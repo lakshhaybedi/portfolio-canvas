@@ -1,0 +1,512 @@
+
+5:42:58 AM - Starting compilation in watch mode...
+
+src/app/page.tsx(4,20): error TS2307: Cannot find module '@/components/IDCard' or its corresponding type declarations.
+
+5:43:02 AM - Found 1 error. Watching for file changes.
+
+5:43:03 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(4,20): error TS2307: Cannot find module '@/components/IDCard' or its corresponding type declarations.
+
+5:43:03 AM - Found 1 error. Watching for file changes.
+
+5:43:39 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(4,20): error TS2307: Cannot find module '@/components/IDCard' or its corresponding type declarations.
+
+5:43:39 AM - Found 1 error. Watching for file changes.
+
+5:44:11 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(4,20): error TS2307: Cannot find module '@/components/IDCard' or its corresponding type declarations.
+
+5:44:11 AM - Found 1 error. Watching for file changes.
+
+5:44:12 AM - File change detected. Starting incremental compilation...
+
+
+5:44:13 AM - Found 0 errors. Watching for file changes.
+
+5:44:24 AM - File change detected. Starting incremental compilation...
+
+
+5:44:24 AM - Found 0 errors. Watching for file changes.
+
+5:44:27 AM - File change detected. Starting incremental compilation...
+
+
+5:44:27 AM - Found 0 errors. Watching for file changes.
+
+5:44:31 AM - File change detected. Starting incremental compilation...
+
+
+5:44:31 AM - Found 0 errors. Watching for file changes.
+
+5:44:33 AM - File change detected. Starting incremental compilation...
+
+
+5:44:33 AM - Found 0 errors. Watching for file changes.
+
+5:44:51 AM - File change detected. Starting incremental compilation...
+
+
+5:44:52 AM - Found 0 errors. Watching for file changes.
+
+5:44:54 AM - File change detected. Starting incremental compilation...
+
+
+5:44:54 AM - Found 0 errors. Watching for file changes.
+
+5:44:57 AM - File change detected. Starting incremental compilation...
+
+
+5:44:57 AM - Found 0 errors. Watching for file changes.
+
+5:45:01 AM - File change detected. Starting incremental compilation...
+
+
+5:45:01 AM - Found 0 errors. Watching for file changes.
+
+5:45:03 AM - File change detected. Starting incremental compilation...
+
+
+5:45:03 AM - Found 0 errors. Watching for file changes.
+
+5:45:07 AM - File change detected. Starting incremental compilation...
+
+
+5:45:07 AM - Found 0 errors. Watching for file changes.
+
+5:55:13 AM - File change detected. Starting incremental compilation...
+
+
+5:55:13 AM - Found 0 errors. Watching for file changes.
+
+5:55:13 AM - File change detected. Starting incremental compilation...
+
+
+5:55:14 AM - Found 0 errors. Watching for file changes.
+
+5:55:14 AM - File change detected. Starting incremental compilation...
+
+
+5:55:14 AM - Found 0 errors. Watching for file changes.
+
+5:55:15 AM - File change detected. Starting incremental compilation...
+
+
+5:55:15 AM - Found 0 errors. Watching for file changes.
+
+5:55:28 AM - File change detected. Starting incremental compilation...
+
+
+5:55:29 AM - Found 0 errors. Watching for file changes.
+
+5:55:30 AM - File change detected. Starting incremental compilation...
+
+
+5:55:30 AM - Found 0 errors. Watching for file changes.
+
+5:55:31 AM - File change detected. Starting incremental compilation...
+
+
+5:55:31 AM - Found 0 errors. Watching for file changes.
+
+5:55:36 AM - File change detected. Starting incremental compilation...
+
+
+5:55:36 AM - Found 0 errors. Watching for file changes.
+
+5:57:56 AM - File change detected. Starting incremental compilation...
+
+
+5:57:56 AM - Found 0 errors. Watching for file changes.
+
+5:57:57 AM - File change detected. Starting incremental compilation...
+
+
+5:57:57 AM - Found 0 errors. Watching for file changes.
+
+5:58:17 AM - File change detected. Starting incremental compilation...
+
+
+5:58:17 AM - Found 0 errors. Watching for file changes.
+
+5:58:22 AM - File change detected. Starting incremental compilation...
+
+
+5:58:22 AM - Found 0 errors. Watching for file changes.
+
+5:58:27 AM - File change detected. Starting incremental compilation...
+
+
+5:58:27 AM - Found 0 errors. Watching for file changes.
+
+5:58:31 AM - File change detected. Starting incremental compilation...
+
+
+5:58:31 AM - Found 0 errors. Watching for file changes.
+
+5:58:36 AM - File change detected. Starting incremental compilation...
+
+
+5:58:36 AM - Found 0 errors. Watching for file changes.
+
+5:59:05 AM - File change detected. Starting incremental compilation...
+
+
+5:59:05 AM - Found 0 errors. Watching for file changes.
+
+5:59:07 AM - File change detected. Starting incremental compilation...
+
+
+5:59:07 AM - Found 0 errors. Watching for file changes.
+
+5:59:08 AM - File change detected. Starting incremental compilation...
+
+
+5:59:08 AM - Found 0 errors. Watching for file changes.
+
+5:59:10 AM - File change detected. Starting incremental compilation...
+
+
+5:59:10 AM - Found 0 errors. Watching for file changes.
+
+5:59:11 AM - File change detected. Starting incremental compilation...
+
+
+5:59:11 AM - Found 0 errors. Watching for file changes.
+
+5:59:15 AM - File change detected. Starting incremental compilation...
+
+
+5:59:15 AM - Found 0 errors. Watching for file changes.
+
+5:59:17 AM - File change detected. Starting incremental compilation...
+
+
+5:59:17 AM - Found 0 errors. Watching for file changes.
+
+5:59:22 AM - File change detected. Starting incremental compilation...
+
+
+5:59:22 AM - Found 0 errors. Watching for file changes.
+
+6:06:39 AM - File change detected. Starting incremental compilation...
+
+
+6:06:39 AM - Found 0 errors. Watching for file changes.
+
+6:06:40 AM - File change detected. Starting incremental compilation...
+
+
+6:06:40 AM - Found 0 errors. Watching for file changes.
+
+6:06:44 AM - File change detected. Starting incremental compilation...
+
+
+6:06:44 AM - Found 0 errors. Watching for file changes.
+
+6:06:47 AM - File change detected. Starting incremental compilation...
+
+
+6:06:47 AM - Found 0 errors. Watching for file changes.
+
+6:06:50 AM - File change detected. Starting incremental compilation...
+
+
+6:06:50 AM - Found 0 errors. Watching for file changes.
+
+6:13:10 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(92,8): error TS2304: Cannot find name 'IDCard'.
+
+6:13:11 AM - Found 1 error. Watching for file changes.
+
+6:13:11 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(92,8): error TS2304: Cannot find name 'IDCard'.
+
+6:13:11 AM - Found 1 error. Watching for file changes.
+
+6:13:12 AM - File change detected. Starting incremental compilation...
+
+src/app/page.tsx(92,8): error TS2304: Cannot find name 'IDCard'.
+
+6:13:12 AM - Found 1 error. Watching for file changes.
+
+6:13:19 AM - File change detected. Starting incremental compilation...
+
+
+6:13:20 AM - Found 0 errors. Watching for file changes.
+
+6:13:33 AM - File change detected. Starting incremental compilation...
+
+
+6:13:33 AM - Found 0 errors. Watching for file changes.
+
+6:13:45 AM - File change detected. Starting incremental compilation...
+
+
+6:13:45 AM - Found 0 errors. Watching for file changes.
+
+6:13:48 AM - File change detected. Starting incremental compilation...
+
+
+6:13:48 AM - Found 0 errors. Watching for file changes.
+
+6:13:51 AM - File change detected. Starting incremental compilation...
+
+
+6:13:51 AM - Found 0 errors. Watching for file changes.
+
+6:14:12 AM - File change detected. Starting incremental compilation...
+
+
+6:14:12 AM - Found 0 errors. Watching for file changes.
+
+6:14:14 AM - File change detected. Starting incremental compilation...
+
+
+6:14:14 AM - Found 0 errors. Watching for file changes.
+
+6:14:17 AM - File change detected. Starting incremental compilation...
+
+
+6:14:17 AM - Found 0 errors. Watching for file changes.
+
+6:14:18 AM - File change detected. Starting incremental compilation...
+
+
+6:14:18 AM - Found 0 errors. Watching for file changes.
+
+6:14:22 AM - File change detected. Starting incremental compilation...
+
+
+6:14:22 AM - Found 0 errors. Watching for file changes.
+
+6:14:24 AM - File change detected. Starting incremental compilation...
+
+
+6:14:24 AM - Found 0 errors. Watching for file changes.
+
+6:14:28 AM - File change detected. Starting incremental compilation...
+
+
+6:14:28 AM - Found 0 errors. Watching for file changes.
+
+6:15:20 AM - File change detected. Starting incremental compilation...
+
+
+6:15:20 AM - Found 0 errors. Watching for file changes.
+
+6:15:21 AM - File change detected. Starting incremental compilation...
+
+
+6:15:21 AM - Found 0 errors. Watching for file changes.
+
+6:15:30 AM - File change detected. Starting incremental compilation...
+
+
+6:15:30 AM - Found 0 errors. Watching for file changes.
+
+6:15:33 AM - File change detected. Starting incremental compilation...
+
+
+6:15:33 AM - Found 0 errors. Watching for file changes.
+
+6:15:36 AM - File change detected. Starting incremental compilation...
+
+
+6:15:36 AM - Found 0 errors. Watching for file changes.
+
+6:17:54 AM - File change detected. Starting incremental compilation...
+
+
+6:17:54 AM - Found 0 errors. Watching for file changes.
+
+6:18:15 AM - File change detected. Starting incremental compilation...
+
+
+6:18:15 AM - Found 0 errors. Watching for file changes.
+
+6:18:27 AM - File change detected. Starting incremental compilation...
+
+
+6:18:27 AM - Found 0 errors. Watching for file changes.
+
+6:18:32 AM - File change detected. Starting incremental compilation...
+
+
+6:18:32 AM - Found 0 errors. Watching for file changes.
+
+6:18:35 AM - File change detected. Starting incremental compilation...
+
+
+6:18:35 AM - Found 0 errors. Watching for file changes.
+
+6:18:39 AM - File change detected. Starting incremental compilation...
+
+
+6:18:39 AM - Found 0 errors. Watching for file changes.
+
+6:22:38 AM - File change detected. Starting incremental compilation...
+
+
+6:22:38 AM - Found 0 errors. Watching for file changes.
+
+6:22:39 AM - File change detected. Starting incremental compilation...
+
+
+6:22:39 AM - Found 0 errors. Watching for file changes.
+
+6:23:11 AM - File change detected. Starting incremental compilation...
+
+
+6:23:12 AM - Found 0 errors. Watching for file changes.
+
+6:23:21 AM - File change detected. Starting incremental compilation...
+
+
+6:23:21 AM - Found 0 errors. Watching for file changes.
+
+6:23:23 AM - File change detected. Starting incremental compilation...
+
+
+6:23:23 AM - Found 0 errors. Watching for file changes.
+
+6:23:27 AM - File change detected. Starting incremental compilation...
+
+
+6:23:27 AM - Found 0 errors. Watching for file changes.
+
+6:42:00 AM - File change detected. Starting incremental compilation...
+
+
+6:42:00 AM - Found 0 errors. Watching for file changes.
+
+6:45:33 AM - File change detected. Starting incremental compilation...
+
+
+6:45:33 AM - Found 0 errors. Watching for file changes.
+
+7:01:37 AM - File change detected. Starting incremental compilation...
+
+
+7:01:37 AM - Found 0 errors. Watching for file changes.
+
+7:01:38 AM - File change detected. Starting incremental compilation...
+
+
+7:01:38 AM - Found 0 errors. Watching for file changes.
+
+7:04:01 AM - File change detected. Starting incremental compilation...
+
+
+7:04:02 AM - Found 0 errors. Watching for file changes.
+
+7:04:22 AM - File change detected. Starting incremental compilation...
+
+
+7:04:22 AM - Found 0 errors. Watching for file changes.
+
+7:05:09 AM - File change detected. Starting incremental compilation...
+
+
+7:05:10 AM - Found 0 errors. Watching for file changes.
+
+7:05:43 AM - File change detected. Starting incremental compilation...
+
+
+7:05:43 AM - Found 0 errors. Watching for file changes.
+
+7:05:55 AM - File change detected. Starting incremental compilation...
+
+
+7:05:56 AM - Found 0 errors. Watching for file changes.
+
+7:06:02 AM - File change detected. Starting incremental compilation...
+
+
+7:06:02 AM - Found 0 errors. Watching for file changes.
+
+7:06:06 AM - File change detected. Starting incremental compilation...
+
+
+7:06:06 AM - Found 0 errors. Watching for file changes.
+
+7:06:09 AM - File change detected. Starting incremental compilation...
+
+
+7:06:09 AM - Found 0 errors. Watching for file changes.
+
+7:10:54 AM - File change detected. Starting incremental compilation...
+
+
+7:10:54 AM - Found 0 errors. Watching for file changes.
+
+7:10:55 AM - File change detected. Starting incremental compilation...
+
+
+7:10:55 AM - Found 0 errors. Watching for file changes.
+
+7:11:22 AM - File change detected. Starting incremental compilation...
+
+
+7:11:22 AM - Found 0 errors. Watching for file changes.
+
+7:11:28 AM - File change detected. Starting incremental compilation...
+
+
+7:11:28 AM - Found 0 errors. Watching for file changes.
+
+7:11:51 AM - File change detected. Starting incremental compilation...
+
+
+7:11:51 AM - Found 0 errors. Watching for file changes.
+
+7:12:07 AM - File change detected. Starting incremental compilation...
+
+
+7:12:08 AM - Found 0 errors. Watching for file changes.
+
+7:12:18 AM - File change detected. Starting incremental compilation...
+
+
+7:12:19 AM - Found 0 errors. Watching for file changes.
+
+7:12:28 AM - File change detected. Starting incremental compilation...
+
+
+7:12:28 AM - Found 0 errors. Watching for file changes.
+
+7:12:37 AM - File change detected. Starting incremental compilation...
+
+
+7:12:37 AM - Found 0 errors. Watching for file changes.
+
+7:12:54 AM - File change detected. Starting incremental compilation...
+
+
+7:12:54 AM - Found 0 errors. Watching for file changes.
+
+7:12:58 AM - File change detected. Starting incremental compilation...
+
+
+7:12:59 AM - Found 0 errors. Watching for file changes.
+
+7:13:05 AM - File change detected. Starting incremental compilation...
+
+
+7:13:05 AM - Found 0 errors. Watching for file changes.
+
+7:13:08 AM - File change detected. Starting incremental compilation...
+
+
+7:13:08 AM - Found 0 errors. Watching for file changes.
+
+7:13:11 AM - File change detected. Starting incremental compilation...
+
+
+7:13:11 AM - Found 0 errors. Watching for file changes.
