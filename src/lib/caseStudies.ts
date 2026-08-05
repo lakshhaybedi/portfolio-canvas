@@ -19,6 +19,15 @@ export type CaseStudy = {
   year: string;
   tags: string[];
   accent: string;
+  // `accent` as a solid fill (backgrounds, borders, dots) always has enough
+  // contrast against the page's near-black bg, but two of the three brand
+  // colors fall under 4.5:1 when used *as text* — `accentText` is a
+  // lightened variant safe for that (equal to `accent` when the original
+  // already passes). `badgeOnAccent` is the readable text color to place
+  // *on top of* a solid `accent` fill (e.g. a filled number badge) — pure
+  // white fails badly on the lighter accents (standard-bank, elevance).
+  accentText: string;
+  badgeOnAccent: string;
   overview: string;
   heroImage?: string;
   heroUrl?: string;
@@ -71,6 +80,11 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2024",
     tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
     accent: "#E20074",
+    // #E20074 is 4.23:1 on the page bg as text (fails AA 4.5:1) and 2.59:1
+    // for white-on-fill (badge) — E62689 (15% mixed toward white) clears
+    // 4.5:1 for text; white stays the right badge color here (4.68:1).
+    accentText: "#E62689",
+    badgeOnAccent: "#FFFFFF",
     heroImage: TC_HERO,
     overview:
       "T-Cloud is an enterprise dashboard product designed for T-Mobile's internal operations teams managing cloud infrastructure at scale. The challenge was translating high-density technical data into an interface that operators could monitor, act on, and trust across both web and tablet form factors. Operations teams worked across fragmented tooling — switching between multiple platforms to get a complete picture of system health. The lack of a unified view slowed response time and introduced errors during high-stakes incidents.",
@@ -119,6 +133,10 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2024",
     tags: ["FinTech", "Mobile", "Multi-Market"],
     accent: "#00B4AA",
+    // Already 7.6:1 as text — no lightening needed. White-on-fill for the
+    // badge is only 2.6:1 though (fails), so the badge uses near-black text.
+    accentText: "#00B4AA",
+    badgeOnAccent: "#0A0A0A",
     heroImage: SB_SLIDE_1,
     slides: [
       { src: SB_SLIDE_1, label: "Overview & Problem",    caption: "Designing cross-border mobile payments for Africa's most complex markets — 7 countries, one coherent UX." },
@@ -166,6 +184,10 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2023",
     tags: ["Healthcare", "Web App", "Appointment Flow"],
     accent: "#7C6AF7",
+    // Already 5.0:1 as text — no lightening needed. White-on-fill for the
+    // badge is only 4.0:1 though (fails), so the badge uses near-black text.
+    accentText: "#7C6AF7",
+    badgeOnAccent: "#0A0A0A",
     heroImage: EH_SLIDE_1,
     slides: [
       { src: EH_SLIDE_1, label: "Overview & Problem",    caption: "Reimagining how Anthem members find providers, schedule appointments, and access care — end-to-end UX across scheduling, rescheduling, cancellation, and Get Care Now." },

@@ -83,6 +83,9 @@ export default function Sidebar({ activePageId, onSelect }) {
           return (
             <div
               key={page.id}
+              role="button"
+              tabIndex={0}
+              aria-current={isActive}
               draggable={isAdmin}
               onDragStart={() => (dragIndexRef.current = idx)}
               onDragOver={(e) => e.preventDefault()}
@@ -93,6 +96,9 @@ export default function Sidebar({ activePageId, onSelect }) {
                 }
               }}
               onClick={() => onSelect(page.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(page.id); }
+              }}
               style={{
                 padding: "8px 14px",
                 cursor: "pointer",
@@ -232,6 +238,7 @@ export default function Sidebar({ activePageId, onSelect }) {
             <input
               type="password"
               placeholder="Password"
+              aria-label="Admin password"
               value={pwInput}
               onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
               onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
@@ -286,6 +293,7 @@ function IconBtn({ children, onClick, title }) {
     <button
       onClick={onClick}
       title={title}
+      aria-label={title}
       style={{
         background: "transparent",
         border: "none",

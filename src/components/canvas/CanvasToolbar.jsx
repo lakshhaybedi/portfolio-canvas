@@ -55,6 +55,8 @@ export default function CanvasToolbar({
         <button
           key={t.id}
           title={`${t.label}  ${t.key}`}
+          aria-label={t.label}
+          aria-pressed={activeTool === t.id}
           onClick={() => { onToolChange(t.id); setPicker(null); }}
           style={{
             width: 32, height: 32,
@@ -89,6 +91,8 @@ export default function CanvasToolbar({
       <div style={{ position: "relative" }}>
         <button
           title={hasSelection ? "Fill colour (edits selection)" : "Fill colour"}
+          aria-label={hasSelection ? "Fill colour (edits selection)" : "Fill colour"}
+          aria-expanded={picker === "fill"}
           onClick={() => togglePicker("fill")}
           style={{
             width: 28, height: 28,
@@ -113,6 +117,8 @@ export default function CanvasToolbar({
       <div style={{ position: "relative" }}>
         <button
           title={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
+          aria-label={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
+          aria-expanded={picker === "stroke"}
           onClick={() => togglePicker("stroke")}
           style={{
             width: 28, height: 28,
@@ -142,6 +148,8 @@ export default function CanvasToolbar({
           <button
             key={w}
             title={`${w}px stroke`}
+            aria-label={`${w}px stroke width`}
+            aria-pressed={strokeWidth === w}
             onClick={() => onStrokeWidthChange(w)}
             style={{
               width: 24, height: 28,

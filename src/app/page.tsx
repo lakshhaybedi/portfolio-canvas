@@ -1,7 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { motion, useReducedMotion, useAnimationControls, useScroll, useTransform } from "framer-motion";
 import { CASE_STUDIES } from "@/lib/caseStudies";
+import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
+import { useHasFinePointer } from "@/lib/useHasFinePointer";
+import { useHeroScrollProgress } from "@/components/hero/ScrollController";
+import HeroContent from "@/components/hero/HeroContent";
+import PortfolioFolder from "@/components/folder/PortfolioFolder";
+import WindowManager from "@/components/windows/WindowManager";
+
+// Three.js/WebGL needs a real browser context — never render during
+// Next's static-export prerender.
+const ParticleBackground = dynamic(() => import("@/components/hero/ParticleBackground"), { ssr: false });
 
 const PROJECTS = [
   {
@@ -34,26 +47,32 @@ const PROJECTS = [
 ];
 
 export default function Portfolio() {
-  const [time, setTime] = useState("");
-  const [date, setDate] = useState("");
   const [hovered, setHovered] = useState<number | null>(null);
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [cursorLarge, setCursorLarge] = useState(false);
 
-  // Live clock
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }));
-      setDate(now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase());
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
+  const reduceMotion = useReducedMotion();
+  const isFinePointer = useHasFinePointer();
+  const marqueeControls = useAnimationControls();
+  const reveal = revealVariant(!!reduceMotion);
 
-  // Cursor tracking
+  // Scroll progress — thin bar fixed to the top of the viewport
+  const { scrollYProgress } = useScroll();
+  const scrollProgressX = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1, 1] : [0, 1]);
+
+  // Shared scroll progress for the hero — drives the WebGL morph/camera and
+  // the DOM content's fade/slide from a single source.
+  const heroRef = useRef<HTMLElement>(null);
+  const heroProgress = useHeroScrollProgress(heroRef);
+
+  // Gate the custom cursor to fine-pointer devices only
   useEffect(() => {
+    document.body.classList.toggle("has-fine-pointer", isFinePointer);
+  }, [isFinePointer]);
+
+  // Cursor tracking (fine pointer only)
+  useEffect(() => {
+    if (!isFinePointer) return;
     let frame: number;
     const move = (e: MouseEvent) => {
       cancelAnimationFrame(frame);
@@ -61,17 +80,16 @@ export default function Portfolio() {
     };
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
-  }, []);
+  }, [isFinePointer]);
 
-  // Scroll reveal
+  // Marquee loop
   useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("visible"); }),
-      { threshold: 0.12 }
-    );
-    document.querySelectorAll(".reveal").forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
+    if (reduceMotion) return;
+    marqueeControls.start({
+      x: ["0%", "-50%"],
+      transition: { duration: 20, ease: "linear", repeat: Infinity },
+    });
+  }, [reduceMotion, marqueeControls]);
 
   const setLarge = (v: boolean) => setCursorLarge(v);
 
@@ -82,134 +100,110 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* Custom Cursor */}
-      <div
-        className={`cursor-dot${cursorLarge ? " cursor-large" : ""}`}
-        style={{ left: cursor.x, top: cursor.y }}
+      {/* Fixed particle background — wave grid → rotating globe on scroll,
+          behind all page content, not scoped to the hero section */}
+      <ParticleBackground />
+
+      {/* Custom Cursor — fine-pointer devices only */}
+      {isFinePointer && (
+        <div
+          className={`cursor-dot${cursorLarge ? " cursor-large" : ""}`}
+          style={{ left: cursor.x, top: cursor.y }}
+        />
+      )}
+
+      {/* ── Scroll progress ── */}
+      <motion.div
+        aria-hidden="true"
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+          height: 2, transformOrigin: "0% 50%",
+          scaleX: scrollProgressX,
+          background: "linear-gradient(90deg, #E20074, #7C6AF7, #00B4AA)",
+        }}
       />
 
       {/* ── Navigation ── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "20px 48px",
-        background: "rgba(237,234,212,0.88)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(0,0,0,0.08)",
-        animation: "fadeIn 0.8s ease forwards",
-      }}>
+      <motion.nav
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 48px",
+          background: "rgba(10,10,10,0.75)",
+          backdropFilter: "blur(10px)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
           Lakshhay Bedi
         </span>
         <ul style={{ display: "flex", gap: 36, listStyle: "none" }}>
           {["Work", "About", "Contact"].map((link) => (
             <li key={link}>
-              <a
+              <motion.a
                 href={`#${link.toLowerCase()}`}
                 onMouseEnter={() => setLarge(true)}
                 onMouseLeave={() => setLarge(false)}
+                whileHover={{ opacity: 0.55 }}
+                whileTap={{ scale: 0.95 }}
                 style={{
                   fontSize: 11, fontWeight: 600, letterSpacing: "0.12em",
-                  textTransform: "uppercase", textDecoration: "none", color: "#111",
-                  transition: "opacity 0.2s",
+                  textTransform: "uppercase", textDecoration: "none", color: "var(--fg)",
+                  display: "inline-block",
                 }}
               >
                 {link}
-              </a>
+              </motion.a>
             </li>
           ))}
         </ul>
-      </nav>
+      </motion.nav>
 
       {/* ── Hero ── */}
-      <section style={{
+      <section ref={heroRef} style={{
         position: "relative", height: "100vh", minHeight: 700,
         display: "flex", flexDirection: "column", justifyContent: "flex-end",
         padding: "0 48px 52px", overflow: "hidden",
       }}>
-        {/* Grid lines */}
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
-          backgroundImage: `repeating-linear-gradient(
-            to right,
-            transparent,
-            transparent calc(14.285% - 1px),
-            rgba(0,0,0,0.055) calc(14.285% - 1px),
-            rgba(0,0,0,0.055) 14.285%
-          )`,
-          animation: "fadeIn 1.2s ease forwards",
-        }} />
+        <HeroContent scrollYProgress={heroProgress} reduceMotion={reduceMotion} setLarge={setLarge} />
 
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{
-            fontSize: "clamp(80px, 12vw, 178px)",
-            fontWeight: 700, lineHeight: 0.92,
-            letterSpacing: "-0.03em", textTransform: "uppercase",
-            opacity: 0,
-            animation: "fadeUp 1s cubic-bezier(0.16,1,0.3,1) 0.15s forwards",
-          }}>
-            <span style={{ display: "block" }}>Lakshhay</span>
-            <span style={{ display: "block" }}>Bedi</span>
-          </div>
-
-          <div style={{
-            display: "flex", alignItems: "flex-end", justifyContent: "space-between",
-            marginTop: 32, opacity: 0,
-            animation: "fadeUp 0.8s ease 0.55s forwards",
-          }}>
-            <div>
-              <p style={{
-                fontSize: 13, fontWeight: 400, letterSpacing: "0.1em",
-                textTransform: "uppercase", color: "#888",
-                lineHeight: 1.8, maxWidth: 520,
-              }}>
-                Senior UX Designer — Enterprise · FinTech · Healthcare<br />
-                Designing systems that hold up under real-world pressure.
-              </p>
-            </div>
-            <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
-              <div style={{
-                fontFamily: "'Space Grotesk', monospace",
-                fontSize: 13, fontWeight: 500, letterSpacing: "0.05em", color: "#888",
-              }}>
-                <span style={{ display: "block" }}>{date}</span>
-                <span style={{ display: "block", fontSize: 22, fontWeight: 600, color: "#111", marginTop: 2 }}>{time}</span>
-              </div>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                border: "1px solid rgba(0,0,0,0.12)", padding: "6px 16px",
-                fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-              }}>
-                <span style={{
-                  width: 7, height: 7, background: "#22c55e", borderRadius: "50%",
-                  animation: "pulse-dot 2s ease-in-out infinite",
-                }} />
-                Available for work
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          position: "absolute", bottom: 52, left: "50%", transform: "translateX(-50%)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-          fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "#888",
-          opacity: 0, animation: "fadeIn 1s ease 1.1s forwards", zIndex: 1,
-        }}>
-          <span style={{ animation: "bounce 1.6s ease-in-out infinite", display: "block" }}>↓</span>
+        <motion.div
+          className="hero-scroll-cue"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.1 }}
+          style={{
+            position: "absolute", bottom: 52, left: "50%", transform: "translateX(-50%)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+            fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)",
+            zIndex: 1,
+          }}
+        >
+          <span style={{ animation: reduceMotion ? "none" : "bounce 1.6s ease-in-out infinite", display: "block" }}>↓</span>
           Scroll
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Marquee ── */}
-      <div style={{
-        overflow: "hidden",
-        borderTop: "1px solid rgba(0,0,0,0.1)",
-        borderBottom: "1px solid rgba(0,0,0,0.1)",
-        padding: "14px 0",
-        background: "#111",
-      }}>
-        <div style={{ display: "flex", whiteSpace: "nowrap", animation: "marquee 20s linear infinite" }}>
+      <div
+        style={{
+          overflow: "hidden",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          padding: "14px 0",
+          background: "var(--bg-elevated)",
+        }}
+        onMouseEnter={() => marqueeControls.stop()}
+        onMouseLeave={() => {
+          if (!reduceMotion) {
+            marqueeControls.start({ x: ["0%", "-50%"], transition: { duration: 20, ease: "linear", repeat: Infinity } });
+          }
+        }}
+      >
+        <motion.div animate={marqueeControls} style={{ display: "flex", whiteSpace: "nowrap" }}>
           {[...marqueeItems, ...marqueeItems].map((item, i) => (
             <span key={i} style={{
               display: "inline-flex", alignItems: "center", gap: 20, padding: "0 20px",
@@ -220,143 +214,160 @@ export default function Portfolio() {
               <span style={{ width: 4, height: 4, background: "rgba(237,234,212,0.3)", borderRadius: "50%", display: "inline-block" }} />
             </span>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* ── Work ── */}
       <section id="work" style={{ padding: "100px 48px" }}>
-        <div className="reveal" style={{ marginBottom: 48 }}>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ marginBottom: 48 }}
+        >
           <span style={{
             fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "#888",
+            textTransform: "uppercase", color: "var(--muted)",
             display: "flex", alignItems: "center", gap: 16,
           }}>
             Selected Work
-            <span style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)", display: "block" }} />
+            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
           </span>
-        </div>
+        </motion.div>
 
-        <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-          {PROJECTS.map((p, i) => (
-            <div
-              key={i}
-              className="reveal"
-              style={{ transitionDelay: `${i * 0.1}s` }}
-              onMouseEnter={() => { setHovered(i); setLarge(false); }}
-              onMouseLeave={() => { setHovered(null); setLarge(false); }}
-              onClick={() => { window.location.href = `/work/${p.slug}`; }}
-            >
-              <div style={{
-                borderBottom: "1px solid rgba(0,0,0,0.1)",
-                padding: "28px 0",
-                cursor: "none",
-                background: hovered === i ? "#111" : "transparent",
-                transition: "background 0.5s cubic-bezier(0.16,1,0.3,1)",
-              }}>
-                {/* Row header */}
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "60px 1fr auto auto",
-                  alignItems: "center", gap: 24,
-                }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 500, letterSpacing: "0.05em",
-                    color: hovered === i ? "rgba(237,234,212,0.4)" : "#888",
-                    transition: "color 0.4s ease",
-                  }}>
-                    {p.num}
-                  </span>
-
-                  <div>
-                    <div style={{
-                      fontSize: "clamp(26px, 3.5vw, 54px)",
-                      fontWeight: 700, letterSpacing: "-0.02em", textTransform: "uppercase",
-                      lineHeight: 1, marginBottom: 5,
-                      color: hovered === i ? "#EDEAD4" : "#111",
+        <div style={{ borderTop: "1px solid var(--border)" }}>
+          {PROJECTS.map((p, i) => {
+            const isOpen = hovered === i;
+            return (
+              <motion.div
+                key={i}
+                initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+                transition={{ duration: 0.85, ease: easeOutExpo, delay: i * 0.08 }}
+              >
+                <Link
+                  href={`/work/${p.slug}`}
+                  onMouseEnter={() => { setHovered(i); setLarge(true); }}
+                  onMouseLeave={() => { setHovered(null); setLarge(false); }}
+                  onFocus={() => { setHovered(i); setLarge(true); }}
+                  onBlur={() => { setHovered(null); setLarge(false); }}
+                  style={{
+                    display: "block", textDecoration: "none", color: "inherit",
+                    borderBottom: "1px solid var(--border)",
+                    background: isOpen ? "var(--bg-elevated)" : "transparent",
+                    transition: "background 0.5s cubic-bezier(0.16,1,0.3,1)",
+                    cursor: isFinePointer ? "none" : "pointer",
+                  }}
+                >
+                  <div
+                    className="work-row"
+                    style={{
+                      padding: "28px 0",
+                      display: "grid", gridTemplateColumns: "60px 1fr auto auto",
+                      alignItems: "center", gap: 24,
+                    }}
+                  >
+                    <span className="work-row-num" style={{
+                      fontSize: 12, fontWeight: 500, letterSpacing: "0.05em",
+                      color: isOpen ? "var(--muted-strong)" : "var(--muted)",
                       transition: "color 0.4s ease",
                     }}>
-                      {p.title}
-                    </div>
-                    <div style={{
-                      fontSize: 13,
-                      color: hovered === i ? "rgba(237,234,212,0.5)" : "#888",
-                      transition: "color 0.4s ease",
-                    }}>
-                      {p.company}
-                    </div>
-                  </div>
+                      {p.num}
+                    </span>
 
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                    {p.tags.map((tag) => (
-                      <span key={tag} style={{
-                        fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        border: `1px solid ${hovered === i ? "rgba(237,234,212,0.2)" : "rgba(0,0,0,0.12)"}`,
-                        padding: "4px 12px",
-                        color: hovered === i ? "rgba(237,234,212,0.65)" : "#555",
-                        transition: "all 0.4s ease",
+                    <div className="work-row-title">
+                      <div style={{
+                        fontSize: "clamp(26px, 3.5vw, 54px)",
+                        fontWeight: 700, letterSpacing: "-0.02em", textTransform: "uppercase",
+                        lineHeight: 1, marginBottom: 5,
+                        color: isOpen ? "#EDEAD4" : "rgba(237,234,212,0.9)",
+                        transition: "color 0.4s ease",
                       }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div style={{
-                    fontSize: 13, textAlign: "right",
-                    color: hovered === i ? "rgba(237,234,212,0.45)" : "#888",
-                    transition: "color 0.4s ease",
-                    display: "flex", alignItems: "center", gap: 16,
-                  }}>
-                    <span>{p.year}</span>
-                    <span style={{
-                      fontSize: 22,
-                      transform: hovered === i ? "translate(3px,-3px)" : "translate(0,0)",
-                      transition: "transform 0.3s ease",
-                      color: hovered === i ? "rgba(237,234,212,0.6)" : "#888",
-                    }}>↗</span>
-                  </div>
-                </div>
-
-                {/* Expandable description */}
-                <div style={{
-                  maxHeight: hovered === i ? 120 : 0,
-                  overflow: "hidden",
-                  transition: "max-height 0.55s cubic-bezier(0.16,1,0.3,1)",
-                  paddingLeft: 84,
-                }}>
-                  <p style={{
-                    fontSize: 14, fontWeight: 300, lineHeight: 1.7,
-                    color: "rgba(237,234,212,0.72)",
-                    paddingTop: 16, paddingRight: 120,
-                  }}>
-                    {p.desc}
-                  </p>
-                  {hovered === i && (
-                    <div style={{
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      marginTop: 8, marginBottom: 4,
-                      fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: CASE_STUDIES.find((c) => c.slug === p.slug)?.accent ?? "#888",
-                    }}>
-                      View case study →
+                        {p.title}
+                      </div>
+                      <div style={{
+                        fontSize: 13,
+                        color: isOpen ? "rgba(237,234,212,0.5)" : "var(--muted)",
+                        transition: "color 0.4s ease",
+                      }}>
+                        {p.company}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+
+                    <div className="work-row-tags" style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {p.tags.map((tag) => (
+                        <span key={tag} style={{
+                          fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          border: `1px solid ${isOpen ? "rgba(237,234,212,0.2)" : "var(--border)"}`,
+                          padding: "4px 12px",
+                          color: isOpen ? "rgba(237,234,212,0.65)" : "var(--muted)",
+                          transition: "all 0.4s ease",
+                        }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="work-row-meta" style={{
+                      fontSize: 13, textAlign: "right",
+                      color: isOpen ? "var(--muted-strong)" : "var(--muted)",
+                      transition: "color 0.4s ease",
+                      display: "flex", alignItems: "center", gap: 14,
+                    }}>
+                      <span>{p.year}</span>
+                      <motion.span
+                        aria-hidden
+                        animate={{ rotate: isOpen ? 45 : 0 }}
+                        transition={{ duration: 0.3, ease: easeOutExpo }}
+                        style={{
+                          width: 20, height: 20, borderRadius: "50%",
+                          border: `1px solid ${isOpen ? "rgba(237,234,212,0.35)" : "var(--border-strong)"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 12, lineHeight: 1,
+                          color: isOpen ? "rgba(237,234,212,0.7)" : "var(--muted)",
+                        }}
+                      >
+                        +
+                      </motion.span>
+                      <span style={{
+                        fontSize: 22,
+                        transform: isOpen ? "translate(3px,-3px)" : "translate(0,0)",
+                        transition: "transform 0.3s ease",
+                        color: isOpen ? "rgba(237,234,212,0.6)" : "var(--muted)",
+                      }}>↗</span>
+                    </div>
+                  </div>
+
+                  {/* Expandable description */}
+                  <div className="work-row-desc" style={{
+                    maxHeight: isOpen ? 140 : 0,
+                    overflow: "hidden",
+                    transition: "max-height 0.55s cubic-bezier(0.16,1,0.3,1)",
+                    paddingLeft: 84,
+                  }}>
+                    <p style={{
+                      fontSize: 14, fontWeight: 300, lineHeight: 1.7,
+                      color: "rgba(237,234,212,0.72)",
+                      paddingTop: 16, paddingRight: 120,
+                    }}>
+                      {p.desc}
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
       {/* ── View in Canvas ── */}
-      <section
-        className="reveal"
+      <motion.section
+        className="canvas-cta-section"
+        initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
         style={{
           margin: "0 48px",
           borderRadius: 16,
           overflow: "hidden",
-          background: "#111",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--border)",
           position: "relative",
         }}
       >
@@ -367,15 +378,16 @@ export default function Portfolio() {
           backgroundSize: "24px 24px",
         }} />
 
-        <div style={{
+        <div className="canvas-cta-row" style={{
           position: "relative", zIndex: 1,
           padding: "72px 64px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 48,
+          flexWrap: "wrap",
         }}>
           <div>
             <div style={{
               fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
-              textTransform: "uppercase", color: "rgba(237,234,212,0.3)",
+              textTransform: "uppercase", color: "var(--muted)",
               marginBottom: 18,
               display: "flex", alignItems: "center", gap: 10,
             }}>
@@ -384,7 +396,7 @@ export default function Portfolio() {
             <div style={{
               fontSize: "clamp(32px, 4.5vw, 64px)",
               fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.05,
-              color: "#EDEAD4", marginBottom: 20,
+              color: "var(--fg)", marginBottom: 20,
             }}>
               View the work<br />in an open canvas.
             </div>
@@ -396,62 +408,63 @@ export default function Portfolio() {
             </p>
           </div>
 
-          <a
-            href="/canvas"
-            onMouseEnter={() => setLarge(false)}
-            style={{
-              flexShrink: 0,
-              display: "inline-flex", alignItems: "center", gap: 12,
-              padding: "18px 36px",
-              background: "#EDEAD4", color: "#111",
-              fontSize: 13, fontWeight: 700, letterSpacing: "0.1em",
-              textTransform: "uppercase", textDecoration: "none",
-              borderRadius: 8,
-              transition: "opacity 0.2s, transform 0.2s",
-              whiteSpace: "nowrap",
-            }}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "0.88";
-              (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "1";
-              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-            }}
-          >
-            Open Canvas
-            <span style={{ fontSize: 18, fontWeight: 400, lineHeight: 1 }}>↗</span>
-          </a>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} style={{ flexShrink: 0 }}>
+            <Link
+              href="/canvas"
+              onMouseEnter={() => setLarge(false)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 12,
+                padding: "18px 36px",
+                background: "var(--fg)", color: "var(--fg-invert)",
+                fontSize: 13, fontWeight: 700, letterSpacing: "0.1em",
+                textTransform: "uppercase", textDecoration: "none",
+                borderRadius: 8,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Open Canvas
+              <span style={{ fontSize: 18, fontWeight: 400, lineHeight: 1 }}>↗</span>
+            </Link>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ── About ── */}
-      <section id="about" style={{ padding: "100px 48px", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
-        <div className="reveal" style={{ marginBottom: 64 }}>
+      <section id="about" style={{ padding: "100px 48px", borderTop: "1px solid var(--border)" }}>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ marginBottom: 64 }}
+        >
           <span style={{
             fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "#888",
+            textTransform: "uppercase", color: "var(--muted)",
             display: "flex", alignItems: "center", gap: 16,
           }}>
             About Me
-            <span style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)", display: "block" }} />
+            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
           </span>
-        </div>
+        </motion.div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80 }}>
-          <div className="reveal delay-1">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 80 }}>
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+            transition={{ delay: 0.1 }}
+          >
             <p style={{ fontSize: 22, fontWeight: 300, lineHeight: 1.7, letterSpacing: "-0.01em" }}>
               I'm a <strong style={{ fontWeight: 600 }}>Senior UX Designer</strong> focused on complex systems — dashboards, financial products, and regulated workflows where the stakes are high and the edge cases are endless.
             </p>
             <p style={{ fontSize: 22, fontWeight: 300, lineHeight: 1.7, letterSpacing: "-0.01em", marginTop: 24 }}>
               My work spans enterprise B2B, financial services across Africa, and health insurance infrastructure. I design for users who are under pressure, not just users who are browsing.
             </p>
-            <p style={{ fontSize: 14, color: "#888", lineHeight: 1.7, marginTop: 32, fontWeight: 400, letterSpacing: "0.01em" }}>
+            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginTop: 32, fontWeight: 400, letterSpacing: "0.01em" }}>
               Full process: research → flow architecture → high-fidelity UI → design system contribution.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="reveal delay-2">
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+            transition={{ delay: 0.2 }}
+          >
             {[
               { label: "Tools", items: ["Figma", "FigJam", "Zeplin", "Maze", "Hotjar", "Miro", "JIRA", "Confluence"] },
               { label: "Domains", items: ["Enterprise B2B", "FinTech", "Healthcare", "Multi-market", "Design Systems"] },
@@ -460,44 +473,37 @@ export default function Portfolio() {
               <div key={block.label} style={{ marginBottom: 36 }}>
                 <div style={{
                   fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
-                  textTransform: "uppercase", color: "#888",
+                  textTransform: "uppercase", color: "var(--muted)",
                   marginBottom: 12, paddingBottom: 12,
-                  borderBottom: "1px solid rgba(0,0,0,0.08)",
+                  borderBottom: "1px solid var(--border)",
                 }}>
                   {block.label}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 4 }}>
                   {block.items.map((s) => (
-                    <span
+                    <motion.span
                       key={s}
+                      whileHover={{ background: "var(--fg)", color: "var(--fg-invert)" }}
+                      transition={{ duration: 0.25 }}
                       style={{
                         fontSize: 13, fontWeight: 400, padding: "6px 14px",
-                        border: "1px solid rgba(0,0,0,0.12)",
-                        transition: "background 0.25s, color 0.25s",
-                        cursor: "default",
-                      }}
-                      onMouseOver={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = "#111";
-                        (e.currentTarget as HTMLElement).style.color = "#EDEAD4";
-                      }}
-                      onMouseOut={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = "transparent";
-                        (e.currentTarget as HTMLElement).style.color = "#111";
+                        border: "1px solid var(--border)",
+                        cursor: "default", display: "inline-block",
                       }}
                     >
                       {s}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── Contact ── */}
-      <section id="contact" style={{ padding: "100px 48px 80px", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
-        <div className="reveal">
+      <section id="contact" style={{ padding: "100px 48px 80px", borderTop: "1px solid var(--border)" }}>
+        <motion.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}>
           <div style={{
             fontSize: "clamp(48px, 7vw, 112px)",
             fontWeight: 700, letterSpacing: "-0.03em", textTransform: "uppercase",
@@ -505,34 +511,33 @@ export default function Portfolio() {
           }}>
             Let's Work<br />Together.
           </div>
-        </div>
-        <div className="reveal delay-1" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a
+        </motion.div>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          transition={{ delay: 0.1 }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px 24px" }}
+        >
+          <motion.a
             href="mailto:lakshhay@example.com"
             onMouseEnter={() => setLarge(true)}
             onMouseLeave={() => setLarge(false)}
+            whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
             style={{
-              fontSize: 20, fontWeight: 400, color: "#888",
+              fontSize: 20, fontWeight: 400, color: "var(--muted)",
               textDecoration: "none",
-              borderBottom: "1px solid rgba(0,0,0,0.12)", paddingBottom: 2,
-              transition: "color 0.2s, border-color 0.2s",
-            }}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "#111";
-              (e.currentTarget as HTMLElement).style.borderColor = "#111";
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "#888";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.12)";
+              borderBottom: "1px solid var(--border)", paddingBottom: 2,
             }}
           >
             lakshhay@example.com
-          </a>
-          <span style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          </motion.a>
+          <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             © 2024 Lakshhay Bedi
           </span>
-        </div>
+        </motion.div>
       </section>
+
+      <PortfolioFolder />
+      <WindowManager />
     </>
   );
 }
