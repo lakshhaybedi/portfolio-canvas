@@ -1,24 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { motion, useTransform, type MotionValue } from "framer-motion";
 import { revealVariant, easeOutExpo } from "@/lib/motion";
 
 /**
  * The DOM overlay above the WebGL canvas: identity block (name/clock/
- * availability — unchanged from the previous hero) plus the new headline,
- * subtitle, and CTA. Animates in independently of the particle system, and
+ * availability — unchanged from the previous hero) plus the headline and
+ * subtitle. Animates in independently of the particle system, and
  * fades/slides slightly with the same scroll progress the canvas uses.
  */
 export default function HeroContent({
   scrollYProgress,
   reduceMotion,
-  setLarge,
 }: {
   scrollYProgress: MotionValue<number>;
   reduceMotion: boolean | null;
-  setLarge: (v: boolean) => void;
 }) {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
@@ -65,7 +62,7 @@ export default function HeroContent({
           margin: 0,
         }}
       >
-        Designing products that feel magical.
+        Lakshhay Bedi
       </motion.h1>
 
       <motion.div
@@ -83,25 +80,6 @@ export default function HeroContent({
           }}>
             UX Designer crafting premium digital experiences through interaction, motion and systems thinking.
           </p>
-
-          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
-            <Link
-              href="#work"
-              onMouseEnter={() => setLarge(true)}
-              onMouseLeave={() => setLarge(false)}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 10,
-                padding: "14px 28px",
-                background: "var(--fg)", color: "var(--fg-invert)",
-                fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
-                textTransform: "uppercase", textDecoration: "none",
-                borderRadius: 8, whiteSpace: "nowrap",
-              }}
-            >
-              View Projects
-              <span style={{ fontSize: 16, fontWeight: 400, lineHeight: 1 }}>↗</span>
-            </Link>
-          </motion.div>
         </div>
 
         <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>

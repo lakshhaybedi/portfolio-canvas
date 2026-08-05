@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { MotionValue } from "framer-motion";
 import { generateWaveGridPositions, generateSpherePositions } from "./shapePresets";
 import { particleFragmentShader, particleVertexShader } from "./particleShaders";
-import { useCursorWorldPosition } from "./CursorInteraction";
 import { useMorphProgress } from "./MorphController";
 import { HERO_LOOK_AT } from "./sceneConstants";
 
@@ -37,7 +36,6 @@ function tieredParticleCount(): number {
 // not bright enough). 1.8 per explicit "make the dots brighter" request.
 export default function ParticleSystem({
   scrollYProgress,
-  interactive,
   particleCount,
   particleSize = 1.8,
   waveAmplitude = 1.2,
@@ -47,7 +45,6 @@ export default function ParticleSystem({
   rotationSpeed = 0.15,
 }: {
   scrollYProgress: MotionValue<number>;
-  interactive: boolean;
   particleCount?: number;
   particleSize?: number;
   waveAmplitude?: number;
@@ -58,8 +55,6 @@ export default function ParticleSystem({
 }) {
   const { gl } = useThree();
   const morphProgress = useMorphProgress(scrollYProgress, false);
-  const cursorWorldPos = useCursorWorldPosition(0, interactive);
-  const cursorStrengthRef = useRef(0);
 
   const targetCount = useMemo(() => particleCount ?? tieredParticleCount(), [particleCount]);
 
@@ -83,8 +78,6 @@ export default function ParticleSystem({
       uniforms: {
         uTime: { value: 0 },
         uMorphProgress: { value: 0 },
-        uCursor: { value: new THREE.Vector3(0, 0, 0) },
-        uCursorStrength: { value: 0 },
         uPixelRatio: { value: gl.getPixelRatio() },
         uSize: { value: particleSize },
         uColor: { value: PARTICLE_COLOR },
@@ -113,12 +106,6 @@ export default function ParticleSystem({
     material.uniforms.uTime.value += delta;
     // Small clamp keeps the spring's overshoot "slight" rather than wild.
     material.uniforms.uMorphProgress.value = clamp(morphProgress.get(), -0.15, 1.15);
-    material.uniforms.uCursor.value.copy(cursorWorldPos.current);
-
-    // Smoothly fade cursor influence in/out rather than snapping it.
-    const targetStrength = interactive ? 1 : 0;
-    cursorStrengthRef.current += (targetStrength - cursorStrengthRef.current) * 0.06;
-    material.uniforms.uCursorStrength.value = cursorStrengthRef.current;
   });
 
   // frustumCulled disabled: Three derives the auto bounding sphere from the

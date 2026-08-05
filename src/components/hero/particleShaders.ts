@@ -1,9 +1,11 @@
 // GPU particle shaders for the hero background.
 //
 // Everything that needs to run per-particle per-frame (noise drift, the
-// cloud→shape morph, cursor repel, camera-distance size/alpha falloff) lives
-// here in GLSL rather than in JS, so the animation loop touches uniforms and
-// a handful of camera values only — not 10k individual particle objects.
+// cloud→shape morph, camera-distance size/alpha falloff) lives here in
+// GLSL rather than in JS, so the animation loop touches uniforms and a
+// handful of camera values only — not 10k individual particle objects.
+// No cursor reactivity — removed per explicit request; particles only
+// respond to time and scroll-driven morph now.
 
 // Classic Ashima Arts / Ian McEwan simplex noise (public-domain reference
 // implementation, ubiquitous in WebGL shader work — not project-specific
@@ -78,8 +80,6 @@ attribute float aSeed;
 
 uniform float uTime;
 uniform float uMorphProgress;
-uniform vec3 uCursor;
-uniform float uCursorStrength;
 uniform float uPixelRatio;
 uniform float uSize;
 uniform vec3 uGlobeCenter;
@@ -132,41 +132,18 @@ void main() {
 
   vec3 worldPos = basePos + vec3(0.0, wave + shimmer, 0.0);
 
-  // Cursor repel — subtle lift near the world-space cursor point. Fades out
-  // as the globe forms; a formed globe isn't meant to react to the cursor
-  // the way the loose grid does. Radius and push both cut down (1.6→0.7,
-  // 0.6→0.15) — at the old strength, combined with the wider point-size
-  // range below, this read as an obvious crater with a blown-up bright dot
-  // at its center (wherever the pointer's ray happens to hit the ground,
-  // including its idle/default position) rather than a subtle deformation.
-  //
-  // Vertical-only, not radial: uCursor sits on the fixed ground plane, so a
-  // radial push (worldPos - uCursor) is almost entirely a horizontal X/Z
-  // shove — it slides a particle sideways off its grid column/row, leaving
-  // a visible gap in the line behind it. Lifting along Y instead keeps every
-  // particle in its column/row (line stays continuous) while still reading
-  // as a reaction to the cursor.
-  float cursorDist = distance(worldPos, uCursor);
-  float cursorRadius = 0.7;
-  float repel = smoothstep(cursorRadius, 0.0, cursorDist) * uCursorStrength * (1.0 - uMorphProgress);
-  worldPos.y += repel * 0.4;
-
   vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
 
   vCamDist = -mvPosition.z;
 
-  // Perspective size attenuation + a gentle cursor-proximity swell, cheap to
-  // compute per-vertex. The reference distance (7.0) matches the camera's
-  // resting z, so uSize is roughly the on-screen pixel size at that distance
-  // rather than an arbitrary blow-up. Variance kept narrow (not removed
-  // entirely) — dots should read as a uniform structured grid, not twinkling
-  // dust, but a perfectly identical size for every dot looks synthetic.
+  // Perspective size attenuation, cheap to compute per-vertex. The
+  // reference distance (7.0) matches the camera's resting z, so uSize is
+  // roughly the on-screen pixel size at that distance rather than an
+  // arbitrary blow-up. Variance kept narrow (not removed entirely) — dots
+  // should read as a uniform structured grid, not twinkling dust, but a
+  // perfectly identical size for every dot looks synthetic.
   float sizeVariance = 0.92 + fract(aSeed * 91.7) * 0.16;
-  // Cut from 1.2 → 0.25 for the same reason as the repel push above — with
-  // the wider size clamp, the old multiplier turned the nearest particle to
-  // the cursor into an oversized bright blob instead of a gentle swell.
-  float pulse = 1.0 + repel * 0.25;
   // Clamp widened from (1.0, 3.0) to (0.5, 7.0) — per reference image, near
   // dots should read noticeably larger and far ones noticeably smaller, not
   // a flat, narrow size band. Still nowhere near the ~300px-per-particle
@@ -174,7 +151,7 @@ void main() {
   // safe; the clamp itself (not just its bounds) is what guards against
   // that class of bug recurring. Floor raised 0.5→1.0 — below 1px, far dots
   // were anti-aliasing into a soft smudge instead of a small, sharp point.
-  gl_PointSize = clamp(uSize * uPixelRatio * sizeVariance * pulse * (7.0 / vCamDist), 1.0, 7.0);
+  gl_PointSize = clamp(uSize * uPixelRatio * sizeVariance * (7.0 / vCamDist), 1.0, 7.0);
 
   // Camera-distance falloff stands in for depth-of-field: particles nearer
   // the camera stay crisp/bright, ones further toward the horizon soften

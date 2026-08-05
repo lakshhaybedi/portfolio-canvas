@@ -57,7 +57,7 @@ export default function ParticleBackground() {
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={fixedLayerStyle}
     >
-      <ParticleSystem scrollYProgress={morphProgress} interactive={interactive} />
+      <ParticleSystem scrollYProgress={morphProgress} />
       <CameraRig scrollYProgress={morphProgress} interactive={interactive} />
     </Canvas>
   );

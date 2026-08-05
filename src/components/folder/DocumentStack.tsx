@@ -45,10 +45,6 @@ const SHEETS: SheetConfig[] = [
   { decoration: "ribbon", width: 48, left: 15, top: 0, rotate: -2, idleDuration: 4.9, idleDelay: 0.5 },
 ];
 
-// The frontmost sheet (rendered last, highest z-index) is the one that
-// tilts independently on hover — "top sheet tilts a few degrees."
-const TOP_SHEET_INDEX = SHEETS.length - 1;
-
 function SheetDecoration({ type }: { type: Decoration }) {
   switch (type) {
     case "corner-fold":
@@ -120,28 +116,21 @@ export default function DocumentStack({
   phase,
   reduceMotion,
 }: {
-  phase: "idle" | "hover" | "open";
+  phase: "idle" | "open";
   reduceMotion: boolean;
 }) {
   return (
     <>
       {SHEETS.map((sheet, i) => {
-        const isTopSheet = i === TOP_SHEET_INDEX;
-
-        // Rise: idle (resting peek) → hover (6–10px pre-open cue) → open
-        // (further rise, revealed by the flap swinging away).
-        const rise = phase === "open" ? 16 : phase === "hover" ? 7 : 0;
+        // Rise: resting peek → further rise, revealed by the flap swinging
+        // away, once opened. No separate hover rise — removed per explicit
+        // "remove the move hover effects" request.
+        const rise = phase === "open" ? 16 : 0;
         const y = sheet.top - rise;
 
         // Fan: rotation spread doubles on open — "documents fan out
-        // slightly before settling" — plus the top sheet gets an extra
-        // independent tilt on hover as a "click me" cue.
-        const rotate =
-          phase === "open"
-            ? sheet.rotate * 2
-            : phase === "hover" && isTopSheet
-            ? sheet.rotate + 5
-            : sheet.rotate;
+        // slightly before settling."
+        const rotate = phase === "open" ? sheet.rotate * 2 : sheet.rotate;
 
         if (reduceMotion) {
           // Still visible at rest (that's the whole point — the folder

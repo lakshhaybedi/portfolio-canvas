@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { motion, useReducedMotion, useAnimationControls, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useAnimationControls, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 import { CASE_STUDIES } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
@@ -16,6 +16,30 @@ import WindowManager from "@/components/windows/WindowManager";
 // Next's static-export prerender.
 const ParticleBackground = dynamic(() => import("@/components/hero/ParticleBackground"), { ssr: false });
 
+// Scroll-cue ring geometry. A CSS `border: dashed` can't control dash count
+// or weight directly (the browser picks both from the border-width), which
+// is why it read as a fussy ring of many thin dashes — an SVG circle with
+// an explicit stroke-dasharray gives exact control over both.
+const SCROLL_CUE_SIZE = 68;
+const SCROLL_CUE_STROKE = 2.5; // matches the arrow glyph's visual weight
+const SCROLL_CUE_RADIUS = SCROLL_CUE_SIZE / 2 - SCROLL_CUE_STROKE / 2;
+const SCROLL_CUE_CIRCUMFERENCE = 2 * Math.PI * SCROLL_CUE_RADIUS;
+const SCROLL_CUE_DASH_COUNT = 8;
+const SCROLL_CUE_PERIOD = SCROLL_CUE_CIRCUMFERENCE / SCROLL_CUE_DASH_COUNT;
+// Gap is a smaller share of each dash+gap period than dash — tighter
+// spacing between dashes than an even 50/50 split.
+const SCROLL_CUE_GAP_RATIO = 0.3;
+const SCROLL_CUE_GAP = SCROLL_CUE_PERIOD * SCROLL_CUE_GAP_RATIO;
+const SCROLL_CUE_DASH = SCROLL_CUE_PERIOD - SCROLL_CUE_GAP;
+const SCROLL_CUE_RING_OPACITY = 0.85;
+
+// Reuses the same hero images already established on each case-study page
+// (single source of truth in caseStudies.ts) rather than duplicating URLs
+// or introducing new placeholder assets just for this hover preview.
+function heroImageFor(slug: string) {
+  return CASE_STUDIES.find((c) => c.slug === slug)?.heroImage;
+}
+
 const PROJECTS = [
   {
     slug: "t-cloud",
@@ -25,6 +49,8 @@ const PROJECTS = [
     tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
     year: "2024",
     desc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
+    heroColor: "#E10074",
+    previewImage: heroImageFor("t-cloud"),
   },
   {
     slug: "standard-bank",
@@ -34,6 +60,12 @@ const PROJECTS = [
     tags: ["FinTech", "Mobile", "Multi-Market"],
     year: "2024",
     desc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
+    // Requested #0033A9 measures 1.78:1 against the row's hover background
+    // (var(--bg-elevated)) — fails even the 3:1 large-text minimum this
+    // title needs. Lightened ~30% toward white (same hue) to clear 3:1
+    // with a real margin (3.83:1) while staying close to the original navy.
+    heroColor: "#4C70C3",
+    previewImage: heroImageFor("standard-bank"),
   },
   {
     slug: "elevance-health",
@@ -43,6 +75,8 @@ const PROJECTS = [
     tags: ["Healthcare", "Web App", "Appointment Flow"],
     year: "2023",
     desc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
+    heroColor: "#3D82FF",
+    previewImage: heroImageFor("elevance-health"),
   },
 ];
 
@@ -50,11 +84,33 @@ export default function Portfolio() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [cursorLarge, setCursorLarge] = useState(false);
+  const [scrollCueHovered, setScrollCueHovered] = useState(false);
 
   const reduceMotion = useReducedMotion();
   const isFinePointer = useHasFinePointer();
   const marqueeControls = useAnimationControls();
   const reveal = revealVariant(!!reduceMotion);
+
+  // Project-preview image that follows the cursor while hovering a Work
+  // row. `useSpring(plainNumber, ...)` only seeds itself from that number's
+  // *first* render — it doesn't re-target on later renders, so binding it
+  // directly to `cursor.x`/`cursor.y` (React state) left the preview stuck
+  // at its very first position (0,0) instead of tracking the mouse. Real
+  // MotionValues don't have that problem: they propagate on every `.set()`
+  // regardless of React's render cycle, so the effect below pushes each
+  // `cursor` update into one explicitly, and the spring follows *that*.
+  const previewSpring = reduceMotion
+    ? { stiffness: 1000, damping: 100 }
+    : { stiffness: 260, damping: 26, mass: 0.4 };
+  const rawPreviewX = useMotionValue(0);
+  const rawPreviewY = useMotionValue(0);
+  const previewX = useSpring(rawPreviewX, previewSpring);
+  const previewY = useSpring(rawPreviewY, previewSpring);
+  useEffect(() => {
+    rawPreviewX.set(cursor.x);
+    rawPreviewY.set(cursor.y);
+  }, [cursor, rawPreviewX, rawPreviewY]);
+  const previewProject = hovered !== null ? PROJECTS[hovered] : null;
 
   // Scroll progress — thin bar fixed to the top of the viewport
   const { scrollYProgress } = useScroll();
@@ -112,6 +168,54 @@ export default function Portfolio() {
         />
       )}
 
+      {/* Project preview — follows the cursor while hovering a Work row;
+          which image it shows swaps with `hovered`. The outer AnimatePresence
+          only fires enter/exit for starting/stopping hover on the list as a
+          whole; the inner one crossfades just the image when moving directly
+          from one row to another, so the frame doesn't re-pop on every row
+          change. Fine-pointer only — there's no persistent hover to attach
+          to on touch. */}
+      <AnimatePresence>
+        {isFinePointer && previewProject && (
+          <motion.div
+            key="project-preview"
+            aria-hidden="true"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: reduceMotion ? 0 : 0.25, ease: easeOutExpo }}
+            style={{
+              position: "fixed", left: previewX, top: previewY,
+              // Right of the cursor (x offset), vertically centered on it
+              // (y: -50% shifts the box up by half its own height so its
+              // center — not its top edge — lines up with the cursor).
+              x: 28, y: "-50%",
+              width: 260, height: 170,
+              zIndex: 500, pointerEvents: "none",
+              borderRadius: 12, overflow: "hidden",
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-strong)",
+              boxShadow: "0 30px 70px rgba(0,0,0,0.55)",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {previewProject.previewImage && (
+                <motion.img
+                  key={previewProject.slug}
+                  src={previewProject.previewImage}
+                  alt=""
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.2 }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Scroll progress ── */}
       <motion.div
         aria-hidden="true"
@@ -168,7 +272,7 @@ export default function Portfolio() {
         display: "flex", flexDirection: "column", justifyContent: "flex-end",
         padding: "0 48px 52px", overflow: "hidden",
       }}>
-        <HeroContent scrollYProgress={heroProgress} reduceMotion={reduceMotion} setLarge={setLarge} />
+        <HeroContent scrollYProgress={heroProgress} reduceMotion={reduceMotion} />
 
         <motion.div
           className="hero-scroll-cue"
@@ -177,13 +281,91 @@ export default function Portfolio() {
           transition={{ duration: 1, delay: 1.1 }}
           style={{
             position: "absolute", bottom: 52, left: "50%", transform: "translateX(-50%)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)",
             zIndex: 1,
           }}
         >
-          <span style={{ animation: reduceMotion ? "none" : "bounce 1.6s ease-in-out infinite", display: "block" }}>↓</span>
-          Scroll
+          <Link
+            href="#work"
+            aria-label="Scroll to projects"
+            onMouseEnter={() => { setScrollCueHovered(true); setLarge(true); }}
+            onMouseLeave={() => { setScrollCueHovered(false); setLarge(false); }}
+            style={{
+              position: "relative",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: SCROLL_CUE_SIZE, height: SCROLL_CUE_SIZE,
+              textDecoration: "none",
+              cursor: isFinePointer ? "none" : "pointer",
+            }}
+          >
+            {/* Solid fill — the resting state. Fades out on hover as the
+                dashed ring below fades in, so the circle reads as
+                "transforming" from filled to an outlined ring rather than
+                two unrelated elements swapping. */}
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute", inset: 0,
+                borderRadius: "50%",
+                background: "var(--fg)",
+                opacity: scrollCueHovered ? 0 : 1,
+                transition: "opacity 0.3s ease",
+              }}
+            />
+            {/* Dashed ring — an SVG stroke, not a CSS border: a border's
+                dash count/weight aren't controllable and rendered as a lot
+                of thin dashes. This gives 8 dashes as bold as the arrow
+                glyph. Always slowly rotating (imperceptibly, since it's
+                invisible at rest) so the instant it's revealed on hover it
+                already reads as spinning rather than starting from a
+                static pose.
+                Opacity lives on this plain wrapping span, not on the
+                motion.svg itself — a motion element with an active
+                `animate` prop takes direct imperative control of its own
+                style, so a plain conditional value in its `style` (like
+                this hover-driven opacity) goes stale instead of updating
+                on every render. Isolating it here keeps the toggle on
+                normal React/CSS, which updates reliably. */}
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute", inset: 0,
+                opacity: scrollCueHovered ? SCROLL_CUE_RING_OPACITY : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              <motion.svg
+                width={SCROLL_CUE_SIZE}
+                height={SCROLL_CUE_SIZE}
+                viewBox={`0 0 ${SCROLL_CUE_SIZE} ${SCROLL_CUE_SIZE}`}
+                animate={reduceMotion ? undefined : { rotate: 360 }}
+                transition={reduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: "linear" }}
+                style={{ display: "block" }}
+              >
+                <circle
+                  cx={SCROLL_CUE_SIZE / 2}
+                  cy={SCROLL_CUE_SIZE / 2}
+                  r={SCROLL_CUE_RADIUS}
+                  fill="none"
+                  stroke="var(--fg)"
+                  strokeWidth={SCROLL_CUE_STROKE}
+                  strokeDasharray={`${SCROLL_CUE_DASH} ${SCROLL_CUE_GAP}`}
+                />
+              </motion.svg>
+            </span>
+            <span
+              aria-hidden="true"
+              style={{
+                position: "relative", zIndex: 1,
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: scrollCueHovered ? "var(--fg)" : "var(--fg-invert)",
+                transition: "color 0.3s ease",
+              }}
+            >
+              <span style={{ fontSize: 14, animation: reduceMotion ? "none" : "bounce 1.6s ease-in-out infinite", display: "block" }}>↓</span>
+              Scroll
+            </span>
+          </Link>
         </motion.div>
       </section>
 
@@ -233,7 +415,15 @@ export default function Portfolio() {
           </span>
         </motion.div>
 
-        <div style={{ borderTop: "1px solid var(--border)" }}>
+        {/* A standalone line, not a wrapping border: this needs the same
+            -24px bleed as each row's own margin (below) to span the same
+            width, but if it were a `borderTop` on the div that *wraps* the
+            rows, its own -24px margin would compound with each row's
+            already-independent -24px margin (each relative to its own
+            parent's box) — doubling the bleed to the full viewport width
+            instead of matching it. Keeping it a sibling avoids that. */}
+        <div style={{ height: 1, background: "var(--border)", margin: "0 -24px" }} />
+        <div>
           {PROJECTS.map((p, i) => {
             const isOpen = hovered === i;
             return (
@@ -254,6 +444,14 @@ export default function Portfolio() {
                     background: isOpen ? "var(--bg-elevated)" : "transparent",
                     transition: "background 0.5s cubic-bezier(0.16,1,0.3,1)",
                     cursor: isFinePointer ? "none" : "pointer",
+                    // Negative margin + matching padding: the hover
+                    // highlight bleeds 24px wider than the text column on
+                    // each side, so the highlighted row has real breathing
+                    // room around its own content instead of the text
+                    // touching the highlight's edges — content's on-screen
+                    // position is unchanged (margin and padding cancel out).
+                    margin: "0 -24px",
+                    padding: "0 24px",
                   }}
                 >
                   <div
@@ -277,7 +475,7 @@ export default function Portfolio() {
                         fontSize: "clamp(26px, 3.5vw, 54px)",
                         fontWeight: 700, letterSpacing: "-0.02em", textTransform: "uppercase",
                         lineHeight: 1, marginBottom: 5,
-                        color: isOpen ? "#EDEAD4" : "rgba(237,234,212,0.9)",
+                        color: isOpen ? p.heroColor : "rgba(237,234,212,0.9)",
                         transition: "color 0.4s ease",
                       }}>
                         {p.title}
@@ -338,7 +536,7 @@ export default function Portfolio() {
 
                   {/* Expandable description */}
                   <div className="work-row-desc" style={{
-                    maxHeight: isOpen ? 140 : 0,
+                    maxHeight: isOpen ? 200 : 0,
                     overflow: "hidden",
                     transition: "max-height 0.55s cubic-bezier(0.16,1,0.3,1)",
                     paddingLeft: 84,
@@ -346,7 +544,7 @@ export default function Portfolio() {
                     <p style={{
                       fontSize: 14, fontWeight: 300, lineHeight: 1.7,
                       color: "rgba(237,234,212,0.72)",
-                      paddingTop: 16, paddingRight: 120,
+                      paddingTop: 16, paddingRight: 120, paddingBottom: 28,
                     }}>
                       {p.desc}
                     </p>

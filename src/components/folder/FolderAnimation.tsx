@@ -16,8 +16,10 @@ const FLAP_SPRING = { type: "spring" as const, stiffness: 300, damping: 26 };
  * Pure visual folder graphic — closed/open cover-flap animation, the
  * document-stack peeking out, and the palette that makes the whole thing
  * read as an object sitting in front of the page rather than part of it.
- * No position, drag, or page-level state lives here; the parent
- * (PortfolioFolder) owns idle bob, mouse-tilt, and open/closed/focus state.
+ * No position or page-level state lives here; the parent (PortfolioFolder)
+ * owns idle bob and open/closed/focus state. Hover/focus only brighten the
+ * border and shadow below — no hover-triggered movement (flap peek, papers
+ * rising) on purpose, per explicit "remove the move hover effects" request.
  */
 export default function FolderAnimation({
   isOpen,
@@ -28,8 +30,8 @@ export default function FolderAnimation({
   isHovered: boolean;
   reduceMotion: boolean;
 }) {
-  const flapOpenDeg = reduceMotion ? (isOpen ? 38 : 0) : isOpen ? 38 : isHovered ? 2 : 0;
-  const phase: "idle" | "hover" | "open" = isOpen ? "open" : isHovered ? "hover" : "idle";
+  const flapOpenDeg = isOpen ? 38 : 0;
+  const phase: "idle" | "open" = isOpen ? "open" : "idle";
   const active = isOpen || isHovered;
   const border = active ? FOLDER_BORDER_HOVER : FOLDER_BORDER;
 

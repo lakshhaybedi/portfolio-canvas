@@ -43,7 +43,7 @@ export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) 
           padding: "4px 10px 8px",
         }}
       >
-        Portfolio
+        My Documents
       </div>
       <motion.div
         variants={staggerContainer(0.05)}
