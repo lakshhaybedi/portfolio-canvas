@@ -10,6 +10,23 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const CLAMP = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+// Shift-constrain a drag box to a square, anchored at the original
+// mousedown point (ox,oy) and growing toward wherever the cursor (cx,cy)
+// currently is — used both while drawing a new rect/ellipse/frame and
+// while resizing one from a corner handle, so shift behaves identically
+// in both cases (matches Figma: the fixed corner never moves, only the
+// opposite one follows the larger of the two axis deltas).
+function squareConstrain(ox, oy, cx, cy, shiftKey) {
+  const w = Math.abs(cx - ox), h = Math.abs(cy - oy);
+  if (!shiftKey) {
+    return { x: Math.min(ox, cx), y: Math.min(oy, cy), w, h };
+  }
+  const size = Math.max(w, h);
+  const x = cx >= ox ? ox : ox - size;
+  const y = cy >= oy ? oy : oy - size;
+  return { x, y, w: size, h: size };
+}
+
 // Per-unit-deltaY multiplier for ctrl/pinch zoom. Went through two passes:
 // the original (0.998, ~21%/120px notch) was reported too slow, a first
 // retune toward a documented Figma rate (0.99912, ~10%/notch) was then
@@ -106,6 +123,25 @@ export default function Canvas({ pageId }) {
     }
   }, []);
 
+  // Wheel events (especially trackpad pinch/pan) can fire dozens of times
+  // per frame — calling applyTransform() directly from every one of them
+  // was the actual cause of zoom feeling "laggy/stuttery," not the zoom
+  // math itself. transformRef.current still updates synchronously on every
+  // event (cheap, no DOM touch); the expensive part — writing style.
+  // transform and, worse, recomputing the grid's background-size/position
+  // (a repaint, not just a composite) — now happens at most once per
+  // animation frame, coalescing however many wheel events arrived since.
+  const rafRef = useRef(null);
+  const scheduleApply = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      applyTransform();
+    });
+  }, [applyTransform]);
+
+  useEffect(() => () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); }, []);
+
   // ── Tool state ─────────────────────────────────────────────
   const [activeTool,  setActiveTool]  = useState("select");
   // New shapes start unfilled with a red outline — a deliberate "unstyled
@@ -114,6 +150,8 @@ export default function Canvas({ pageId }) {
   const [fillColor,   setFillColor]   = useState("transparent");
   const [strokeColor, setStrokeColor] = useState("#FF3B30");
   const [strokeWidth, setStrokeWidth] = useState(1);
+  const [fontSize,    setFontSize]    = useState(14);
+  const [fontColor,   setFontColor]   = useState("#EDEAD4");
   const [drawPreview, setDrawPreview] = useState(null);
   const drawStartRef = useRef(null);
 
@@ -146,6 +184,8 @@ export default function Canvas({ pageId }) {
     if (el.fill   !== undefined) setFillColor(el.fill);
     if (el.stroke !== undefined) setStrokeColor(el.stroke);
     if (el.strokeWidth !== undefined) setStrokeWidth(el.strokeWidth);
+    if (el.fontSize !== undefined) setFontSize(el.fontSize);
+    if (el.color !== undefined) setFontColor(el.color);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]); // only on selection change, not on every element update
 
@@ -171,6 +211,20 @@ export default function Canvas({ pageId }) {
     if (!selectedId) return;
     if (isSessionElement(selectedId)) updateGuestElement(selectedId, { strokeWidth: w });
     else if (isAdmin) updateElementStyle(pageId, selectedId, { strokeWidth: w });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+
+  const handleFontSizeChange = useCallback((size) => {
+    setFontSize(size);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) updateGuestElement(selectedId, { fontSize: size });
+    else if (isAdmin) updateElementStyle(pageId, selectedId, { fontSize: size });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+
+  const handleFontColorChange = useCallback((color) => {
+    setFontColor(color);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) updateGuestElement(selectedId, { color });
+    else if (isAdmin) updateElementStyle(pageId, selectedId, { color });
   }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
 
   // ── Keyboard ──────────────────────────────────────────────
@@ -235,8 +289,8 @@ export default function Canvas({ pageId }) {
       // two-finger pan
       transformRef.current = { ...t, x: t.x - e.deltaX, y: t.y - e.deltaY };
     }
-    applyTransform();
-  }, [applyTransform]);
+    scheduleApply();
+  }, [scheduleApply]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -256,7 +310,7 @@ export default function Canvas({ pageId }) {
       const startY = e.clientY - transformRef.current.y;
       const onMove = (ev) => {
         transformRef.current = { ...transformRef.current, x: ev.clientX - startX, y: ev.clientY - startY };
-        applyTransform();
+        scheduleApply();
       };
       const onUp = () => {
         isPanRef.current = false;
@@ -283,13 +337,17 @@ export default function Canvas({ pageId }) {
     const onMove = (ev) => {
       const { cx, cy } = screenToCanvas(ev.clientX, ev.clientY);
       const { sx: ox, sy: oy } = drawStartRef.current;
-      const x = Math.min(ox, cx), y = Math.min(oy, cy);
-      const w = Math.abs(cx - ox), h = Math.abs(cy - oy);
       if (activeTool === "arrow") {
         setDrawPreview({ type: "arrow", x: Math.min(ox, cx), y: Math.min(oy, cy), w: Math.abs(cx - ox), h: Math.abs(cy - oy), x1: ox, y1: oy, x2: cx, y2: cy, stroke: strokeColor, strokeWidth });
       } else if (activeTool === "text") {
+        const x = Math.min(ox, cx), y = Math.min(oy, cy);
+        const w = Math.abs(cx - ox), h = Math.abs(cy - oy);
         setDrawPreview({ type: "text-preview", x, y, w: Math.max(40, w), h: Math.max(20, h) });
       } else {
+        // Shift constrains rect/ellipse/frame to a square/circle while
+        // drawing — not just when resizing afterward. Anchored at the
+        // original mousedown point, growing toward wherever the cursor is.
+        const { x, y, w, h } = squareConstrain(ox, oy, cx, cy, ev.shiftKey);
         setDrawPreview({ type: activeTool, x, y, w: Math.max(2, w), h: Math.max(2, h), fill: fillColor, stroke: strokeColor, strokeWidth });
       }
     };
@@ -300,26 +358,28 @@ export default function Canvas({ pageId }) {
       const { sx: ox, sy: oy } = drawStartRef.current;
       const dx = Math.abs(ex - ox), dy = Math.abs(ey - oy);
       if (dx > 4 || dy > 4) {
-        const x = Math.min(ox, ex), y = Math.min(oy, ey);
-        const w = Math.max(20, Math.abs(ex - ox)), h = Math.max(20, Math.abs(ey - oy));
+        const squarable = activeTool !== "arrow" && activeTool !== "text";
+        const box = squarable ? squareConstrain(ox, oy, ex, ey, ev.shiftKey) : { x: Math.min(ox, ex), y: Math.min(oy, ey), w: Math.abs(ex - ox), h: Math.abs(ey - oy) };
+        const x = box.x, y = box.y;
+        const w = Math.max(20, box.w), h = Math.max(20, box.h);
         if (activeTool === "arrow") {
           commit({ type: "arrow", x, y, w, h, x1: ox, y1: oy, x2: ex, y2: ey, stroke: strokeColor, strokeWidth });
         } else if (activeTool === "text") {
-          commit({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: "#EDEAD4", fontSize: 14 });
+          commit({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: fontColor, fontSize });
         } else if (activeTool === "frame") {
           commit({ type: "frame", label: "Frame", x, y, w, h, stroke: strokeColor, strokeWidth });
         } else {
           commit({ type: activeTool, x, y, w, h, fill: fillColor, stroke: strokeColor, strokeWidth });
         }
       } else if (activeTool === "text") {
-        commit({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: "#EDEAD4", fontSize: 14 });
+        commit({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: fontColor, fontSize });
       }
       setDrawPreview(null);
       drawStartRef.current = null;
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, pageId, addElementStore, addGuestElement, applyTransform, screenToCanvas]);
+  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, fontColor, fontSize, pageId, addElementStore, addGuestElement, scheduleApply, screenToCanvas]);
 
   // ── Drop image — admin only; guest image uploads would sit as
   // multi-MB base64 strings in memory with no cleanup story, unlike the
@@ -347,6 +407,12 @@ export default function Canvas({ pageId }) {
     });
     e.target.value = "";
   }, [pageId, addElementStore]);
+
+  // Font controls only make sense for text — shown while the text tool is
+  // active (styling whatever gets drawn next) or while a text element is
+  // selected (styling that element), not for rect/ellipse/arrow/frame.
+  const selectedElement = selectedId ? elements.find((e) => e.id === selectedId) : null;
+  const showTextControls = activeTool === "text" || selectedElement?.type === "text";
 
   return (
     <TransformContext.Provider value={transformRef}>
@@ -443,6 +509,9 @@ export default function Canvas({ pageId }) {
             fillColor={fillColor}     onFillChange={handleFillChange}
             strokeColor={strokeColor} onStrokeChange={handleStrokeChange}
             strokeWidth={strokeWidth} onStrokeWidthChange={handleStrokeWidthChange}
+            fontSize={fontSize}   onFontSizeChange={handleFontSizeChange}
+            fontColor={fontColor} onFontColorChange={handleFontColorChange}
+            showTextControls={showTextControls}
             hasSelection={!!selectedId}
             isAdmin={isAdmin}
           />

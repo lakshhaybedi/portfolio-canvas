@@ -32,10 +32,13 @@ export default function CanvasToolbar({
   fillColor,   onFillChange,
   strokeColor, onStrokeChange,
   strokeWidth, onStrokeWidthChange,
+  fontSize,    onFontSizeChange,
+  fontColor,   onFontColorChange,
+  showTextControls,
   hasSelection,
   isAdmin,
 }) {
-  const [picker, setPicker]   = useState(null); // "fill" | "stroke" | null
+  const [picker, setPicker]   = useState(null); // "fill" | "stroke" | "font" | null
   const [shapeMenuOpen, setShapeMenuOpen] = useState(false);
   // Which shape the combined Rectangle/Ellipse slot shows and activates on a
   // plain click — Figma-style: the group remembers whichever variant you
@@ -192,6 +195,65 @@ export default function CanvasToolbar({
           </button>
         ))}
       </div>
+
+      {showTextControls && (
+        <>
+          <Divider />
+          {/* Font size — a plain editable number, like Figma's own field,
+              not a fixed preset list; text can reasonably be any size. */}
+          <div style={{
+            width: 44, height: SLOT, boxSizing: "border-box",
+            display: "flex", alignItems: "center",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 6, overflow: "hidden", flexShrink: 0,
+          }}>
+            <input
+              type="number"
+              min={1}
+              max={400}
+              value={fontSize}
+              aria-label="Font size"
+              title="Font size"
+              onChange={e => {
+                const n = Math.max(1, Math.min(400, Math.round(Number(e.target.value)) || 1));
+                onFontSizeChange(n);
+              }}
+              style={{
+                width: 0, flex: 1, minWidth: 0, background: "transparent", border: "none",
+                color: "#EDEAD4", fontSize: 11, padding: "4px 2px 4px 8px",
+                outline: "none", fontFamily: "'Space Grotesk',sans-serif",
+              }}
+            />
+            <span style={{ fontSize: 9, color: "rgba(237,234,212,0.4)", padding: "0 6px 0 1px" }}>px</span>
+          </div>
+
+          {/* Font colour */}
+          <div style={{ position: "relative" }}>
+            <button
+              title={hasSelection ? "Font colour (edits selection)" : "Font colour"}
+              aria-label={hasSelection ? "Font colour (edits selection)" : "Font colour"}
+              aria-expanded={picker === "font"}
+              onClick={() => togglePicker("font")}
+              style={{
+                width: SLOT - 4, height: SLOT - 4, boxSizing: "border-box",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "transparent",
+                border: picker === "font" ? "2px solid #7C6AF7" : "2px solid rgba(255,255,255,0.18)",
+                borderRadius: 5, cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: fontColor, fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1 }}>A</span>
+            </button>
+            {picker === "font" && (
+              <PickerPopover>
+                <ColorPicker color={fontColor} onChange={onFontColorChange} onClose={() => setPicker(null)} />
+              </PickerPopover>
+            )}
+          </div>
+        </>
+      )}
 
       {!isAdmin && (
         <>

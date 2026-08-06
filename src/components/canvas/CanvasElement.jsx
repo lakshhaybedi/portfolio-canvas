@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useRef } from "react";
 import { TransformContext } from "./Canvas";
 
 const HANDLE = 10;
@@ -18,15 +18,22 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   const transformRef = useContext(TransformContext);
 
   // ── Drag ──────────────────────────────────────────────────
+  // onInteractionStart fires on the *first actual pointermove*, not at
+  // pointerdown — a plain click-to-select is a pointerdown+pointerup with
+  // no movement in between, and snapshotting there would push a no-op
+  // entry onto undo history. A user who clicks a few things then makes one
+  // real edit would then need several Cmd+Z presses before anything
+  // visibly changes, which reads as "undo doesn't work."
   const onPointerDownMove = useCallback((e) => {
     if (!editable) return;
     e.stopPropagation();
     onSelect(el.id);
-    onInteractionStart?.();
     const startX = e.clientX, startY = e.clientY;
     const origX = el.x, origY = el.y;
+    let snapshotted = false;
 
     const onMove = (ev) => {
+      if (!snapshotted) { snapshotted = true; onInteractionStart?.(); }
       const s = transformRef.current.scale;
       onUpdate({
         x: origX + (ev.clientX - startX) / s,
@@ -44,11 +51,12 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   // ── Resize ────────────────────────────────────────────────
   const onPointerDownResize = useCallback((e) => {
     e.stopPropagation();
-    onInteractionStart?.();
     const startX = e.clientX, startY = e.clientY;
     const origW = el.w, origH = el.h;
+    let snapshotted = false;
 
     const onMove = (ev) => {
+      if (!snapshotted) { snapshotted = true; onInteractionStart?.(); }
       const s = transformRef.current.scale;
       let newW = origW + (ev.clientX - startX) / s;
       let newH = origH + (ev.clientY - startY) / s;
@@ -73,11 +81,12 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   // ── Rotate ────────────────────────────────────────────────
   const onPointerDownRotate = useCallback((e) => {
     e.stopPropagation();
-    onInteractionStart?.();
     const cx = el.x + el.w / 2;
     const cy = el.y + el.h / 2;
+    let snapshotted = false;
 
     const onMove = (ev) => {
+      if (!snapshotted) { snapshotted = true; onInteractionStart?.(); }
       const s = transformRef.current.scale;
       const { x: tx, y: ty } = transformRef.current;
       const angle =
@@ -97,6 +106,12 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     if (!editable) { if (el.type === "image") onEnlarge(el); }
     else onSelect(el.id);
   };
+
+  // Same lazy-snapshot idea as the drag/resize/rotate handlers above —
+  // focusing the textarea to look at it (then clicking away without typing)
+  // shouldn't create an undo checkpoint. Snapshot on the first keystroke of
+  // an edit session instead, reset on blur so the next session gets its own.
+  const textEditStartedRef = useRef(false);
 
   return (
     <div
@@ -140,8 +155,11 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
           {editable ? (
             <textarea
               value={el.text ?? ""}
-              onChange={(e) => onUpdate({ text: e.target.value })}
-              onFocus={() => onInteractionStart?.()}
+              onChange={(e) => {
+                if (!textEditStartedRef.current) { textEditStartedRef.current = true; onInteractionStart?.(); }
+                onUpdate({ text: e.target.value });
+              }}
+              onBlur={() => { textEditStartedRef.current = false; }}
               onPointerDown={(e) => e.stopPropagation()}
               style={{
                 width: "100%", height: "100%", background: "transparent",
@@ -264,38 +282,85 @@ function ArrowElement({ el }) {
   );
 }
 
+// Reorders which element draws on top when shapes overlap (the same idea
+// as Figma's "Bring forward"/"Send backward") and deletes the selected
+// element. Real functionality, worth keeping — but bare ↑/↓ glyphs with
+// only a hover tooltip weren't self-explanatory, so this spells it out
+// with icon + label instead of relying on hover-to-discover.
 function FloatingToolbar({ onBringForward, onSendBackward, onDelete }) {
   return (
     <div
       onPointerDown={(e) => e.stopPropagation()}
       style={{
         position: "absolute", top: -36, left: 0,
-        display: "flex", gap: 4,
+        display: "flex", alignItems: "center", gap: 2,
         background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 6, padding: "3px 5px", whiteSpace: "nowrap",
+        borderRadius: 7, padding: 3, whiteSpace: "nowrap",
         zIndex: 20,
       }}
     >
       {[
-        ["↑", onBringForward, "Bring forward"],
-        ["↓", onSendBackward, "Send backward"],
-        ["✕", onDelete,       "Delete"],
-      ].map(([label, fn, title]) => (
+        { icon: <LayerForwardIcon />, label: "Forward", title: "Bring forward — move above overlapping shapes", fn: onBringForward },
+        { icon: <LayerBackwardIcon />, label: "Backward", title: "Send backward — move below overlapping shapes", fn: onSendBackward },
+      ].map(({ icon, label, title, fn }) => (
         <button
-          key={title}
+          key={label}
           onClick={(e) => { e.stopPropagation(); fn(); }}
           title={title}
+          aria-label={title}
           style={{
+            display: "flex", alignItems: "center", gap: 5,
             background: "transparent", border: "none", color: "#EDEAD4",
-            cursor: "pointer", fontSize: 12, padding: "2px 5px",
-            borderRadius: 4, opacity: 0.7,
+            cursor: "pointer", fontSize: 11, fontFamily: "'Space Grotesk',sans-serif",
+            padding: "4px 7px", borderRadius: 5, opacity: 0.75,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.background = "transparent"; }}
         >
+          {icon}
           {label}
         </button>
       ))}
+      <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.1)", margin: "0 2px" }} />
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        title="Delete"
+        aria-label="Delete"
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: 24, height: 24,
+          background: "transparent", border: "none", color: "#EDEAD4",
+          cursor: "pointer", borderRadius: 5, opacity: 0.75,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(255,59,48,0.18)"; e.currentTarget.style.color = "#FF3B30"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#EDEAD4"; }}
+      >
+        <TrashIcon />
+      </button>
     </div>
+  );
+}
+
+function LayerForwardIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <rect x="2" y="4" width="8" height="8" rx="1" fill="rgba(237,234,212,0.3)" />
+      <rect x="4" y="2" width="8" height="8" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+function LayerBackwardIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <rect x="4" y="2" width="8" height="8" rx="1" fill="rgba(237,234,212,0.3)" />
+      <rect x="2" y="4" width="8" height="8" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+      <path d="M2.5 3.5h9M5.5 3.5V2h3v1.5M3.5 3.5l.5 8.5h6l.5-8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
