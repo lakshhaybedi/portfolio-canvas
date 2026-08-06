@@ -155,6 +155,10 @@ export default function PortfolioFolder() {
     });
   }, []);
 
+  // Rotation lives on the inner layer (with the cursor tilt), not here —
+  // FolderContents is a sibling of that inner layer, not a child of it, so
+  // the document list panel stays level and readable while the folder
+  // graphic itself tilts.
   const outerPose = reduceMotion
     ? undefined
     : phase === "idle"
@@ -162,6 +166,8 @@ export default function PortfolioFolder() {
     : phase === "hover"
     ? { y: -3, scale: 1.03, rotate: 0 }
     : { y: -4, scale: 1.02, rotate: 0 }; // opening / open / closing
+
+  const innerRotate = phase === "opening" || phase === "open" ? -25 : 0;
 
   const outerTransition = reduceMotion
     ? undefined
@@ -213,10 +219,11 @@ export default function PortfolioFolder() {
           userSelect: "none",
         }}
       >
-        {/* Inner layer: cursor-tracked tilt only, fully decoupled from the
-            outer pose above. */}
+        {/* Inner layer: cursor-tracked tilt plus the open-state left tilt,
+            fully decoupled from the outer pose above. FolderContents is
+            deliberately outside this layer (see outerPose comment). */}
         <motion.div
-          animate={reduceMotion ? undefined : { rotateX: tilt.x, rotateY: tilt.y }}
+          animate={reduceMotion ? undefined : { rotateX: tilt.x, rotateY: tilt.y, rotate: innerRotate }}
           transition={reduceMotion ? undefined : SPRING_HOVER}
           style={{
             display: "flex",
