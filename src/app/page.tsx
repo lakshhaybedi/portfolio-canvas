@@ -722,19 +722,51 @@ export default function Portfolio() {
           transition={{ delay: 0.1 }}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px 24px" }}
         >
-          <motion.a
-            href="mailto:lakshhay@example.com"
-            onMouseEnter={() => setLarge(true)}
-            onMouseLeave={() => setLarge(false)}
-            whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
-            style={{
-              fontSize: 20, fontWeight: 400, color: "var(--muted)",
-              textDecoration: "none",
-              borderBottom: "1px solid var(--border)", paddingBottom: 2,
-            }}
-          >
-            lakshhay@example.com
-          </motion.a>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 28px" }}>
+            <motion.a
+              href="mailto:lakshhaybedi@gmail.com"
+              onMouseEnter={() => setLarge(true)}
+              onMouseLeave={() => setLarge(false)}
+              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
+              style={{
+                fontSize: 20, fontWeight: 400, color: "var(--muted)",
+                textDecoration: "none",
+                borderBottom: "1px solid var(--border)", paddingBottom: 2,
+              }}
+            >
+              lakshhaybedi@gmail.com
+            </motion.a>
+            <motion.a
+              href="https://www.linkedin.com/in/lakshhaybedi/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onMouseEnter={() => setLarge(true)}
+              onMouseLeave={() => setLarge(false)}
+              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
+              style={{
+                fontSize: 14, fontWeight: 500, color: "var(--muted)",
+                textDecoration: "none", letterSpacing: "0.04em",
+                borderBottom: "1px solid var(--border)", paddingBottom: 2,
+              }}
+            >
+              LinkedIn
+            </motion.a>
+            <motion.a
+              href="https://www.behance.net/lakshhaybedi/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onMouseEnter={() => setLarge(true)}
+              onMouseLeave={() => setLarge(false)}
+              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
+              style={{
+                fontSize: 14, fontWeight: 500, color: "var(--muted)",
+                textDecoration: "none", letterSpacing: "0.04em",
+                borderBottom: "1px solid var(--border)", paddingBottom: 2,
+              }}
+            >
+              Behance
+            </motion.a>
+          </div>
           <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             © 2024 Lakshhay Bedi
           </span>

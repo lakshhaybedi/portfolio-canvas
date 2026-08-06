@@ -603,6 +603,29 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               background: resizing ? accent : "var(--border)",
               transition: resizing ? "none" : "background 0.2s",
             }} />
+            {/* Resize affordance — sticky (not absolute) so it tracks
+                roughly the middle of the viewport as the reader scrolls,
+                rather than sitting once at the vertical midpoint of a page
+                that can run several thousand pixels tall and never be seen. */}
+            <div style={{ position: "sticky", top: "calc(50vh - 18px)", height: 0 }}>
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute", left: "50%", top: 0,
+                  transform: "translateX(-50%)",
+                  width: 18, height: 36, borderRadius: 9,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: resizing ? accent : "var(--bg-elevated)",
+                  border: `1px solid ${resizing ? accent : "var(--border)"}`,
+                  transition: resizing ? "none" : "background 0.2s, border-color 0.2s",
+                }}
+              >
+                <svg width="8" height="16" viewBox="0 0 8 16" fill="none">
+                  <rect x="0" y="0" width="2" height="16" rx="1" fill={resizing ? badgeOnAccent : "var(--muted)"} />
+                  <rect x="6" y="0" width="2" height="16" rx="1" fill={resizing ? badgeOnAccent : "var(--muted)"} />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* RIGHT: sticky screens panel — a fixed, scroll-locked carousel
