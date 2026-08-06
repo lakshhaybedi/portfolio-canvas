@@ -10,12 +10,15 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const CLAMP = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// Per-unit-deltaY multiplier for ctrl/pinch zoom, tuned to Figma's actual
-// zoom curve — about a 10% scale change per ~120px of wheel deltaY (one
-// notch on most mice). The previous constant (0.998) worked out to roughly
-// 21%/notch, more than double Figma's rate, which is what made the zoom
-// feel noticeably twitchier/faster than Figma's.
-const ZOOM_WHEEL_FACTOR = 0.99912;
+// Per-unit-deltaY multiplier for ctrl/pinch zoom. Went through two passes:
+// the original (0.998, ~21%/120px notch) was reported too slow, a first
+// retune toward a documented Figma rate (0.99912, ~10%/notch) was then
+// reported *still* too slow — so actual deltaY magnitudes on real trackpads
+// clearly run smaller than the ~120px/notch this was calibrated against.
+// This pass prioritizes a decisive, clearly-perceptible jump (~55%/120px)
+// over precise calibration against an assumption that was already twice
+// wrong; easy to retune again if this overshoots.
+const ZOOM_WHEEL_FACTOR = 0.985;
 
 // Guest-drawn elements always render above the published page, regardless
 // of the published elements' own z values — they're an annotation layer on
@@ -35,6 +38,7 @@ export default function Canvas({ pageId }) {
   const updateElementStyle   = useCanvasStore((s) => s.updateElementStyle);
   const bringForwardStore    = useCanvasStore((s) => s.bringForward);
   const sendBackwardStore    = useCanvasStore((s) => s.sendBackward);
+  const snapshotStore        = useCanvasStore((s) => s._snapshot);
   const undo                 = useCanvasStore((s) => s.undo);
   const redo                 = useCanvasStore((s) => s.redo);
 
@@ -104,8 +108,11 @@ export default function Canvas({ pageId }) {
 
   // ── Tool state ─────────────────────────────────────────────
   const [activeTool,  setActiveTool]  = useState("select");
-  const [fillColor,   setFillColor]   = useState("rgba(124,106,247,0.15)");
-  const [strokeColor, setStrokeColor] = useState("#7C6AF7");
+  // New shapes start unfilled with a red outline — a deliberate "unstyled
+  // placeholder" look, distinct from the purple used for the app's own UI
+  // chrome/selection state elsewhere.
+  const [fillColor,   setFillColor]   = useState("transparent");
+  const [strokeColor, setStrokeColor] = useState("#FF3B30");
   const [strokeWidth, setStrokeWidth] = useState(1);
   const [drawPreview, setDrawPreview] = useState(null);
   const drawStartRef = useRef(null);
@@ -393,6 +400,15 @@ export default function Canvas({ pageId }) {
                     onDelete={() => (isSession ? deleteGuestElement(el.id) : deleteElementStore(pageId, el.id))}
                     onBringForward={() => (isSession ? bringForwardGuest(el.id) : bringForwardStore(pageId, el.id))}
                     onSendBackward={() => (isSession ? sendBackwardGuest(el.id) : sendBackwardStore(pageId, el.id))}
+                    // One snapshot per drag/resize/rotate/text-edit *gesture*
+                    // (fired once at pointerdown/focus), not per pointermove
+                    // or keystroke — updateElement itself never snapshots
+                    // (it's called continuously mid-drag), so without this,
+                    // Cmd+Z had nothing to revert to for moves/resizes/
+                    // rotates/text edits, only for style changes and
+                    // create/delete/reorder. Session-only guest elements
+                    // still have no undo, matching the earlier design.
+                    onInteractionStart={isSession ? undefined : snapshotStore}
                   />
                 );
               })}

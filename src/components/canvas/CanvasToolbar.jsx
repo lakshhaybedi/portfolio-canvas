@@ -118,7 +118,8 @@ export default function CanvasToolbar({
           aria-expanded={picker === "fill"}
           onClick={() => togglePicker("fill")}
           style={{
-            width: SLOT - 4, height: SLOT - 4,
+            width: SLOT - 4, height: SLOT - 4, boxSizing: "border-box",
+            display: "flex",
             ...swatchStyle(fillColor),
             border: picker === "fill"
               ? "2px solid #7C6AF7"
@@ -144,7 +145,7 @@ export default function CanvasToolbar({
           aria-expanded={picker === "stroke"}
           onClick={() => togglePicker("stroke")}
           style={{
-            width: SLOT - 4, height: SLOT - 4,
+            width: SLOT - 4, height: SLOT - 4, boxSizing: "border-box",
             background: "transparent",
             border: picker === "stroke"
               ? `3px solid #7C6AF7`
@@ -175,7 +176,7 @@ export default function CanvasToolbar({
             aria-pressed={strokeWidth === w}
             onClick={() => onStrokeWidthChange(w)}
             style={{
-              width: SLOT - 8, height: SLOT,
+              width: SLOT - 8, height: SLOT, boxSizing: "border-box",
               background: strokeWidth === w ? "rgba(124,106,247,0.25)" : "transparent",
               border: strokeWidth === w ? "1px solid rgba(124,106,247,0.5)" : "1px solid transparent",
               borderRadius: 5, cursor: "pointer",

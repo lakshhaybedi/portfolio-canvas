@@ -14,7 +14,7 @@ const HANDLE = 10;
  * state (a guest editing something they drew this session), so this
  * component doesn't need to know or care which.
  */
-export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward }) {
+export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart }) {
   const transformRef = useContext(TransformContext);
 
   // ── Drag ──────────────────────────────────────────────────
@@ -22,6 +22,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     if (!editable) return;
     e.stopPropagation();
     onSelect(el.id);
+    onInteractionStart?.();
     const startX = e.clientX, startY = e.clientY;
     const origX = el.x, origY = el.y;
 
@@ -38,20 +39,28 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.x, el.y, editable, transformRef, onUpdate, onSelect]);
+  }, [el.id, el.x, el.y, editable, transformRef, onUpdate, onSelect, onInteractionStart]);
 
   // ── Resize ────────────────────────────────────────────────
   const onPointerDownResize = useCallback((e) => {
     e.stopPropagation();
+    onInteractionStart?.();
     const startX = e.clientX, startY = e.clientY;
     const origW = el.w, origH = el.h;
 
     const onMove = (ev) => {
       const s = transformRef.current.scale;
-      onUpdate({
-        w: Math.max(20, origW + (ev.clientX - startX) / s),
-        h: Math.max(20, origH + (ev.clientY - startY) / s),
-      });
+      let newW = origW + (ev.clientX - startX) / s;
+      let newH = origH + (ev.clientY - startY) / s;
+      // Shift constrains to the shape's original aspect ratio — driven by
+      // whichever axis moved proportionally further, matching Figma's
+      // corner-handle behavior rather than forcing width === height.
+      if (ev.shiftKey) {
+        const factor = Math.max(newW / origW, newH / origH);
+        newW = origW * factor;
+        newH = origH * factor;
+      }
+      onUpdate({ w: Math.max(20, newW), h: Math.max(20, newH) });
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
@@ -59,11 +68,12 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.w, el.h, transformRef, onUpdate]);
+  }, [el.w, el.h, transformRef, onUpdate, onInteractionStart]);
 
   // ── Rotate ────────────────────────────────────────────────
   const onPointerDownRotate = useCallback((e) => {
     e.stopPropagation();
+    onInteractionStart?.();
     const cx = el.x + el.w / 2;
     const cy = el.y + el.h / 2;
 
@@ -80,7 +90,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.x, el.y, el.w, el.h, transformRef, onUpdate]);
+  }, [el.x, el.y, el.w, el.h, transformRef, onUpdate, onInteractionStart]);
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -131,6 +141,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
             <textarea
               value={el.text ?? ""}
               onChange={(e) => onUpdate({ text: e.target.value })}
+              onFocus={() => onInteractionStart?.()}
               onPointerDown={(e) => e.stopPropagation()}
               style={{
                 width: "100%", height: "100%", background: "transparent",
