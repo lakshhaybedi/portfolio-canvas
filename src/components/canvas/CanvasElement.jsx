@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useContext, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { TransformContext } from "./Canvas";
 
 const HANDLE = 10;
@@ -17,6 +17,16 @@ const HANDLE = 10;
 export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart }) {
   const transformRef = useContext(TransformContext);
 
+  // Captures whether this element was *already* selected before the
+  // current pointerdown — read by handleClick below instead of the
+  // `selected` prop directly, because React re-renders (with the new
+  // selected=true from onSelect() just below) between the pointerdown and
+  // click events of the same physical click. Reading the prop directly in
+  // handleClick would see the just-updated value and treat every first
+  // click as if the element were already selected, jumping straight to
+  // text-edit mode instead of selecting first.
+  const wasSelectedRef = useRef(false);
+
   // ── Drag ──────────────────────────────────────────────────
   // onInteractionStart fires on the *first actual pointermove*, not at
   // pointerdown — a plain click-to-select is a pointerdown+pointerup with
@@ -26,6 +36,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   // visibly changes, which reads as "undo doesn't work."
   const onPointerDownMove = useCallback((e) => {
     if (!editable) return;
+    wasSelectedRef.current = selected;
     e.stopPropagation();
     onSelect(el.id);
     const startX = e.clientX, startY = e.clientY;
@@ -46,7 +57,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.x, el.y, editable, transformRef, onUpdate, onSelect, onInteractionStart]);
+  }, [el.id, el.x, el.y, editable, selected, transformRef, onUpdate, onSelect, onInteractionStart]);
 
   // ── Resize ────────────────────────────────────────────────
   const onPointerDownResize = useCallback((e) => {
@@ -101,10 +112,24 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     window.addEventListener("pointerup",   onUp);
   }, [el.x, el.y, el.w, el.h, transformRef, onUpdate, onInteractionStart]);
 
+  // Text elements previously rendered their <textarea> the instant they
+  // were editable at all — not just while selected — so the full-size
+  // textarea permanently sat on top of the element and swallowed every
+  // pointerdown via its own stopPropagation (needed so clicking in to type
+  // doesn't also start a drag). Net effect: text elements could never be
+  // dragged by their body at all, which is very likely what "undo doesn't
+  // work" actually was — there was nothing to undo because the move never
+  // happened in the first place. Fixed to match Figma: one click selects
+  // (drag works normally, nothing here blocks it), a second click *while
+  // already selected* enters edit mode.
+  const [isEditingText, setIsEditingText] = useState(false);
+  useEffect(() => { if (!selected) setIsEditingText(false); }, [selected]);
+
   const handleClick = (e) => {
     e.stopPropagation();
-    if (!editable) { if (el.type === "image") onEnlarge(el); }
-    else onSelect(el.id);
+    if (!editable) { if (el.type === "image") onEnlarge(el); return; }
+    if (el.type === "text" && wasSelectedRef.current) { setIsEditingText(true); return; }
+    onSelect(el.id);
   };
 
   // Same lazy-snapshot idea as the drag/resize/rotate handlers above —
@@ -152,14 +177,15 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
           fontFamily: "'Space Grotesk',sans-serif",
           overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
-          {editable ? (
+          {editable && isEditingText ? (
             <textarea
+              autoFocus
               value={el.text ?? ""}
               onChange={(e) => {
                 if (!textEditStartedRef.current) { textEditStartedRef.current = true; onInteractionStart?.(); }
                 onUpdate({ text: e.target.value });
               }}
-              onBlur={() => { textEditStartedRef.current = false; }}
+              onBlur={() => { textEditStartedRef.current = false; setIsEditingText(false); }}
               onPointerDown={(e) => e.stopPropagation()}
               style={{
                 width: "100%", height: "100%", background: "transparent",

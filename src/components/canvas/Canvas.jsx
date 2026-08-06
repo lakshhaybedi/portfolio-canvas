@@ -9,6 +9,13 @@ import CanvasToolbar from "./CanvasToolbar";
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const CLAMP = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+// Half-extent of the dot-grid's oversized transform layer, in canvas units
+// — must be a multiple of the grid's own 20px tile so background-position
+// "0 0" on the oversized box still lands on the same tile boundary as
+// canvas-space (0,0). 4000px covers ±800% zoom-out or ±80000px of pan
+// before the grid would visibly run out — comfortably beyond this app's
+// own 10%-500% zoom range.
+const GRID_HALF_SIZE = 4000;
 
 // Shift-constrain a drag box to a square, anchored at the original
 // mousedown point (ox,oy) and growing toward wherever the cursor (cx,cy)
@@ -105,18 +112,28 @@ export default function Canvas({ pageId }) {
   // ── Transform stored in a ref — zero React re-renders on pan/zoom ──
   const transformRef = useRef({ x: 0, y: 0, scale: 1 });
   const innerRef     = useRef(null);   // the translated/scaled div
+  const gridRef       = useRef(null);  // the translated/scaled dot-grid layer
   const containerRef = useRef(null);   // the viewport div
   const zoomLabelRef = useRef(null);   // zoom % text node
 
   const applyTransform = useCallback(() => {
     const { x, y, scale } = transformRef.current;
+    const t = `translate3d(${x}px,${y}px,0) scale(${scale})`;
     if (innerRef.current) {
-      innerRef.current.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
+      innerRef.current.style.transform = t;
     }
-    // grid tracks pan/zoom via background-position/size on the container
-    if (containerRef.current) {
-      containerRef.current.style.backgroundSize     = `${20 * scale}px ${20 * scale}px`;
-      containerRef.current.style.backgroundPosition = `${x}px ${y}px`;
+    // The grid used to track zoom by rewriting background-size/position on
+    // every frame — each write forces the browser to actually repaint that
+    // radial-gradient tile across the full viewport, which turned out to be
+    // the real cost behind "zoom feels laggy/stuttery on M5 Pro," not the
+    // frequency of updates (rAF-batching alone didn't fix it, because a
+    // single repaint per frame is still a repaint per frame). The grid now
+    // lives on its own oversized, statically-tiled layer that gets the same
+    // translate3d/scale transform as the content layer above — a pure
+    // compositor operation, same as how innerRef already avoided repaints
+    // for the actual case-study content.
+    if (gridRef.current) {
+      gridRef.current.style.transform = t;
     }
     if (zoomLabelRef.current) {
       zoomLabelRef.current.textContent = `${Math.round(scale * 100)}%`;
@@ -434,11 +451,32 @@ export default function Canvas({ pageId }) {
           style={{
             flex: 1, overflow: "hidden", position: "relative",
             background: "#0d0d0d",
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
             cursor: cursorStyle,
           }}
         >
+          {/* Dot grid — its own oversized, statically-tiled layer that gets
+              the same translate3d/scale transform as the content layer
+              below, rather than having background-size/position rewritten
+              (repainted) on every pan/zoom event. transformOrigin sits at
+              this layer's own (GRID_HALF_SIZE, GRID_HALF_SIZE), which is
+              exactly where canvas-space (0,0) falls given the -GRID_HALF_SIZE
+              offset below — same pivot point innerRef uses at its own (0,0),
+              so the two layers stay aligned under identical transforms. */}
+          <div
+            ref={gridRef}
+            style={{
+              position: "absolute",
+              left: -GRID_HALF_SIZE, top: -GRID_HALF_SIZE,
+              width: GRID_HALF_SIZE * 2, height: GRID_HALF_SIZE * 2,
+              transformOrigin: `${GRID_HALF_SIZE}px ${GRID_HALF_SIZE}px`,
+              transform: "translate3d(0,0,0) scale(1)",
+              backgroundImage: "radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+              willChange: "transform",
+              pointerEvents: "none",
+            }}
+          />
+
           {/* Inner transform layer — GPU composited */}
           <div
             ref={innerRef}
