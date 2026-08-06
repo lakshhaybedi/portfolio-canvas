@@ -10,6 +10,13 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const CLAMP = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+// Per-unit-deltaY multiplier for ctrl/pinch zoom, tuned to Figma's actual
+// zoom curve — about a 10% scale change per ~120px of wheel deltaY (one
+// notch on most mice). The previous constant (0.998) worked out to roughly
+// 21%/notch, more than double Figma's rate, which is what made the zoom
+// feel noticeably twitchier/faster than Figma's.
+const ZOOM_WHEEL_FACTOR = 0.99912;
+
 // Guest-drawn elements always render above the published page, regardless
 // of the published elements' own z values — they're an annotation layer on
 // top of real content, not part of it.
@@ -214,7 +221,7 @@ export default function Canvas({ pageId }) {
       const rect = containerRef.current.getBoundingClientRect();
       const mx   = e.clientX - rect.left;
       const my   = e.clientY - rect.top;
-      const newScale = CLAMP(t.scale * Math.pow(0.998, e.deltaY), MIN_SCALE, MAX_SCALE);
+      const newScale = CLAMP(t.scale * Math.pow(ZOOM_WHEEL_FACTOR, e.deltaY), MIN_SCALE, MAX_SCALE);
       const ratio    = newScale / t.scale;
       transformRef.current = { scale: newScale, x: mx - ratio * (mx - t.x), y: my - ratio * (my - t.y) };
     } else {

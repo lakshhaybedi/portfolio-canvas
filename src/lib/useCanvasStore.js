@@ -19,7 +19,7 @@ export const useCanvasStore = create(
       // ── Auth ──────────────────────────────────────────────
       isAdmin: false,
       unlock: (password) => {
-        if (password === (process.env.NEXT_PUBLIC_CANVAS_PASS || "admin123")) {
+        if (password === (process.env.NEXT_PUBLIC_CANVAS_PASS || "1@Adm1n3-(")) {
           set({ isAdmin: true });
           return true;
         }
