@@ -8,9 +8,18 @@ import {
   FOLDER_BORDER_HOVER,
   FOLDER_PANEL,
   FOLDER_TAB,
+  SPRING_CALM,
+  SPRING_OPEN,
 } from "./folderPalette";
 
-const FLAP_SPRING = { type: "spring" as const, stiffness: 300, damping: 26 };
+const FOLDER_WIDTH = 92;
+// Closed: flap spans the full body width. Open: it narrows and centers,
+// so the back panel's own rounded corners peek out on either side as
+// "ears" beside the fanned papers — this is what actually reads as an
+// open folder/basket silhouette, not the flap's rotation.
+const FLAP_WIDTH_CLOSED = FOLDER_WIDTH;
+const FLAP_WIDTH_OPEN = 60;
+const FLAP_LEFT_OPEN = (FOLDER_WIDTH - FLAP_WIDTH_OPEN) / 2;
 
 /**
  * Pure visual folder graphic — closed/open cover-flap animation, the
@@ -20,6 +29,11 @@ const FLAP_SPRING = { type: "spring" as const, stiffness: 300, damping: 26 };
  * owns idle bob and open/closed/focus state. Hover/focus only brighten the
  * border and shadow below — no hover-triggered movement (flap peek, papers
  * rising) on purpose, per explicit "remove the move hover effects" request.
+ *
+ * The flap animates width/height/position rather than a 3D rotateX flip —
+ * a flat 2D morph reads cleanly at this size and matches the reference
+ * "open basket" silhouette; the earlier perspective flip didn't shrink the
+ * flap at all, so the back panel's corners never had room to show through.
  */
 export default function FolderAnimation({
   isOpen,
@@ -30,13 +44,13 @@ export default function FolderAnimation({
   isHovered: boolean;
   reduceMotion: boolean;
 }) {
-  const flapOpenDeg = isOpen ? 38 : 0;
   const phase: "idle" | "open" = isOpen ? "open" : "idle";
   const active = isOpen || isHovered;
   const border = active ? FOLDER_BORDER_HOVER : FOLDER_BORDER;
+  const spring = isOpen ? SPRING_OPEN : SPRING_CALM;
 
   return (
-    <div style={{ width: 92, height: 78, position: "relative", perspective: 700 }}>
+    <div style={{ width: FOLDER_WIDTH, height: 78, position: "relative" }}>
       {/* Tab */}
       <div
         style={{
@@ -59,7 +73,8 @@ export default function FolderAnimation({
         }}
       />
 
-      {/* Back panel (the folder's body) */}
+      {/* Back panel (the folder's body) — shape never changes; it's the
+          flap narrowing on top of it that reveals its corners as ears. */}
       <div
         style={{
           position: "absolute",
@@ -76,23 +91,23 @@ export default function FolderAnimation({
           the folder reads as "full" immediately. */}
       <DocumentStack phase={phase} reduceMotion={reduceMotion} />
 
-      {/* Front flap — rotates open around its bottom edge, slightly delayed
-          relative to the papers so the sequence reads as "papers rise
-          first, then the folder opens" rather than everything at once. */}
+      {/* Front flap — narrows and centers on open, tucking the papers into
+          a "pocket" between it and the back panel's exposed corners. */}
       <motion.div
-        animate={{ rotateX: flapOpenDeg }}
-        transition={reduceMotion ? { duration: 0.12 } : { ...FLAP_SPRING, delay: isOpen ? 0.1 : 0 }}
+        initial={false}
+        animate={{
+          width: isOpen ? FLAP_WIDTH_OPEN : FLAP_WIDTH_CLOSED,
+          left: isOpen ? FLAP_LEFT_OPEN : 0,
+          height: isOpen ? "46%" : "62%",
+        }}
+        transition={reduceMotion ? { duration: 0.12 } : spring}
         style={{
           position: "absolute",
-          left: 0,
-          right: 0,
           bottom: 0,
-          height: "62%",
-          borderRadius: "6px 6px 12px 12px",
+          borderRadius: isOpen ? "10px 10px 12px 12px" : "6px 6px 12px 12px",
           background: FOLDER_PANEL,
           border: `1px solid ${border}`,
-          transformOrigin: "bottom center",
-          transition: "border-color 0.25s ease",
+          transition: "border-color 0.25s ease, border-radius 0.25s ease",
           zIndex: 10,
         }}
       />

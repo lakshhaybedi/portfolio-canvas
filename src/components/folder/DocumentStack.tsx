@@ -18,6 +18,12 @@ interface SheetConfig {
   left: number;
   top: number;
   rotate: number;
+  // Fan-open target rotation/rise — deliberately asymmetric (outer sheets
+  // lean hard left/right, the front-most center sheet stays near-vertical)
+  // rather than a uniform doubling of the resting tilt, to read as a clear
+  // card-fan silhouette instead of a slightly-more-tilted stack.
+  openRotate: number;
+  openRise: number;
   // Deterministic (not random) per-sheet idle timing so independent float
   // doesn't hydration-mismatch and doesn't sync all five sheets together.
   idleDuration: number;
@@ -38,11 +44,11 @@ interface SheetConfig {
 // monotonic, so the stack reads as dropped-into-place rather than a neat
 // fan of index cards.
 const SHEETS: SheetConfig[] = [
-  { decoration: "corner-fold", width: 44, left: 9, top: 16, rotate: -7, idleDuration: 4.6, idleDelay: 0 },
-  { decoration: "lines", width: 46, left: 13, top: 12, rotate: -3, idleDuration: 5.4, idleDelay: 0.35 },
-  { decoration: "pdf-tag", width: 47, left: 17, top: 8, rotate: 1, idleDuration: 5.0, idleDelay: 0.7 },
-  { decoration: "color-tab", width: 46, left: 12, top: 4, rotate: 5, idleDuration: 5.8, idleDelay: 0.15 },
-  { decoration: "ribbon", width: 48, left: 15, top: 0, rotate: -2, idleDuration: 4.9, idleDelay: 0.5 },
+  { decoration: "corner-fold", width: 44, left: 9, top: 16, rotate: -7, openRotate: -22, openRise: 10, idleDuration: 4.6, idleDelay: 0 },
+  { decoration: "lines", width: 46, left: 13, top: 12, rotate: -3, openRotate: -10, openRise: 14, idleDuration: 5.4, idleDelay: 0.35 },
+  { decoration: "pdf-tag", width: 47, left: 17, top: 8, rotate: 1, openRotate: 4, openRise: 16, idleDuration: 5.0, idleDelay: 0.7 },
+  { decoration: "color-tab", width: 46, left: 12, top: 4, rotate: 5, openRotate: 14, openRise: 14, idleDuration: 5.8, idleDelay: 0.15 },
+  { decoration: "ribbon", width: 48, left: 15, top: 0, rotate: -2, openRotate: -3, openRise: 20, idleDuration: 4.9, idleDelay: 0.5 },
 ];
 
 function SheetDecoration({ type }: { type: Decoration }) {
@@ -122,15 +128,12 @@ export default function DocumentStack({
   return (
     <>
       {SHEETS.map((sheet, i) => {
-        // Rise: resting peek → further rise, revealed by the flap swinging
-        // away, once opened. No separate hover rise — removed per explicit
-        // "remove the move hover effects" request.
-        const rise = phase === "open" ? 16 : 0;
-        const y = sheet.top - rise;
-
-        // Fan: rotation spread doubles on open — "documents fan out
-        // slightly before settling."
-        const rotate = phase === "open" ? sheet.rotate * 2 : sheet.rotate;
+        // Rise + fan: resting peek → a further, per-sheet rise and an
+        // asymmetric rotation once opened, revealed as the flap narrows.
+        // No separate hover rise — removed per explicit "remove the move
+        // hover effects" request.
+        const y = phase === "open" ? sheet.top - sheet.openRise : sheet.top;
+        const rotate = phase === "open" ? sheet.openRotate : sheet.rotate;
 
         if (reduceMotion) {
           // Still visible at rest (that's the whole point — the folder
@@ -154,28 +157,19 @@ export default function DocumentStack({
           );
         }
 
+        // Two nested motion elements on purpose: the outer one does the
+        // snappy, spring-driven open/close rise+fan (a few hundred ms —
+        // the previous version reused the multi-second idle-bob tween for
+        // this too, so "opening" actually drifted to position over
+        // 4-6 seconds instead of snapping). The inner one carries a small,
+        // continuous idle float that keeps running regardless of phase,
+        // fully decoupled so open/close can never get caught mid-bob.
         return (
           <motion.div
             key={sheet.decoration}
             initial={false}
-            animate={{
-              y: [y - 0.6, y, y - 0.6],
-              rotate,
-              opacity: 1,
-            }}
-            transition={{
-              y: {
-                duration: sheet.idleDuration,
-                delay: sheet.idleDelay,
-                repeat: Infinity,
-                ease: "easeInOut",
-                // Occasional tiny settling pause rather than a smooth,
-                // perfectly regular bob.
-                times: [0, 0.55, 1],
-              },
-              rotate: phase === "open" ? SPRING_OPEN : SPRING_CALM,
-              opacity: { duration: 0.2 },
-            }}
+            animate={{ y, rotate }}
+            transition={phase === "open" ? SPRING_OPEN : SPRING_CALM}
             style={{
               position: "absolute",
               left: sheet.left, width: sheet.width, top: 0,
@@ -185,7 +179,21 @@ export default function DocumentStack({
               zIndex: 2 + i,
             }}
           >
-            <SheetDecoration type={sheet.decoration} />
+            <motion.div
+              animate={{ y: [0, -1.4, 0] }}
+              transition={{
+                duration: sheet.idleDuration,
+                delay: sheet.idleDelay,
+                repeat: Infinity,
+                ease: "easeInOut",
+                // Occasional tiny settling pause rather than a smooth,
+                // perfectly regular bob.
+                times: [0, 0.55, 1],
+              }}
+              style={{ position: "absolute", inset: 0 }}
+            >
+              <SheetDecoration type={sheet.decoration} />
+            </motion.div>
           </motion.div>
         );
       })}
