@@ -18,6 +18,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   const [cursorLarge, setLarge]   = useState(false);
   const [lightbox, setLightbox]   = useState<number | null>(null);
   const [activeScreen, setActive] = useState(0);
+  const [hoveredScreen, setHoveredScreen] = useState<number | null>(null);
   const [navHovered, setNavHov]   = useState<string | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(300);
   const [resizing, setResizing]   = useState(false);
@@ -292,7 +293,12 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                 onMouseEnter={() => { setNavHov(c.slug); setLarge(false); }}
                 onMouseLeave={() => setNavHov(null)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 8,
+                  // `center` aligns the two spans' box midpoints, not their
+                  // text — with a 10px number next to an 11px label, equal
+                  // line-heights still left a visible vertical offset since
+                  // centered boxes of different heights don't share a
+                  // baseline. `baseline` aligns the actual glyphs.
+                  display: "flex", alignItems: "baseline", gap: 8,
                   padding: "0 20px",
                   textDecoration: "none",
                   borderBottom: isCurrent ? `3px solid ${c.accent}` : "3px solid transparent",
@@ -650,26 +656,39 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               <span style={{ color: accentText }}>{screens.length}</span>
             </div>
 
-            <div className="case-screens-list" style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
-              {screens.length > 0 ? screens.map((screen, i) => (
+            <div
+              className="case-screens-list"
+              onMouseLeave={() => setHoveredScreen(null)}
+              style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}
+            >
+              {screens.length > 0 ? screens.map((screen, i) => {
+                // Hovering previews which screen is "selected" without
+                // committing to it — falls back to the last-clicked/default
+                // screen once the pointer leaves so there's always exactly
+                // one highlighted, not zero.
+                const highlighted = (hoveredScreen ?? activeScreen) === i;
+                return (
                 <button
                   key={i}
                   className="case-screen-btn"
                   onClick={() => { setLightbox(i); setActive(i); }}
+                  onMouseEnter={() => setHoveredScreen(i)}
+                  onFocus={() => setHoveredScreen(i)}
+                  onBlur={() => setHoveredScreen(null)}
                   aria-label={`Open ${screen.label} in expanded view`}
-                  aria-current={activeScreen === i}
+                  aria-current={highlighted}
                   style={{ background: "none", border: "none", padding: 0, cursor: isFinePointer ? "none" : "pointer", textAlign: "left" }}
                 >
                   <div className="case-screen-thumb" style={{
                     position: "relative",
                     borderRadius: 6, overflow: "hidden",
-                    border: `2px solid ${activeScreen === i ? accent : "var(--border)"}`,
-                    boxShadow: activeScreen === i ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
+                    border: `2px solid ${highlighted ? accent : "var(--border)"}`,
+                    boxShadow: highlighted ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
                     transition: "border-color 0.25s, box-shadow 0.25s",
                   }}>
                     <img
                       src={screen.src} alt={screen.label}
-                      style={{ width: "100%", display: "block", opacity: activeScreen === i ? 1 : 0.7, transition: "opacity 0.25s" }}
+                      style={{ width: "100%", display: "block", opacity: highlighted ? 1 : 0.7, transition: "opacity 0.25s" }}
                     />
                     <div className="case-screen-expand-icon" aria-hidden="true" style={{
                       position: "absolute", inset: 0,
@@ -684,12 +703,13 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   <div className="case-screen-label" style={{
                     marginTop: 6, fontSize: 9, fontWeight: 700,
                     letterSpacing: "0.12em", textTransform: "uppercase",
-                    color: activeScreen === i ? accentText : "var(--muted)", transition: "color 0.25s",
+                    color: highlighted ? accentText : "var(--muted)", transition: "color 0.25s",
                   }}>
                     {screen.label}
                   </div>
                 </button>
-              )) : (
+                );
+              }) : (
                 /* Screens placeholder */
                 [1, 2, 3].map((n) => (
                   <div key={n} className="case-screen-btn" style={{

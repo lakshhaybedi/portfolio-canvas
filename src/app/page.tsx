@@ -248,9 +248,21 @@ export default function Portfolio() {
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        <motion.button
+          onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? "instant" : "smooth" })}
+          onMouseEnter={() => setLarge(true)}
+          onMouseLeave={() => setLarge(false)}
+          whileHover={{ opacity: 0.7 }}
+          whileTap={{ scale: 0.97 }}
+          aria-label="Scroll to top"
+          style={{
+            fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+            background: "none", border: "none", padding: 0, color: "var(--fg)",
+            fontFamily: "inherit", cursor: isFinePointer ? "none" : "pointer",
+          }}
+        >
           Lakshhay Bedi
-        </span>
+        </motion.button>
         <ul style={{ display: "flex", gap: 36, listStyle: "none" }}>
           {["Work", "About", "Contact"].map((link) => (
             <li key={link}>
