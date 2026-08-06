@@ -1,199 +1,133 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  PAPER_COLOR,
-  PAPER_SHADE,
-  RIBBON_ACCENT,
-  SPRING_CALM,
-  SPRING_OPEN,
-  TAB_ACCENT,
-} from "./folderPalette";
-
-type Decoration = "corner-fold" | "lines" | "pdf-tag" | "color-tab" | "ribbon";
+import { type FolderPhase, PAPER_COLOR, PAPER_SHADE, SPRING_PAPER } from "./folderPalette";
 
 interface SheetConfig {
-  decoration: Decoration;
   width: number;
   left: number;
   top: number;
   rotate: number;
-  // Fan-open target rotation/rise — deliberately asymmetric (outer sheets
-  // lean hard left/right, the front-most center sheet stays near-vertical)
-  // rather than a uniform doubling of the resting tilt, to read as a clear
-  // card-fan silhouette instead of a slightly-more-tilted stack.
+  // Open-state targets are deliberately close to the resting values —
+  // "documents rise upward naturally... spread only a little. Do not
+  // scatter. Keep them aligned" — not a card-fan. Only the front-most
+  // sheet leans out at all, and barely.
   openRotate: number;
   openRise: number;
-  // Deterministic (not random) per-sheet idle timing so independent float
-  // doesn't hydration-mismatch and doesn't sync all five sheets together.
-  idleDuration: number;
-  idleDelay: number;
+  hoverRise: number;
 }
 
-// Five sheets — matches the five real documents in the folder. Each carries
-// a distinct, tiny motif so the stack reads as "documents," not one flat
-// block: a folded corner, faint text lines, a PDF tag, a muted folder-tab
-// accent, and a certificate ribbon. Only two of five carry any hue (tab,
-// ribbon), both heavily muted, to stay monochromatic at a glance.
-//
-// Ordered back-to-front with `top` *decreasing* down the list (each sheet
-// peeks a little higher than the one behind it) and z-index increasing to
-// match — get this pairing backwards and a more-revealed sheet renders
-// *behind* a less-revealed one, hiding it almost entirely, which is what
-// the first pass at this got wrong. left/rotate jitter is deliberately not
-// monotonic, so the stack reads as dropped-into-place rather than a neat
-// fan of index cards.
+// Five sheets, matching the five real documents. "Tiny offset stacking" —
+// left/top/rotate all vary within a few px/degrees, not enough to read as
+// individually animated pieces; the stack moves as one object because
+// every sheet here shares the same phase-driven spring, staggered only by
+// a flat 40ms per sheet (see `delay` below), not by independent timing.
 const SHEETS: SheetConfig[] = [
-  { decoration: "corner-fold", width: 44, left: 9, top: 16, rotate: -7, openRotate: -22, openRise: 10, idleDuration: 4.6, idleDelay: 0 },
-  { decoration: "lines", width: 46, left: 13, top: 12, rotate: -3, openRotate: -10, openRise: 14, idleDuration: 5.4, idleDelay: 0.35 },
-  { decoration: "pdf-tag", width: 47, left: 17, top: 8, rotate: 1, openRotate: 4, openRise: 16, idleDuration: 5.0, idleDelay: 0.7 },
-  { decoration: "color-tab", width: 46, left: 12, top: 4, rotate: 5, openRotate: 14, openRise: 14, idleDuration: 5.8, idleDelay: 0.15 },
-  { decoration: "ribbon", width: 48, left: 15, top: 0, rotate: -2, openRotate: -3, openRise: 20, idleDuration: 4.9, idleDelay: 0.5 },
+  { width: 50, left: 19, top: 15, rotate: -2, openRotate: -3, openRise: 14, hoverRise: 2 },
+  { width: 50, left: 20, top: 11, rotate: 1, openRotate: 1, openRise: 16, hoverRise: 3 },
+  { width: 50, left: 21, top: 7, rotate: -1, openRotate: -2, openRise: 18, hoverRise: 3 },
+  { width: 50, left: 20, top: 3, rotate: 2, openRotate: 3, openRise: 20, hoverRise: 4 },
+  { width: 50, left: 19, top: 0, rotate: -1, openRotate: -4, openRise: 22, hoverRise: 4 },
 ];
 
-function SheetDecoration({ type }: { type: Decoration }) {
-  switch (type) {
-    case "corner-fold":
-      return (
-        <div
-          style={{
-            position: "absolute", top: 0, right: 0, width: 0, height: 0,
-            borderStyle: "solid", borderWidth: "0 9px 9px 0",
-            borderColor: `transparent ${PAPER_SHADE} transparent transparent`,
-          }}
-        />
-      );
-    case "lines":
-      return (
-        <div style={{ position: "absolute", top: 3, left: 6, right: 8, display: "flex", flexDirection: "column", gap: 3 }}>
-          <div style={{ height: 1.4, borderRadius: 1, background: PAPER_SHADE, width: "100%" }} />
-          <div style={{ height: 1.4, borderRadius: 1, background: PAPER_SHADE, width: "80%" }} />
-          <div style={{ height: 1.4, borderRadius: 1, background: PAPER_SHADE, width: "62%" }} />
-        </div>
-      );
-    case "pdf-tag":
-      return (
-        <div
-          style={{
-            position: "absolute", top: 2, left: 5,
-            padding: "1px 4px", borderRadius: 2,
-            background: "rgba(10,10,10,0.7)",
-            fontSize: 6, fontWeight: 800, letterSpacing: "0.03em",
-            color: PAPER_COLOR, lineHeight: "7px",
-          }}
-        >
-          PDF
-        </div>
-      );
-    case "color-tab":
-      return (
-        <div
-          style={{
-            position: "absolute", top: -4, left: 10,
-            width: 16, height: 6, borderRadius: "2px 2px 0 0",
-            background: TAB_ACCENT,
-          }}
-        />
-      );
-    case "ribbon":
-      return (
-        <div style={{ position: "absolute", top: -3, left: 8, width: 12, height: 14 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: RIBBON_ACCENT, margin: "0 auto" }} />
-          <div
-            style={{
-              position: "absolute", top: 5, left: 0, width: 0, height: 0,
-              borderStyle: "solid", borderWidth: "8px 4px 0 0",
-              borderColor: `${RIBBON_ACCENT} transparent transparent transparent`,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute", top: 5, right: 0, width: 0, height: 0,
-              borderStyle: "solid", borderWidth: "8px 0 0 4px",
-              borderColor: `${RIBBON_ACCENT} transparent transparent transparent`,
-            }}
-          />
-        </div>
-      );
-  }
+/** Subtle folded corner + faint text lines — the same minimal treatment on
+ * every sheet, on purpose. Distinct per-sheet icons (PDF badge, color tab,
+ * ribbon) read as illustrative/cartoon-ish at this scale; a folder full of
+ * plain paper edges reads as premium. */
+function SheetMarks() {
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute", top: 0, right: 0, width: 0, height: 0,
+          borderStyle: "solid", borderWidth: "0 8px 8px 0",
+          borderColor: `transparent ${PAPER_SHADE} transparent transparent`,
+        }}
+      />
+      <div style={{ position: "absolute", top: 8, left: 7, right: 9, display: "flex", flexDirection: "column", gap: 3 }}>
+        <div style={{ height: 1.4, borderRadius: 1, background: PAPER_SHADE, width: "100%" }} />
+        <div style={{ height: 1.4, borderRadius: 1, background: PAPER_SHADE, width: "72%" }} />
+      </div>
+    </>
+  );
 }
+
+// Base delay before the first sheet starts rising — keeps papers visually
+// following the flap/back-panel stages rather than moving simultaneously
+// with them (see FLAP_DELAY/BACK_TILT_DELAY in FolderAnimation.tsx).
+const PAPERS_BASE_DELAY = 0.14;
 
 export default function DocumentStack({
   phase,
   reduceMotion,
+  onLastSettled,
 }: {
-  phase: "idle" | "open";
+  phase: FolderPhase;
   reduceMotion: boolean;
+  onLastSettled?: () => void;
 }) {
+  const rising = phase === "opening" || phase === "open";
+  // Opening staggers 0→n (last sheet starts latest, so it also *finishes*
+  // latest). Closing reverses the stagger — the front sheet tucks away
+  // first, so index 0 now starts latest and finishes latest instead. The
+  // settle callback has to track whichever index that actually is, or it
+  // fires the instant the *first*-finishing sheet settles instead of the
+  // last one.
+  const gateIndex = phase === "closing" ? 0 : SHEETS.length - 1;
+
   return (
     <>
       {SHEETS.map((sheet, i) => {
-        // Rise + fan: resting peek → a further, per-sheet rise and an
-        // asymmetric rotation once opened, revealed as the flap narrows.
-        // No separate hover rise — removed per explicit "remove the move
-        // hover effects" request.
-        const y = phase === "open" ? sheet.top - sheet.openRise : sheet.top;
-        const rotate = phase === "open" ? sheet.openRotate : sheet.rotate;
+        const y =
+          phase === "hover" ? sheet.top - sheet.hoverRise
+          : rising ? sheet.top - sheet.openRise
+          : sheet.top;
+        const rotate = rising ? sheet.openRotate : sheet.rotate;
+        const isGate = i === gateIndex && (phase === "opening" || phase === "closing");
 
         if (reduceMotion) {
-          // Still visible at rest (that's the whole point — the folder
-          // should read as full without needing to be opened first) —
-          // just no float/rise/fan motion, only an instant position jump
-          // between phases.
           return (
             <div
-              key={sheet.decoration}
+              key={i}
               style={{
                 position: "absolute",
                 left: sheet.left, width: sheet.width, top: y,
-                height: 36, borderRadius: "3px 6px 4px 4px",
+                height: 38, borderRadius: "3px 6px 4px 4px",
                 background: PAPER_COLOR,
                 transform: `rotate(${rotate}deg)`,
                 zIndex: 2 + i,
               }}
             >
-              <SheetDecoration type={sheet.decoration} />
+              <SheetMarks />
             </div>
           );
         }
 
-        // Two nested motion elements on purpose: the outer one does the
-        // snappy, spring-driven open/close rise+fan (a few hundred ms —
-        // the previous version reused the multi-second idle-bob tween for
-        // this too, so "opening" actually drifted to position over
-        // 4-6 seconds instead of snapping). The inner one carries a small,
-        // continuous idle float that keeps running regardless of phase,
-        // fully decoupled so open/close can never get caught mid-bob.
+        // Flat 40ms-per-sheet stagger only while actually rising — this is
+        // Stage 4 from the brief, not a continuous independent float.
+        // Reverses on the way back in so the front sheet (last, tallest)
+        // tucks away first.
+        const delay = rising
+          ? PAPERS_BASE_DELAY + i * 0.04
+          : (SHEETS.length - 1 - i) * 0.03;
+
         return (
           <motion.div
-            key={sheet.decoration}
+            key={i}
             initial={false}
             animate={{ y, rotate }}
-            transition={phase === "open" ? SPRING_OPEN : SPRING_CALM}
+            transition={{ ...SPRING_PAPER, delay }}
+            onAnimationComplete={isGate ? onLastSettled : undefined}
             style={{
               position: "absolute",
               left: sheet.left, width: sheet.width, top: 0,
-              height: 36, borderRadius: "3px 6px 4px 4px",
+              height: 38, borderRadius: "3px 6px 4px 4px",
               background: PAPER_COLOR,
               boxShadow: "0 3px 8px rgba(0,0,0,0.28)",
               zIndex: 2 + i,
             }}
           >
-            <motion.div
-              animate={{ y: [0, -1.4, 0] }}
-              transition={{
-                duration: sheet.idleDuration,
-                delay: sheet.idleDelay,
-                repeat: Infinity,
-                ease: "easeInOut",
-                // Occasional tiny settling pause rather than a smooth,
-                // perfectly regular bob.
-                times: [0, 0.55, 1],
-              }}
-              style={{ position: "absolute", inset: 0 }}
-            >
-              <SheetDecoration type={sheet.decoration} />
-            </motion.div>
+            <SheetMarks />
           </motion.div>
         );
       })}

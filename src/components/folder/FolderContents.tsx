@@ -2,10 +2,16 @@
 
 import { motion } from "framer-motion";
 import { DOCUMENTS } from "@/lib/documents";
-import { staggerContainer, easeOutExpo } from "@/lib/motion";
+import { staggerContainer } from "@/lib/motion";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 import DocumentCard from "./DocumentCard";
-import { FOLDER_BORDER, FOLDER_LABEL, FOLDER_PANEL } from "./folderPalette";
+import { FOLDER_BORDER, FOLDER_LABEL, FOLDER_PANEL, SPRING_BODY } from "./folderPalette";
+
+// Delayed to land after the papers have risen (Stage 5 — "the document
+// list becomes visible" is the last step in the sequence, not simultaneous
+// with the papers). Spring, not the page's usual easeOutExpo tween — the
+// brief calls for spring motion throughout the folder specifically.
+const CONTENTS_TRANSITION = { ...SPRING_BODY, delay: 0.2 };
 
 export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) => void }) {
   const lowEndDevice = useIsLowEndDevice();
@@ -13,8 +19,8 @@ export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) 
     <motion.div
       initial={{ opacity: 0, y: -8, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      transition={{ duration: 0.32, ease: easeOutExpo }}
+      exit={{ opacity: 0, y: -8, scale: 0.97, transition: { ...SPRING_BODY, delay: 0 } }}
+      transition={CONTENTS_TRANSITION}
       style={{
         position: "absolute",
         top: "calc(100% + 14px)",
@@ -48,7 +54,7 @@ export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) 
         My Documents
       </div>
       <motion.div
-        variants={staggerContainer(0.05)}
+        variants={staggerContainer(0.04)}
         initial="hidden"
         animate="visible"
         style={{ display: "flex", flexDirection: "column", gap: 2 }}

@@ -1,50 +1,53 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useWindowStore } from "@/lib/useWindowStore";
 import { DOCUMENTS } from "@/lib/documents";
 import FolderAnimation from "./FolderAnimation";
 import FolderContents from "./FolderContents";
-import { FOLDER_LABEL } from "./folderPalette";
+import { FOLDER_LABEL, SPRING_HOVER, type FolderPhase } from "./folderPalette";
 
 const WIDGET_WIDTH = 140;
+// Max cursor-tracked tilt, in degrees — subtle on purpose ("tilts slightly
+// toward the cursor", not a full tilt-card effect).
+const TILT_RANGE = 5;
 
 /**
- * Replaces the old draggable ID card. Sits fixed in roughly the same screen
- * slot, but isn't itself draggable — no mouse-tilt or hover-triggered
- * movement either (removed per explicit request); only the idle float and
- * open/close stay animated. Hover/focus still brighten the border/shadow
- * (see FolderAnimation) — that's a color cue, not a "move" effect.
+ * The folder as a single explicit state machine — idle, hover, opening,
+ * open, closing — rather than a pair of loosely-related booleans. opening→
+ * open and closing→idle/hover both fire from a real Framer Motion
+ * onAnimationComplete callback (see handleSettled/FolderAnimation's
+ * onLastPaperSettled), not a setTimeout guessing how long the animation
+ * takes.
+ *
+ * Two independent motion layers, deliberately: the outer one owns the
+ * phase-driven pose (idle float/rotate loop, hover lift+scale, opening/open
+ * lift) and the inner one owns only the cursor-tracked tilt. Combining a
+ * `repeat: Infinity` idle loop with a value that changes on every
+ * pointermove in the same `animate` call risks Framer treating each
+ * pointermove as a reason to restart the loop; splitting them into two
+ * layers removes that risk entirely rather than hoping it doesn't happen.
  */
 export default function PortfolioFolder() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [phase, setPhase] = useState<FolderPhase>("idle");
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const hoveringRef = useRef(false);
   const reduceMotion = !!useReducedMotion();
   const openWindow = useWindowStore((s) => s.openWindow);
   const setFolderAnchor = useWindowStore((s) => s.setFolderAnchor);
 
+  const isOpenish = phase === "opening" || phase === "open";
+
   useEffect(() => {
-    // Recomputes on every call (not just the first) — a one-time-only
-    // placement left the folder stuck wherever the viewport happened to
-    // measure at that first call, with no way to correct itself if that
-    // read landed on a transient size (e.g. before Chrome OS finishes
-    // settling a newly-opened window). Resize keeps it correctly anchored
-    // to the right edge on any real viewport change too.
     const place = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      // 400 excluded every common phone width (390-430 CSS px) along with
-      // the degenerate sizes it was meant to guard against — the folder is
-      // only 140px wide, so 260 is the real floor (WIDGET_WIDTH + a legible
-      // left margin), not "desktop-only".
       if (vw < 260 || vh < 300) return;
       setPos({ x: vw - WIDGET_WIDTH - 60, y: vh * 0.18 });
     };
-
     place();
     const raf = requestAnimationFrame(place);
     window.addEventListener("resize", place);
@@ -55,8 +58,7 @@ export default function PortfolioFolder() {
   }, []);
 
   // Report the folder's on-screen center so window close animations have a
-  // target to fly back toward. Recomputed on resize since placement above
-  // is viewport-relative.
+  // target to fly back toward.
   useEffect(() => {
     const report = () => {
       const el = wrapperRef.current;
@@ -69,16 +71,20 @@ export default function PortfolioFolder() {
     return () => window.removeEventListener("resize", report);
   }, [pos, setFolderAnchor]);
 
+  const requestClose = useCallback(() => {
+    setPhase((p) => (p === "open" ? "closing" : p));
+  }, []);
+
   // Click-outside (and Escape) closes the open panel.
   useEffect(() => {
-    if (!isOpen) return;
+    if (phase !== "open") return;
     const onDocClick = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+        requestClose();
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") requestClose();
     };
     window.addEventListener("mousedown", onDocClick);
     window.addEventListener("keydown", onKeyDown);
@@ -86,26 +92,85 @@ export default function PortfolioFolder() {
       window.removeEventListener("mousedown", onDocClick);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isOpen]);
+  }, [phase, requestClose]);
 
   const handleOpenDoc = (docId: string) => {
     openWindow(docId);
   };
 
+  const handlePointerEnter = () => {
+    hoveringRef.current = true;
+    setPhase((p) => (p === "idle" ? "hover" : p));
+  };
+
+  const handlePointerLeave = () => {
+    hoveringRef.current = false;
+    setTilt({ x: 0, y: 0 });
+    setPhase((p) => (p === "hover" ? "idle" : p));
+  };
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (reduceMotion || (phase !== "hover" && phase !== "idle")) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({ x: -py * TILT_RANGE, y: px * TILT_RANGE });
+  };
+
+  const handleClick = () => {
+    setTilt({ x: 0, y: 0 });
+    setPhase((p) => {
+      if (p === "idle" || p === "hover") return "opening";
+      if (p === "open") return "closing";
+      return p; // ignore clicks mid-transition
+    });
+  };
+
+  // Keyboard focus gets the same hover-equivalent cue a mouse user gets —
+  // tracked separately from hoveringRef so a blur only reverts to idle if
+  // the mouse isn't *also* currently over the folder.
+  const handleFocus = () => {
+    setPhase((p) => (p === "idle" ? "hover" : p));
+  };
+
+  const handleBlur = () => {
+    setPhase((p) => (p === "hover" && !hoveringRef.current ? "idle" : p));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
-      // Space would otherwise scroll the page — this element isn't a
-      // native <button>, so that default has to be suppressed by hand.
       e.preventDefault();
-      setIsOpen((v) => !v);
+      handleClick();
     }
   };
 
-  // Hover and keyboard focus both count as "actively pointed at" for the
-  // folder's border/shadow highlight (color only, no movement) — a
-  // keyboard user tabbing to the folder should see the same cue a mouse
-  // user gets from hovering.
-  const active = isHovered || isFocused;
+  // The one real completion signal driving opening→open and closing→
+  // idle/hover — fired by the last-settling paper sheet (see
+  // FolderAnimation → DocumentStack's onAnimationComplete wiring).
+  const handleSettled = useCallback(() => {
+    setPhase((p) => {
+      if (p === "opening") return "open";
+      if (p === "closing") return hoveringRef.current ? "hover" : "idle";
+      return p;
+    });
+  }, []);
+
+  const outerPose = reduceMotion
+    ? undefined
+    : phase === "idle"
+    ? { y: [0, -3, 0], scale: 1, rotate: [0, 1.4, 0, -1.4, 0] }
+    : phase === "hover"
+    ? { y: -3, scale: 1.03, rotate: 0 }
+    : { y: -4, scale: 1.02, rotate: 0 }; // opening / open / closing
+
+  const outerTransition = reduceMotion
+    ? undefined
+    : phase === "idle"
+    ? {
+        y: { duration: 3.6, repeat: Infinity, ease: "easeInOut" as const },
+        rotate: { duration: 5.4, repeat: Infinity, ease: "easeInOut" as const },
+      }
+    : SPRING_HOVER;
 
   return (
     <div
@@ -126,24 +191,17 @@ export default function PortfolioFolder() {
         role="button"
         tabIndex={0}
         aria-haspopup="true"
-        aria-expanded={isOpen}
+        aria-expanded={isOpenish}
         aria-label={`My Documents folder, ${DOCUMENTS.length} documents`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        onClick={() => setIsOpen((v) => !v)}
+        onMouseEnter={handlePointerEnter}
+        onMouseLeave={handlePointerLeave}
+        onMouseMove={handlePointerMove}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onClick={handleClick}
         onKeyDown={handleKeyDown}
-        animate={
-          reduceMotion
-            ? undefined
-            : { y: isOpen ? 0 : [0, -3, 0] }
-        }
-        transition={
-          reduceMotion
-            ? undefined
-            : { duration: 3.6, repeat: isOpen ? 0 : Infinity, ease: "easeInOut" }
-        }
+        animate={outerPose}
+        transition={outerTransition}
         style={{
           position: "relative",
           width: WIDGET_WIDTH,
@@ -155,22 +213,36 @@ export default function PortfolioFolder() {
           userSelect: "none",
         }}
       >
-        <FolderAnimation isOpen={isOpen} isHovered={active} reduceMotion={reduceMotion} />
-
-        <span
+        {/* Inner layer: cursor-tracked tilt only, fully decoupled from the
+            outer pose above. */}
+        <motion.div
+          animate={reduceMotion ? undefined : { rotateX: tilt.x, rotateY: tilt.y }}
+          transition={reduceMotion ? undefined : SPRING_HOVER}
           style={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: FOLDER_LABEL,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+            transformStyle: "preserve-3d",
           }}
         >
-          My Documents
-        </span>
+          <FolderAnimation phase={phase} reduceMotion={reduceMotion} onLastPaperSettled={handleSettled} />
+
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: FOLDER_LABEL,
+            }}
+          >
+            My Documents
+          </span>
+        </motion.div>
 
         <AnimatePresence>
-          {isOpen && <FolderContents onOpenDoc={handleOpenDoc} />}
+          {isOpenish && <FolderContents onOpenDoc={handleOpenDoc} />}
         </AnimatePresence>
       </motion.div>
     </div>

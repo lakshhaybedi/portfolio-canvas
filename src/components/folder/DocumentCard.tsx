@@ -1,9 +1,17 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import type { PortfolioDocument } from "@/lib/documents";
-import { fadeUp } from "@/lib/motion";
-import { PAPER_COLOR } from "./folderPalette";
+import { PAPER_COLOR, SPRING_PAPER } from "./folderPalette";
+
+// Local to this list, not the page's shared `fadeUp` — that one's a
+// 0.85s cubic-bezier tween tuned for full-page reveals; this folder's
+// brief specifically calls for spring motion throughout, and a row list
+// this small reads better settling in well under 300ms.
+const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: { opacity: 1, y: 0, transition: SPRING_PAPER },
+};
 
 export default function DocumentCard({
   doc,
@@ -14,7 +22,7 @@ export default function DocumentCard({
 }) {
   return (
     <motion.button
-      variants={fadeUp}
+      variants={rowVariants}
       onClick={() => onOpen(doc.id)}
       whileHover={{ backgroundColor: "rgba(237,234,212,0.06)" }}
       whileTap={{ scale: 0.98 }}
