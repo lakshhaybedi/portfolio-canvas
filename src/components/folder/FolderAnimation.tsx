@@ -22,6 +22,9 @@ const FOLDER_HEIGHT = 78;
 // Framer owns, not a setTimeout we're racing against.
 const FLAP_DELAY = 0.04;
 const BACK_TILT_DELAY = 0.1;
+// 84deg reduced ~60% per feedback — the full hinge-flat open read as too
+// much motion; this keeps a real hinge rotation but far more restrained.
+const FLAP_OPEN_DEG = 34;
 
 /**
  * The folder as one physical object: a back panel, the paper stack, and a
@@ -105,7 +108,7 @@ export default function FolderAnimation({
           the way a real folder cover falls open. */}
       <motion.div
         initial={false}
-        animate={{ rotateX: isOpenish ? 84 : 0 }}
+        animate={{ rotateX: isOpenish ? FLAP_OPEN_DEG : 0 }}
         transition={flapTransition}
         style={{
           position: "absolute",
