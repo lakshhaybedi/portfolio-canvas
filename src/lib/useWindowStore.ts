@@ -55,6 +55,14 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       return;
     }
     const pos = cascadePosition(windows.length);
+    // Windows are a fixed 560x660 (DraggableWindow.tsx) — fine to cascade
+    // and drag around a desktop viewport, but on a phone-width screen that
+    // both overflows the frame and can open positioned partly off-screen
+    // (cascadePosition centers around vw/2, which goes negative once vw is
+    // narrower than the window itself). Opening maximized instead reuses
+    // the existing maximize sizing (calc(100vw - 40px)), which is already
+    // viewport-safe.
+    const isNarrowViewport = typeof window !== "undefined" && window.innerWidth < 640;
     set({
       windows: [
         ...windows,
@@ -65,7 +73,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
           y: pos.y,
           z: nextZ(windows),
           minimized: false,
-          maximized: false,
+          maximized: isNarrowViewport,
         },
       ],
     });

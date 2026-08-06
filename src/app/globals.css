@@ -97,13 +97,11 @@ button:focus-visible,
   opacity: 1;
 }
 
-/* ── Floating portfolio folder + document windows — desktop-width only,
-   avoids obstructing mobile layouts (dragging multiple windows isn't a
-   touch interaction) ── */
-.portfolio-folder-float { display: none; }
-@media (min-width: 900px) {
-  .portfolio-folder-float { display: block; }
-}
+/* Floating portfolio folder — visible at every width. Windows it opens are
+   forced to maximized on narrow viewports (see useWindowStore.ts) rather
+   than kept at their fixed 560x660 desktop size, which is what made
+   multi-window dragging impractical on touch before. */
+.portfolio-folder-float { display: block; }
 
 /* ── Keyframes (only ones still driven from inline `animation:` — the rest of the
    entrance/exit motion lives in Framer Motion, see src/lib/motion.ts) ── */
@@ -147,18 +145,71 @@ button:focus-visible,
   .hero-scroll-cue { display: none !important; }
 
   /* Case-study page: text+image hero and the 1fr/300px body grid don't
-     stack on their own; the sticky screens sidebar also needs to drop out
-     of `position: sticky` + full-viewport height once it's no longer
-     beside the scrolling content, or it fights the page for the viewport. */
+     stack on their own. The screens sidebar becomes a scroll-locked
+     carousel pinned to the bottom of the viewport instead of an in-flow
+     stack — full-resolution thumbnails stacked in a single mobile column
+     were mostly just scroll-past filler; anchored + horizontally browsable
+     mirrors how a native app would surface a screen gallery, and tapping
+     one still opens the same lightbox with prev/next + close. */
   .case-body-grid { grid-template-columns: 1fr !important; }
+  .case-main { padding-bottom: 132px !important; }
   .case-sidebar {
-    position: static !important;
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     height: auto !important;
-    padding: 32px 24px !important;
+    padding: 12px 16px !important;
+    background: rgba(10,10,10,0.96) !important;
+    border-top: 1px solid var(--border) !important;
+    z-index: 250 !important;
+  }
+  .case-sidebar-header,
+  .case-sidebar-hint,
+  .case-screen-label {
+    display: none !important;
+  }
+  .case-screens-list {
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x proximity !important;
+    gap: 10px !important;
+  }
+  .case-screens-list::-webkit-scrollbar { display: none !important; }
+  .case-screen-btn {
+    flex: none !important;
+    height: 84px !important;
+    scroll-snap-align: start !important;
+  }
+  /* Uncropped: height-constrained, width follows the image's own aspect
+     ratio, instead of the desktop column's width:100% (which relied on a
+     block-level parent to set the crop). */
+  .case-screen-thumb {
+    display: inline-block !important;
+    width: auto !important;
+    height: 100% !important;
+  }
+  .case-screen-thumb img {
+    width: auto !important;
+    height: 100% !important;
+    max-width: none !important;
+    object-fit: contain !important;
   }
   /* Drag-to-resize only makes sense with a mouse and a wide-enough viewport
      to have two columns in the first place. */
   .case-resize-handle { display: none !important; }
+
+  /* Scope/Constraints ledger row: the 200px label column alone leaves the
+     description barely 80-100px of a phone-width viewport to wrap in —
+     reads as a near-vertical ransom note. Stack label above description. */
+  .case-scope-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
 
   /* Case-study sticky nav: the project-tab strip has no wrap/scroll, so it
      was clipping mid-word and making the last tab unreachable. Let it

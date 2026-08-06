@@ -37,7 +37,11 @@ export default function PortfolioFolder() {
     const place = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      if (vw < 400 || vh < 300) return;
+      // 400 excluded every common phone width (390-430 CSS px) along with
+      // the degenerate sizes it was meant to guard against — the folder is
+      // only 140px wide, so 260 is the real floor (WIDGET_WIDTH + a legible
+      // left margin), not "desktop-only".
+      if (vw < 260 || vh < 300) return;
       setPos({ x: vw - WIDGET_WIDTH - 60, y: vh * 0.18 });
     };
 

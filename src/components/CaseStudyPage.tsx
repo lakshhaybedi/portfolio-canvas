@@ -214,18 +214,40 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >→</button>
             )}
 
+            {/* A text-only "ESC to close" was the sole close affordance —
+                fine as a hint for keyboard/mouse users, meaningless on a
+                touchscreen with no Escape key and no visible button
+                styling to signal it's tappable. The icon button is the
+                real close control on every device; the text becomes a
+                secondary hint, shown only where Escape is actually a key
+                that exists. */}
             <button
+              aria-label="Close expanded view"
               onClick={closeLightbox}
               style={{
                 position: "absolute", top: 24, right: 32,
-                background: "none", border: "none",
-                fontSize: 11, fontWeight: 600, letterSpacing: "0.12em",
-                textTransform: "uppercase", color: "rgba(255,255,255,0.6)",
+                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+                color: "#fff", width: 40, height: 40, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: isFinePointer ? "none" : "pointer",
               }}
             >
-              ESC to close
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
             </button>
+            {isFinePointer && (
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute", top: 32, right: 84,
+                  fontSize: 11, fontWeight: 600, letterSpacing: "0.12em",
+                  textTransform: "uppercase", color: "rgba(255,255,255,0.6)",
+                }}
+              >
+                Esc to close
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -310,7 +332,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         </div>
       </nav>
 
-      <main style={{ paddingTop: 64, fontFamily: "'Space Grotesk', sans-serif" }}>
+      <main className="case-main" style={{ paddingTop: 64, fontFamily: "'Space Grotesk', sans-serif" }}>
 
         {/* ── Hero ── */}
         <section style={{
@@ -583,14 +605,18 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             }} />
           </div>
 
-          {/* RIGHT: sticky screens panel */}
+          {/* RIGHT: sticky screens panel — a fixed, scroll-locked carousel
+              at the bottom of the viewport on mobile instead (see the
+              .case-sidebar mobile override in globals.css); markup and
+              click-to-lightbox behavior stay identical, only the layout
+              class hooks differ. */}
           <div className="case-sidebar" style={{
             position: "sticky", top: 64,
             height: "calc(100vh - 64px)",
             display: "flex", flexDirection: "column",
             padding: "28px 20px", overflowY: "auto",
           }}>
-            <div style={{
+            <div className="case-sidebar-header" style={{
               fontSize: 9, fontWeight: 700, letterSpacing: "0.18em",
               textTransform: "uppercase", color: "var(--muted)",
               marginBottom: 16, paddingBottom: 12,
@@ -601,10 +627,11 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               <span style={{ color: accentText }}>{screens.length}</span>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+            <div className="case-screens-list" style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
               {screens.length > 0 ? screens.map((screen, i) => (
                 <button
                   key={i}
+                  className="case-screen-btn"
                   onClick={() => { setLightbox(i); setActive(i); }}
                   aria-label={`Open ${screen.label} in expanded view`}
                   aria-current={activeScreen === i}
@@ -631,7 +658,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                       </svg>
                     </div>
                   </div>
-                  <div style={{
+                  <div className="case-screen-label" style={{
                     marginTop: 6, fontSize: 9, fontWeight: 700,
                     letterSpacing: "0.12em", textTransform: "uppercase",
                     color: activeScreen === i ? accentText : "var(--muted)", transition: "color 0.25s",
@@ -642,7 +669,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               )) : (
                 /* Screens placeholder */
                 [1, 2, 3].map((n) => (
-                  <div key={n} style={{
+                  <div key={n} className="case-screen-btn" style={{
                     borderRadius: 6, height: 120,
                     background: `linear-gradient(135deg, rgba(237,234,212,0.05) 0%, ${accent}0a 100%)`,
                     border: "1px dashed rgba(0,0,0,0.10)",
@@ -656,7 +683,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               )}
             </div>
 
-            <div style={{
+            <div className="case-sidebar-hint" style={{
               marginTop: 20, paddingTop: 16,
               borderTop: "1px solid var(--border)",
               fontSize: 9, fontWeight: 600, letterSpacing: "0.12em",
@@ -714,6 +741,7 @@ function ScopeRow({ item, accentText, index }: {
   const reduceMotion = useReducedMotion();
   return (
     <motion.div
+      className="case-scope-row"
       initial="hidden" whileInView="visible" viewport={viewportOnce} variants={revealVariant(!!reduceMotion)}
       transition={{ delay: index * 0.06 }}
       style={{
