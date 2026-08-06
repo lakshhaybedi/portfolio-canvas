@@ -13,6 +13,7 @@ import {
 } from "./folderPalette";
 
 const FOLDER_WIDTH = 92;
+const FOLDER_HEIGHT = 78;
 // Closed: flap spans the full body width. Open: it narrows and centers,
 // so the back panel's own rounded corners peek out on either side as
 // "ears" beside the fanned papers — this is what actually reads as an
@@ -20,6 +21,13 @@ const FOLDER_WIDTH = 92;
 const FLAP_WIDTH_CLOSED = FOLDER_WIDTH;
 const FLAP_WIDTH_OPEN = 60;
 const FLAP_LEFT_OPEN = (FOLDER_WIDTH - FLAP_WIDTH_OPEN) / 2;
+// Plain px, not "62%"/"46%" — Framer's spring physics operates on bare
+// numbers, and silently no-ops on percentage-string values, which is why
+// the flap previously never actually resized on open (its border-radius,
+// a plain non-animated style, updated fine; width/left/height, animated
+// together in one spring, quietly froze at the closed dimensions).
+const FLAP_HEIGHT_CLOSED = FOLDER_HEIGHT * 0.62;
+const FLAP_HEIGHT_OPEN = FOLDER_HEIGHT * 0.46;
 
 /**
  * Pure visual folder graphic — closed/open cover-flap animation, the
@@ -50,7 +58,7 @@ export default function FolderAnimation({
   const spring = isOpen ? SPRING_OPEN : SPRING_CALM;
 
   return (
-    <div style={{ width: FOLDER_WIDTH, height: 78, position: "relative" }}>
+    <div style={{ width: FOLDER_WIDTH, height: FOLDER_HEIGHT, position: "relative" }}>
       {/* Tab */}
       <div
         style={{
@@ -98,7 +106,7 @@ export default function FolderAnimation({
         animate={{
           width: isOpen ? FLAP_WIDTH_OPEN : FLAP_WIDTH_CLOSED,
           left: isOpen ? FLAP_LEFT_OPEN : 0,
-          height: isOpen ? "46%" : "62%",
+          height: isOpen ? FLAP_HEIGHT_OPEN : FLAP_HEIGHT_CLOSED,
         }}
         transition={reduceMotion ? { duration: 0.12 } : spring}
         style={{
