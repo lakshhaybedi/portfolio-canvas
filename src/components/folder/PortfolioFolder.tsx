@@ -28,17 +28,17 @@ export default function PortfolioFolder() {
   const setFolderAnchor = useWindowStore((s) => s.setFolderAnchor);
 
   useEffect(() => {
-    let placedOnce = false;
-
+    // Recomputes on every call (not just the first) — a one-time-only
+    // placement left the folder stuck wherever the viewport happened to
+    // measure at that first call, with no way to correct itself if that
+    // read landed on a transient size (e.g. before Chrome OS finishes
+    // settling a newly-opened window). Resize keeps it correctly anchored
+    // to the right edge on any real viewport change too.
     const place = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       if (vw < 400 || vh < 300) return;
-
-      if (!placedOnce) {
-        setPos({ x: vw - WIDGET_WIDTH - 60, y: vh * 0.18 });
-        placedOnce = true;
-      }
+      setPos({ x: vw - WIDGET_WIDTH - 60, y: vh * 0.18 });
     };
 
     place();

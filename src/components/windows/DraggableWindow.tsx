@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, useDragControls, useMotionValue } from "framer-motion";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 
 const NORMAL_WIDTH = 560;
 const NORMAL_HEIGHT = 660;
@@ -50,6 +51,7 @@ export default function DraggableWindow({
   children: ReactNode;
 }) {
   const dragControls = useDragControls();
+  const lowEndDevice = useIsLowEndDevice();
   const mx = useMotionValue(x);
   const my = useMotionValue(y);
   const prevPos = useRef<{ x: number; y: number } | null>(null);
@@ -110,8 +112,11 @@ export default function DraggableWindow({
           flexDirection: "column",
           borderRadius: 18,
           overflow: "hidden",
-          background: "rgba(21,21,23,0.82)",
-          backdropFilter: "blur(16px)",
+          // This window is draggable — blurring its own backdrop means
+          // recomputing that blur region on every drag frame, on top of
+          // the position update itself. Skipped on weak hardware.
+          background: lowEndDevice ? "rgba(21,21,23,0.97)" : "rgba(21,21,23,0.82)",
+          backdropFilter: lowEndDevice ? undefined : "blur(16px)",
           border: "1px solid var(--border)",
           boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
         }}

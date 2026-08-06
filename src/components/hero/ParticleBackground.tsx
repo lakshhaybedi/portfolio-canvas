@@ -6,6 +6,7 @@ import ParticleSystem from "./ParticleSystem";
 import CameraRig from "./CameraRig";
 import { useWebGLSupport } from "./useWebGLSupport";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 import { usePageMorphProgress } from "./ScrollController";
 import { HERO_CAMERA_BASE } from "./sceneConstants";
 
@@ -26,6 +27,7 @@ import { HERO_CAMERA_BASE } from "./sceneConstants";
 export default function ParticleBackground() {
   const webglSupported = useWebGLSupport();
   const reducedMotion = useReducedMotion();
+  const lowEndDevice = useIsLowEndDevice();
   const interactive = useHasFinePointer();
   const morphProgress = usePageMorphProgress();
 
@@ -36,7 +38,7 @@ export default function ParticleBackground() {
     pointerEvents: "none" as const,
   };
 
-  if (!webglSupported || reducedMotion) {
+  if (!webglSupported || reducedMotion || lowEndDevice) {
     return (
       <div
         aria-hidden="true"

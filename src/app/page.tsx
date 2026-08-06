@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion, useAnimationControls, useMot
 import { CASE_STUDIES } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 import { useHeroScrollProgress } from "@/components/hero/ScrollController";
 import HeroContent from "@/components/hero/HeroContent";
 import PortfolioFolder from "@/components/folder/PortfolioFolder";
@@ -88,6 +89,7 @@ export default function Portfolio() {
 
   const reduceMotion = useReducedMotion();
   const isFinePointer = useHasFinePointer();
+  const lowEndDevice = useIsLowEndDevice();
   const marqueeControls = useAnimationControls();
   const reveal = revealVariant(!!reduceMotion);
 
@@ -236,8 +238,13 @@ export default function Portfolio() {
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "20px 48px",
-          background: "rgba(10,10,10,0.75)",
-          backdropFilter: "blur(10px)",
+          // `backdrop-filter` is one of the most GPU-expensive CSS
+          // properties there is — a full backdrop capture + blur pass every
+          // frame it's on screen, worse still on a `position: fixed` bar
+          // re-composited on every scroll tick. Skipped on weak hardware;
+          // the solid-ish fallback background reads fine without it.
+          background: lowEndDevice ? "rgba(10,10,10,0.94)" : "rgba(10,10,10,0.75)",
+          backdropFilter: lowEndDevice ? undefined : "blur(10px)",
           borderBottom: "1px solid var(--border)",
         }}
       >

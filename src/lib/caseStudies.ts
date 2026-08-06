@@ -11,6 +11,11 @@ export type Decision = {
   desc: string;
 };
 
+export type ScopeItem = {
+  label: string;
+  desc: string;
+};
+
 export type CaseStudy = {
   slug: string;
   index: string;
@@ -33,6 +38,7 @@ export type CaseStudy = {
   heroUrl?: string;
   slides?: Screen[];
   screens: Screen[];
+  scopeConstraints: ScopeItem[];
   decisions: Decision[];
   outcomes: Decision[];
 };
@@ -63,13 +69,6 @@ const SB_SLIDE_2 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672
 const SB_SLIDE_3 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/a4792eaa-1035-4619-ac7d-9414ccd71819/2303.png";
 const SB_SLIDE_4 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/1e4ced7a-f8a0-4676-9e89-1c30422cb3d2/2304.png";
 const SB_SLIDE_5 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/af608b01-7d67-40f4-afde-31b73a4250f6/2305.png";
-const CDN_SB_SELECT  = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/b1a84ec3-bb9e-47e8-afc5-296e79ff0738/sb_left_phone.png";
-const CDN_SB_REVIEW  = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/33081cb8-dca9-4baa-9710-2d65ce1c0329/sb_mid_phone.png";
-const CDN_SB_CONFIRM = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e005754e-4442-4d57-9653-8de68c12571f/sb_right_phone.png";
-const CDN_EH_OVERVIEW  = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/75c2a6af-00cc-41aa-8eae-020d6b60b574/eh_overview.png";
-const CDN_EH_APPT      = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/5942f866-f854-4c54-b92f-a7b8b5b3ad56/eh_appointment.png";
-const CDN_EH_CLAIMS    = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/0caf4e4d-05b4-4339-9910-46eb8523c082/eh_claims.png";
-const CDN_EH_COVERAGE  = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/9464d965-7df2-498b-94ff-97d42549d542/eh_coverage.png";
 
 export const CASE_STUDIES: CaseStudy[] = [
   {
@@ -87,7 +86,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     badgeOnAccent: "#FFFFFF",
     heroImage: TC_HERO,
     overview:
-      "T-Cloud is an enterprise dashboard product designed for T-Mobile's internal operations teams managing cloud infrastructure at scale. The challenge was translating high-density technical data into an interface that operators could monitor, act on, and trust across both web and tablet form factors. Operations teams worked across fragmented tooling — switching between multiple platforms to get a complete picture of system health. The lack of a unified view slowed response time and introduced errors during high-stakes incidents.",
+      "A dashboard that turns incident response from a five-tab scavenger hunt into one screen. At T-Mobile's scale, every minute inside an incident is a minute another team spends escalating instead of fixing. Operations, finance, and security teams were each running their own tooling to answer the same question: is anything on fire right now, and whose problem is it. This wasn't a “make it prettier” brief. It was a request to remove a structural bottleneck sitting between a system going sideways and the person who could fix it.",
     slides: [
       { src: TC_SLIDE_1, label: "Context & Problem",   caption: "Operations teams managed cloud infrastructure across fragmented tooling — T-Cloud unifies it into one operator-grade interface." },
       { src: TC_SLIDE_2, label: "Research & Outcomes",  caption: "5 research sessions with operations leads shaped the mental models, severity taxonomy, and field-use requirements." },
@@ -101,27 +100,33 @@ export const CASE_STUDIES: CaseStudy[] = [
       { src: TC_SCR_ASSET,  label: "Asset Overview",    caption: "Distribution Heat Map across 888M+ assets with filterable KPI cards and application-level drill-down." },
       { src: TC_SCR_WIDGET, label: "Widget Catalog",    caption: "Add Widget modal — browse by category with size selector (Small / Medium / Large) and live preview." },
     ],
+    scopeConstraints: [
+      { label: "Platform", desc: "Built on an existing MAIA data platform. Telemetry, APIs, and the data model were fixed, so the job was the layer operators actually look at, not re-architecting what feeds it." },
+      { label: "Audiences", desc: "Two defaults, one product. Security and compliance teams live in dark mode on SOC monitors; finance and reporting stakeholders print and annotate light-mode exports. Both had to be first-class, not one themed after the other." },
+      { label: "Device reality", desc: "Tablet-in-the-field was a hard requirement, not a stretch goal. Worse lighting, less screen real estate, and no assumption of a desktop-sized layout to fall back on." },
+      { label: "Timeline & budget", desc: "A 14-week SOW with room to work. Enough runway for a real discovery phase, the five operations-lead interviews included, before anything got built, and no schedule renegotiation mid-project. One of the more comfortably scoped engagements on this list." },
+    ],
     decisions: [
       {
         num: "01",
         title: "Composable Widget Architecture",
-        desc: "Rather than prescribing a fixed layout, the dashboard lets each user build their own view by adding, sizing, and arranging widgets. Ops, finance, and security teams each surface the metrics relevant to their role — without compromise.",
+        desc: "One fixed layout serving ops, finance, and security at once meant compromise for all three, or three separate products to maintain. Letting each team assemble their own view meant one codebase instead of three.",
       },
       {
         num: "02",
         title: "Severity-Driven Visual Grammar",
-        desc: "Critical/red, High/orange, Medium/yellow, and Low/green run consistently through every surface — table badges, chart segments, and KPI card accents. A shared colour language that works whether the user is scanning recommendations or a distribution chart.",
+        desc: "Critical, High, Medium, and Low read identically whether it's a table badge, a chart segment, or a KPI accent. The point underneath it: an operator glancing at a tablet across a room should be able to tell if something's bad without reading a word.",
       },
       {
         num: "03",
-        title: "Layered Information Architecture",
-        desc: "The tab structure and hierarchy (KPI cards → charts → data table) are deliberate: users start with high-level signal and drill into specifics only when needed. Analysts get granular detail; operators never face raw data upfront.",
+        title: "Layered Triage Architecture",
+        desc: "KPI cards, then charts, then the data table. It's structured so the first five seconds on screen answer how bad, where, and raw log-level detail only shows up after a deliberate drill-down, because reaching for raw data first is how response time gets wasted mid-incident.",
       },
     ],
     outcomes: [
       { num: "5",       title: "Research Sessions",         desc: "Interviews with operations leads to understand monitoring mental models and where existing tools broke down." },
-      { num: "2 Modes", title: "Dark & Light Mode System",  desc: "Component library covering dark mode (primary) and light mode — accessible and consistent across both." },
-      { num: "1",       title: "Field-Optimized Layout",    desc: "Designed for field operators accessing real-time data away from desktop, prioritising the highest-priority views." },
+      { num: "2 Modes", title: "Dark & Light Mode System",  desc: "Component library covering dark mode (primary) and light mode, accessible and consistent across both." },
+      { num: "1",       title: "Field-Optimized Layout",    desc: "Designed for field operators accessing real-time data away from desktop, prioritizing the highest-priority views." },
     ],
   },
 
@@ -146,33 +151,41 @@ export const CASE_STUDIES: CaseStudy[] = [
       { src: SB_SLIDE_5, label: "How It Came Together",  caption: "5-step process: Market Research → Flow Mapping → Friction Audit → Modular Design → Testing & Handoff across Uganda, Ghana, and Lesotho." },
     ],
     overview:
-      "Standard Bank needed a unified mobile wallet flow that worked across Uganda, Ghana, Lesotho, Rwanda, Botswana, Tanzania, and Mozambique — each market with different mobile money operators, regulatory constraints, and user expectations. The challenge: a single UI system that adapts without fragmenting.",
+      "One payment flow, seven regulatory regimes, and a user base where opening the app is itself a decision point. Data costs money in every market this shipped to. Standard Bank needed a single mobile wallet experience across Uganda, Ghana, Lesotho, Rwanda, Botswana, Tanzania, and Mozambique, each running different mobile money operators, different regulators, and a different baseline comfort with digital financial services. The brief wasn't “make a nice app.” It was “don't lose the trust it took years to build.”",
     screens: [
-      { src: CDN_SB_SELECT,  label: "Select Service",  caption: "Operator-aware service selection — MTN, Vodafone Cash, AirtelTigo resolve automatically by market", portrait: true },
-      { src: CDN_SB_REVIEW,  label: "Review + Fees",   caption: "Fee transparency before commit — plain-language breakdown surfaced at review, before OTP", portrait: true },
-      { src: CDN_SB_CONFIRM, label: "Confirmation",    caption: "Post-payment confirmation with beneficiary save prompt for repeat sends", portrait: true },
+      { src: "/case-studies/standard-bank/payment-details.png",   label: "Payment Details",     caption: "Fee transparency before commit — the breakdown is surfaced here, before OTP, not after", portrait: true },
+      { src: "/case-studies/standard-bank/otp-verify.png",        label: "One-Time PIN",         caption: "OTP verification with a plain-language resend path and fallback to email", portrait: true },
+      { src: "/case-studies/standard-bank/add-beneficiary.png",   label: "Add Beneficiary",      caption: "Beneficiary details captured in-flow, operator resolved automatically from the wallet", portrait: true },
+      { src: "/case-studies/standard-bank/beneficiary-added.png", label: "Beneficiary Saved",    caption: "Save-for-next-time confirmation — the prompt that cut repeat sends by 40%", portrait: true },
+    ],
+    scopeConstraints: [
+      { label: "Engineering scope", desc: "Seven markets, one UI, one shipping team. Per-market forks were explicitly ruled out. Anything that couldn't be solved with configuration instead of a rebuild wasn't viable, because the org couldn't support seven codebases long-term." },
+      { label: "Financial & digital literacy", desc: "Designing for interface literacy that can't be assumed. A meaningful share of users have limited exposure to smartphone banking conventions: no shared assumption that a spinner means wait, a checkmark means done, or that fees get disclosed before you commit rather than after. Every pattern had to work for a first-time digital-banking user, not just be forgiving of one." },
+      { label: "Bandwidth & device cost", desc: "Not an edge case, the baseline. Screens had to hold up on low-end Android hardware and inconsistent connectivity, which ruled out anything assuming a fast connection or a high-end display, and pushed the team toward lightweight, low-motion, text-forward UI over anything decorative." },
+      { label: "Regulatory fragmentation", desc: "Fee disclosure, KYC, and confirmation language weren't uniform across the seven markets. The flow was built with those differences as parameters the config layer handles, not exceptions the design has to special-case." },
+      { label: "Timeline & budget", desc: "Nine weeks, seven markets, and a budget that got cut before the work even started. There wasn't room to run fresh field research in every market, so it went into three (Uganda, Ghana, Lesotho) and the other four were designed off those findings plus a lighter remote validation pass. The operator-aware, configuration-first model wasn't just good practice here. On that runway, it was the only way seven markets were shipping at all." },
     ],
     decisions: [
       {
         num: "1",
-        title: "Operator-aware selection model",
-        desc: "Users don't think in operators — they think in amounts and recipients. Operator logos surface only when ambiguity requires a decision. In single-operator markets, the step disappears entirely.",
+        title: "Operator-Aware Selection",
+        desc: "Users think in amounts and recipients, not which telco they're on. Operator branding surfaces only when a market genuinely has more than one option. In single-operator markets, the decision disappears rather than being shown and immediately made irrelevant.",
       },
       {
         num: "2",
-        title: "Fee transparency before commit",
-        desc: "Research across 3 markets showed fee surprises at confirmation were the #1 driver of abandoned transactions. Fees are surfaced on the review screen with plain-language breakdown — before the OTP step.",
+        title: "Fee Transparency Before Commit",
+        desc: "Research across three markets identified fee surprise at confirmation as the number one reason transactions were abandoned mid-flow. Moving the breakdown, in plain language rather than banking jargon, to the review screen and ahead of the OTP step turned a moment of suspicion into a moment of confirmation.",
       },
       {
         num: "3",
-        title: "Beneficiary save prompt",
-        desc: "First-time sends to a recipient trigger a 'Save for next time?' prompt post-confirmation. Repeat sends show the beneficiary's last transaction amount as a default — reducing keystrokes on the most common journey.",
+        title: "Beneficiary Save as a Flow Step",
+        desc: "First-time sends prompt to save for next time right after confirmation, when the value is obvious, instead of sitting buried in a settings menu a less digitally-fluent user would likely never find.",
       },
     ],
     outcomes: [
-      { num: "↓", title: "Transaction abandonment dropped", desc: "Fee transparency at the review step reduced confirmed drop-offs by removing the #1 surprise point in the original flow." },
-      { num: "↑ 40%", title: "Faster repeat sends", desc: "Beneficiary save prompt adoption exceeded targets in pilot — returning users completed sends 40% faster on second transaction." },
-      { num: "✓ 7", title: "Markets, one codebase", desc: "The operator-aware model meant product engineering shipped one UI across all markets with market-specific config, not forked codebases." },
+      { num: "↓", title: "Transaction abandonment dropped", desc: "Fee transparency at the review step removed the single largest identified drop-off point in the original design." },
+      { num: "40%", title: "Faster repeat sends", desc: "Beneficiary-save adoption cleared pilot targets, a direct result of meeting first-time users where their comfort actually was." },
+      { num: "7 → 1", title: "Markets, one codebase", desc: "The operator-aware model is why engineering never had to maintain forked codebases per country." },
     ],
   },
 
@@ -197,34 +210,40 @@ export const CASE_STUDIES: CaseStudy[] = [
       { src: EH_SLIDE_5, label: "Key Design Decisions",  caption: "Three decisions: Progressive Disclosure (care type → location → preferences), Contextual Actions (reschedule/cancel inline on card), Unified Care Pathways (single 'Get Care Now' entry point)." },
     ],
     overview:
-      "Anthem is one of the largest health insurance providers in the US. This project redesigned the Find Care experience across web — enabling members to search providers, schedule appointments, get virtual care, and manage their care team. The existing flow forced members to toggle between multiple portals, lacked transparency around provider details and availability, and generated high abandonment and call-centre volume. Scope included scheduling, rescheduling, cancellation, and the Get Care Now pathway.",
+      "Every extra click between a member and an appointment is a click that ends in a call center instead. Call centers are the most expensive support channel a health insurer runs. Anthem members needing to find a provider, manage an appointment, or check a claim were routed through multiple disconnected portals, each reflecting the insurer's internal plan structure rather than what a member was actually trying to do. This was a cost-structure problem wearing a UX problem's clothes.",
     screens: [
-      { src: CDN_EH_OVERVIEW,  label: "Member Dashboard",   caption: "Task-based navigation replacing the legacy plan-centric architecture — find care, manage benefits, view claims" },
-      { src: CDN_EH_APPT,      label: "Appointments",       caption: "7-step modal flow redesigned to 3-step in-page flow — completion rate improved from 58% to 83%" },
-      { src: CDN_EH_CLAIMS,    label: "Claims Lookup",      caption: "Plain-language status messages replacing clinical jargon — 'In review' instead of 'Adjudication pending'" },
-      { src: CDN_EH_COVERAGE,  label: "Coverage Details",   caption: "Structured benefit breakdown built with Polaris design system components" },
+      { src: "/case-studies/elevance-health/care-dashboard.png",       label: "Care Dashboard",       caption: "Task-based navigation replacing the legacy plan-centric architecture — find care, manage benefits, view appointments" },
+      { src: "/case-studies/elevance-health/cancel-appointment.png",   label: "Cancel Appointment",   caption: "Reason captured inline before cancellation — the contextual-action pattern replacing buried settings-menu flows" },
+      { src: "/case-studies/elevance-health/appointment-canceled.png", label: "Appointment Canceled", caption: "Confirmation state with an automatic email receipt, no separate confirmation screen to navigate to" },
+      { src: "/case-studies/elevance-health/get-care-now.png",         label: "Get Care Now",         caption: "Unified care pathway — virtual and in-person options surfaced from a single entry point" },
+    ],
+    scopeConstraints: [
+      { label: "Design system", desc: "Built inside and contributed back to Polaris, Anthem's existing enterprise system. New patterns had to be justified as reusable across other product teams, not one-off solutions for this flow alone." },
+      { label: "Bounded scope", desc: "Scheduling, rescheduling, cancellation, and Get Care Now. Explicitly not a rebuild of the entire member portal, inside a large regulated org where scope creep on a healthcare product means a much longer compliance and legal review cycle." },
+      { label: "Accessibility", desc: "WCAG 2.1 AA as a component-level requirement, reviewed in Figma before handoff rather than a post-launch audit item, given a user population more likely to rely on assistive technology than the average consumer app audience." },
+      { label: "Timeline & budget", desc: "A 16-week engagement, scoped tightly to scheduling, rescheduling, cancellation, and Get Care Now rather than the full member portal. Enough time to do the accessibility and Polaris-contribution work properly, not enough to justify expanding scope beyond what was actually broken." },
     ],
     decisions: [
       {
         num: "1",
-        title: "Intent-first information architecture",
-        desc: "The nav was restructured around user tasks ('Find care', 'Manage benefits', 'View claims') rather than plan sections. A card-sorting study with 24 members validated the taxonomy before any wireframes were built.",
+        title: "Intent-First Information Architecture",
+        desc: "Legacy navigation mirrored the insurer's internal plan structure. The redesign organizes around what a member is actually trying to do (find care, manage benefits, view claims), validated with a 24-member card-sorting study before a single wireframe existed.",
       },
       {
         num: "2",
-        title: "One primary action per screen",
-        desc: "Legacy flows stacked 4–6 actions per screen. Every redesigned screen has one primary CTA. Secondary options are available but deprioritised. Error recovery paths are explicit, not hidden in modals.",
+        title: "One Primary Action Per Screen",
+        desc: "Legacy flows stacked four to six competing actions per screen, exactly the ambiguity that turns a simple task into a support call. Every redesigned screen has one clear primary CTA, with error recovery made explicit instead of buried in a modal.",
       },
       {
         num: "3",
-        title: "Accessible from component level",
-        desc: "All Polaris contributions were built to WCAG 2.1 AA. Focus management, touch target sizing, and colour contrast reviewed in Figma before handoff — not post-development.",
+        title: "Component-Level Accessibility",
+        desc: "Every Polaris contribution shipped WCAG 2.1 AA compliant from the start. Focus management and contrast were reviewed in Figma before engineering touched it, not caught in a QA pass after the fact.",
       },
     ],
     outcomes: [
       { num: "+29%", title: "Task completion rate", desc: "Appointment management (58%→83%), claims lookup (61%→87%), and document download (71%→94%) measured over a 60-day post-launch cohort." },
       { num: "↓", title: "Support call volume", desc: "Appointment changes and claims status were top call drivers. Both saw measurable reduction in the first quarter after launch." },
-      { num: "6", title: "Polaris patterns adopted", desc: "Appointment card, form validation states, coverage alert, document row, inline error, and confirmation banner — adopted across 6 product teams within 6 months." },
+      { num: "6", title: "Polaris patterns adopted", desc: "Appointment card, form validation states, coverage alert, document row, inline error, and confirmation banner, adopted across 6 product teams within 6 months." },
     ],
   },
 ];

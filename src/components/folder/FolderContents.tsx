@@ -3,10 +3,12 @@
 import { motion } from "framer-motion";
 import { DOCUMENTS } from "@/lib/documents";
 import { staggerContainer, easeOutExpo } from "@/lib/motion";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 import DocumentCard from "./DocumentCard";
 import { FOLDER_BORDER, FOLDER_LABEL, FOLDER_PANEL } from "./folderPalette";
 
 export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) => void }) {
+  const lowEndDevice = useIsLowEndDevice();
   return (
     <motion.div
       initial={{ opacity: 0, y: -8, scale: 0.97 }}
@@ -26,8 +28,8 @@ export default function FolderContents({ onOpenDoc }: { onOpenDoc: (id: string) 
         width: 260,
         padding: 10,
         borderRadius: 18,
-        background: `${FOLDER_PANEL}E0`,
-        backdropFilter: "blur(16px)",
+        background: `${FOLDER_PANEL}${lowEndDevice ? "F5" : "E0"}`,
+        backdropFilter: lowEndDevice ? undefined : "blur(16px)",
         border: `1px solid ${FOLDER_BORDER}`,
         boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
       }}

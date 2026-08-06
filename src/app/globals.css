@@ -90,6 +90,13 @@ button:focus-visible,
   html { scroll-behavior: auto; }
 }
 
+/* ── Case-study screens sidebar: reveal an "expand" cue on hover so the
+   thumbnail's click-to-lightbox affordance isn't just implied by cursor. ── */
+.case-screen-thumb:hover .case-screen-expand-icon,
+.case-screen-thumb:focus-visible .case-screen-expand-icon {
+  opacity: 1;
+}
+
 /* ── Floating portfolio folder + document windows — desktop-width only,
    avoids obstructing mobile layouts (dragging multiple windows isn't a
    touch interaction) ── */
@@ -149,6 +156,9 @@ button:focus-visible,
     height: auto !important;
     padding: 32px 24px !important;
   }
+  /* Drag-to-resize only makes sense with a mouse and a wide-enough viewport
+     to have two columns in the first place. */
+  .case-resize-handle { display: none !important; }
 
   /* Case-study sticky nav: the project-tab strip has no wrap/scroll, so it
      was clipping mid-word and making the last tab unreachable. Let it

@@ -30,6 +30,23 @@ function tieredParticleCount(): number {
   return 18000;
 }
 
+// shapePresets.ts's default column spacing (0.22) was tuned at ~16:10. A
+// wider canvas widens the camera's horizontal FOV span at a given depth
+// (fixed vertical fov, aspect scales horizontal), so without this the grid
+// falls short of the left/right edges on wide screens — reported on a 16"
+// laptop. Scale linearly with aspect ratio past the tuned baseline; below
+// it, leave spacing at the tuned default rather than shrinking it (that
+// range was already dialed in, and tighter-than-tuned spacing was never
+// validated). Capped so an ultrawide/multi-monitor span doesn't blow the
+// grid out into visibly sparse dots.
+const TUNED_ASPECT = 16 / 10;
+function edgeToEdgeSpacingX(baseSpacingX: number): number {
+  if (typeof window === "undefined" || window.innerHeight === 0) return baseSpacingX;
+  const canvasAspect = window.innerWidth / window.innerHeight;
+  const scale = Math.min(2, Math.max(1, canvasAspect / TUNED_ASPECT));
+  return baseSpacingX * scale;
+}
+
 // Brief's stated ceiling (8-15%) reads as functionally invisible against
 // this site's near-black (#0A0A0A) background on a real display — confirmed
 // by user report through several rounds (0.24, 0.45, 0.72, 1.152 all still
@@ -60,7 +77,9 @@ export default function ParticleSystem({
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const { positions: grid, count } = generateWaveGridPositions(targetCount);
+    const { positions: grid, count } = generateWaveGridPositions(targetCount, {
+      spacingX: edgeToEdgeSpacingX(0.22),
+    });
     const shape = generateSpherePositions(count, { radius: globeRadius });
     const seeds = new Float32Array(count);
     for (let i = 0; i < count; i++) seeds[i] = Math.random();

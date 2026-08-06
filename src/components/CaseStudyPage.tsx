@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } fr
 import { CASE_STUDIES, CaseStudy } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 
 export default function CaseStudyPage({ slug }: { slug: string }) {
   const idx   = CASE_STUDIES.findIndex((c) => c.slug === slug);
@@ -18,13 +19,56 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   const [lightbox, setLightbox]   = useState<number | null>(null);
   const [activeScreen, setActive] = useState(0);
   const [navHovered, setNavHov]   = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [resizing, setResizing]   = useState(false);
 
   const isFinePointer = useHasFinePointer();
+  const lowEndDevice = useIsLowEndDevice();
   const reduceMotion = useReducedMotion();
   const reveal = revealVariant(!!reduceMotion);
   const { scrollYProgress } = useScroll();
   const scrollProgressX = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1, 1] : [0, 1]);
   const screens = study?.screens ?? [];
+
+  // Restore a previously-dragged sidebar width so it doesn't reset to
+  // default every time the reader moves between case studies.
+  useEffect(() => {
+    const saved = sessionStorage.getItem("case-sidebar-width");
+    if (saved) setSidebarWidth(Number(saved));
+  }, []);
+
+  // Panel resize — drag the divider between the narrative column and the
+  // screens sidebar. Width is clamped so neither side collapses to
+  // something unusable, and tracked on `window` (not the handle) since the
+  // cursor easily outruns a 6px-wide target during a fast drag.
+  useEffect(() => {
+    if (!resizing) return;
+    const MIN_SIDEBAR = 220;
+    const MAX_SIDEBAR = 560;
+    const MIN_LEFT = 420;
+    const move = (e: MouseEvent) => {
+      const fromRight = window.innerWidth - e.clientX;
+      const maxAllowed = Math.min(MAX_SIDEBAR, window.innerWidth - MIN_LEFT);
+      const next = Math.max(MIN_SIDEBAR, Math.min(fromRight, maxAllowed));
+      setSidebarWidth(next);
+    };
+    const up = () => {
+      setResizing(false);
+      setSidebarWidth((w) => { sessionStorage.setItem("case-sidebar-width", String(w)); return w; });
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+    };
+  }, [resizing]);
 
   useEffect(() => {
     document.body.classList.toggle("has-fine-pointer", isFinePointer);
@@ -192,8 +236,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         display: "grid", gridTemplateColumns: "1fr auto 1fr",
         alignItems: "center",
         padding: "0 48px", height: 64,
-        background: "rgba(10,10,10,0.75)",
-        backdropFilter: "blur(12px)",
+        background: lowEndDevice ? "rgba(10,10,10,0.94)" : "rgba(10,10,10,0.75)",
+        backdropFilter: lowEndDevice ? undefined : "blur(12px)",
         borderBottom: "1px solid var(--border)",
       }}>
         {/* Back */}
@@ -236,7 +280,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                 }}
               >
                 <span style={{
-                  fontSize: 10, fontWeight: 700,
+                  fontSize: 10, fontWeight: 700, lineHeight: 1,
                   color: isCurrent ? c.accentText : "var(--muted)",
                   transition: "color 0.2s",
                   letterSpacing: "0.06em",
@@ -245,7 +289,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   {c.index}
                 </span>
                 <span style={{
-                  fontSize: 11, fontWeight: isCurrent ? 700 : 500,
+                  fontSize: 11, fontWeight: isCurrent ? 700 : 500, lineHeight: 1,
                   letterSpacing: "0.08em", textTransform: "uppercase",
                   color: isCurrent ? "var(--fg)" : isHov ? "rgba(237,234,212,0.8)" : "var(--muted)",
                   transition: "color 0.2s",
@@ -373,12 +417,32 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         {/* ── Two-column body ── */}
         <div className="case-body-grid" style={{
           display: "grid",
-          gridTemplateColumns: "1fr 300px",
+          gridTemplateColumns: `1fr 6px ${sidebarWidth}px`,
           alignItems: "start", minHeight: "100vh",
         }}>
 
           {/* LEFT: narrative */}
           <div style={{ borderRight: "1px solid var(--border)" }}>
+
+            {/* Scope, Constraints & Reality */}
+            <section style={{ padding: "72px 48px", background: "var(--bg-elevated)" }}>
+              <motion.div
+                initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+                style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: "var(--muted)",
+                  display: "flex", alignItems: "center", gap: 16, marginBottom: 48,
+                }}
+              >
+                Scope, Constraints &amp; Reality
+                <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              </motion.div>
+              <div style={{ borderTop: "1px solid var(--border)" }}>
+                {study.scopeConstraints.map((item, i) => (
+                  <ScopeRow key={i} item={item} accentText={accentText} index={i} />
+                ))}
+              </div>
+            </section>
 
             {/* Portfolio slides */}
             {study.slides && study.slides.length > 0 ? (
@@ -494,6 +558,31 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             </section>
           </div>
 
+          {/* Drag handle — resizes the screens sidebar. Tracked on `window`
+              in the effect above, not here; this is just the visible/hit
+              target and the drag-start trigger. */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize screens panel"
+            className="case-resize-handle"
+            onMouseDown={(e) => { e.preventDefault(); setResizing(true); }}
+            onDoubleClick={() => { setSidebarWidth(300); sessionStorage.setItem("case-sidebar-width", "300"); }}
+            style={{
+              alignSelf: "stretch",
+              cursor: isFinePointer ? "col-resize" : undefined,
+              position: "relative",
+              background: "transparent",
+            }}
+          >
+            <div style={{
+              position: "absolute", top: 0, bottom: 0, left: "50%",
+              width: 1, transform: "translateX(-50%)",
+              background: resizing ? accent : "var(--border)",
+              transition: resizing ? "none" : "background 0.2s",
+            }} />
+          </div>
+
           {/* RIGHT: sticky screens panel */}
           <div className="case-sidebar" style={{
             position: "sticky", top: 64,
@@ -521,7 +610,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   aria-current={activeScreen === i}
                   style={{ background: "none", border: "none", padding: 0, cursor: isFinePointer ? "none" : "pointer", textAlign: "left" }}
                 >
-                  <div style={{
+                  <div className="case-screen-thumb" style={{
+                    position: "relative",
                     borderRadius: 6, overflow: "hidden",
                     border: `2px solid ${activeScreen === i ? accent : "var(--border)"}`,
                     boxShadow: activeScreen === i ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
@@ -531,6 +621,15 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                       src={screen.src} alt={screen.label}
                       style={{ width: "100%", display: "block", opacity: activeScreen === i ? 1 : 0.7, transition: "opacity 0.25s" }}
                     />
+                    <div className="case-screen-expand-icon" aria-hidden="true" style={{
+                      position: "absolute", inset: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity 0.2s",
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    </div>
                   </div>
                   <div style={{
                     marginTop: 6, fontSize: 9, fontWeight: 700,
@@ -606,6 +705,32 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         </nav>
       </main>
     </>
+  );
+}
+
+function ScopeRow({ item, accentText, index }: {
+  item: CaseStudy["scopeConstraints"][0]; accentText: string; index: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.div
+      initial="hidden" whileInView="visible" viewport={viewportOnce} variants={revealVariant(!!reduceMotion)}
+      transition={{ delay: index * 0.06 }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "200px 1fr",
+        gap: 32,
+        padding: "22px 0",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.04em", color: accentText }}>
+        {item.label}
+      </div>
+      <p style={{ fontSize: 14, fontWeight: 300, color: "var(--muted-strong)", lineHeight: 1.75, maxWidth: 720 }}>
+        {item.desc}
+      </p>
+    </motion.div>
   );
 }
 

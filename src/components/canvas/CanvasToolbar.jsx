@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import ColorPicker from "./ColorPicker";
+import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 
 const TOOLS = [
   { id: "select",  label: "Select",    key: "V", icon: <SelectIcon /> },
@@ -21,6 +22,7 @@ export default function CanvasToolbar({
   hasSelection,
 }) {
   const [picker, setPicker]   = useState(null); // "fill" | "stroke" | null
+  const lowEndDevice = useIsLowEndDevice();
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function CanvasToolbar({
         borderRadius: 12,
         padding: "5px 8px",
         boxShadow: "0 8px 32px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)",
-        backdropFilter: "blur(12px)",
+        backdropFilter: lowEndDevice ? undefined : "blur(12px)",
         userSelect: "none",
       }}
     >

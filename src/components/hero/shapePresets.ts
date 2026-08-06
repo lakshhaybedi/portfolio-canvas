@@ -24,6 +24,15 @@ export function generateWaveGridPositions(
   // reach toward the horizon (paired with the relaxed distance falloff in
   // particleShaders.ts) so the back of the wave has real geometry to render
   // sharply instead of just less-faded emptiness.
+  //
+  // spacingX default (0.22) was tuned at a ~16:10 viewport. The grid's
+  // world-space width is fixed at generation time, but a perspective
+  // camera's horizontal FOV span at a given depth scales linearly with the
+  // canvas aspect ratio — so on a wider screen (a 16" laptop, an ultrawide)
+  // the camera sees further past the grid's edges than it did at the
+  // tuning aspect ratio, leaving visible gaps at the left/right. Callers on
+  // wide viewports should scale spacingX by (canvasAspect / tunedAspect) to
+  // keep the grid edge-to-edge — see ParticleSystem.tsx.
   { aspect = 0.75, spacingX = 0.22, spacingZ = 0.24 }: { aspect?: number; spacingX?: number; spacingZ?: number } = {}
 ): { positions: Float32Array; count: number } {
   const cols = Math.max(2, Math.round(Math.sqrt(targetCount * aspect)));
