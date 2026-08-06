@@ -1,21 +1,25 @@
 "use client";
-import { useRef, useCallback, useContext } from "react";
-import { useCanvasStore } from "@/lib/useCanvasStore";
+import { useCallback, useContext } from "react";
 import { TransformContext } from "./Canvas";
 
 const HANDLE = 10;
 
-export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarge }) {
-  const updateElement = useCanvasStore((s) => s.updateElement);
-  const deleteElement = useCanvasStore((s) => s.deleteElement);
-  const bringForward  = useCanvasStore((s) => s.bringForward);
-  const sendBackward  = useCanvasStore((s) => s.sendBackward);
-  const isAdmin       = useCanvasStore((s) => s.isAdmin);
-  const transformRef  = useContext(TransformContext);
+/**
+ * `editable` (not `isAdmin` directly — Canvas.jsx computes it per element)
+ * gates every interaction: drag, resize, rotate, text edit, and the
+ * select/delete/reorder handles. Mutations go through the onUpdate/onDelete
+ * /onBringForward/onSendBackward callbacks rather than calling the Zustand
+ * store directly — Canvas.jsx binds these to either the persisted store
+ * (admin editing a published element) or local, non-persisted session
+ * state (a guest editing something they drew this session), so this
+ * component doesn't need to know or care which.
+ */
+export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward }) {
+  const transformRef = useContext(TransformContext);
 
   // ── Drag ──────────────────────────────────────────────────
   const onPointerDownMove = useCallback((e) => {
-    if (!isAdmin) return;
+    if (!editable) return;
     e.stopPropagation();
     onSelect(el.id);
     const startX = e.clientX, startY = e.clientY;
@@ -23,7 +27,7 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
 
     const onMove = (ev) => {
       const s = transformRef.current.scale;
-      updateElement(pageId, el.id, {
+      onUpdate({
         x: origX + (ev.clientX - startX) / s,
         y: origY + (ev.clientY - startY) / s,
       });
@@ -34,7 +38,7 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.x, el.y, pageId, isAdmin, transformRef, updateElement, onSelect]);
+  }, [el.id, el.x, el.y, editable, transformRef, onUpdate, onSelect]);
 
   // ── Resize ────────────────────────────────────────────────
   const onPointerDownResize = useCallback((e) => {
@@ -44,7 +48,7 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
 
     const onMove = (ev) => {
       const s = transformRef.current.scale;
-      updateElement(pageId, el.id, {
+      onUpdate({
         w: Math.max(20, origW + (ev.clientX - startX) / s),
         h: Math.max(20, origH + (ev.clientY - startY) / s),
       });
@@ -55,7 +59,7 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.w, el.h, pageId, transformRef, updateElement]);
+  }, [el.w, el.h, transformRef, onUpdate]);
 
   // ── Rotate ────────────────────────────────────────────────
   const onPointerDownRotate = useCallback((e) => {
@@ -68,7 +72,7 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
       const { x: tx, y: ty } = transformRef.current;
       const angle =
         Math.atan2((ev.clientY - ty) / s - cy, (ev.clientX - tx) / s - cx) * (180 / Math.PI) + 90;
-      updateElement(pageId, el.id, { rotation: angle });
+      onUpdate({ rotation: angle });
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
@@ -76,30 +80,28 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.x, el.y, el.w, el.h, pageId, transformRef, updateElement]);
+  }, [el.x, el.y, el.w, el.h, transformRef, onUpdate]);
 
   const handleClick = (e) => {
     e.stopPropagation();
-    if (!isAdmin) { if (el.type === "image") onEnlarge(el); }
+    if (!editable) { if (el.type === "image") onEnlarge(el); }
     else onSelect(el.id);
   };
 
-  const isShape = ["rect", "ellipse", "frame"].includes(el.type);
-
   return (
     <div
-      onPointerDown={isAdmin ? onPointerDownMove : undefined}
+      onPointerDown={editable ? onPointerDownMove : undefined}
       onClick={handleClick}
       style={{
         position: "absolute",
         left: el.x, top: el.y,
-        width: el.type === "arrow" ? el.w : el.w,
-        height: el.type === "arrow" ? el.h : el.h,
+        width: el.w,
+        height: el.h,
         transform: `rotate(${el.rotation ?? 0}deg)`,
         zIndex: el.z ?? 0,
-        cursor: isAdmin ? "move" : (el.type === "image" ? "zoom-in" : "default"),
+        cursor: editable ? "move" : (el.type === "image" ? "zoom-in" : "default"),
         boxSizing: "border-box",
-        outline: selected && isAdmin ? "2px solid #7C6AF7" : "none",
+        outline: selected && editable ? "2px solid #7C6AF7" : "none",
         outlineOffset: 2,
         userSelect: "none",
         willChange: "transform",
@@ -125,10 +127,10 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
           fontFamily: "'Space Grotesk',sans-serif",
           overflow: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
-          {isAdmin ? (
+          {editable ? (
             <textarea
               value={el.text ?? ""}
-              onChange={(e) => updateElement(pageId, el.id, { text: e.target.value })}
+              onChange={(e) => onUpdate({ text: e.target.value })}
               onPointerDown={(e) => e.stopPropagation()}
               style={{
                 width: "100%", height: "100%", background: "transparent",
@@ -185,8 +187,8 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
         <ArrowElement el={el} />
       )}
 
-      {/* ── Admin handles ── */}
-      {isAdmin && selected && el.type !== "arrow" && (
+      {/* ── Selection handles ── */}
+      {editable && selected && el.type !== "arrow" && (
         <>
           <div
             onPointerDown={onPointerDownResize}
@@ -204,12 +206,12 @@ export default function CanvasElement({ el, pageId, selected, onSelect, onEnlarg
               borderRadius: "50%", cursor: "crosshair", zIndex: 10,
             }}
           />
-          <FloatingToolbar pageId={pageId} el={el} bringForward={bringForward} sendBackward={sendBackward} deleteElement={deleteElement} />
+          <FloatingToolbar onBringForward={onBringForward} onSendBackward={onSendBackward} onDelete={onDelete} />
         </>
       )}
 
-      {isAdmin && selected && el.type === "arrow" && (
-        <FloatingToolbar pageId={pageId} el={el} bringForward={bringForward} sendBackward={sendBackward} deleteElement={deleteElement} />
+      {editable && selected && el.type === "arrow" && (
+        <FloatingToolbar onBringForward={onBringForward} onSendBackward={onSendBackward} onDelete={onDelete} />
       )}
     </div>
   );
@@ -251,7 +253,7 @@ function ArrowElement({ el }) {
   );
 }
 
-function FloatingToolbar({ pageId, el, bringForward, sendBackward, deleteElement }) {
+function FloatingToolbar({ onBringForward, onSendBackward, onDelete }) {
   return (
     <div
       onPointerDown={(e) => e.stopPropagation()}
@@ -264,9 +266,9 @@ function FloatingToolbar({ pageId, el, bringForward, sendBackward, deleteElement
       }}
     >
       {[
-        ["↑", () => bringForward(pageId, el.id),  "Bring forward"],
-        ["↓", () => sendBackward(pageId, el.id),  "Send backward"],
-        ["✕", () => deleteElement(pageId, el.id), "Delete"],
+        ["↑", onBringForward, "Bring forward"],
+        ["↓", onSendBackward, "Send backward"],
+        ["✕", onDelete,       "Delete"],
       ].map(([label, fn, title]) => (
         <button
           key={title}

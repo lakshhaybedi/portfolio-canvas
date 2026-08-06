@@ -10,20 +10,69 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const CLAMP = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+// Guest-drawn elements always render above the published page, regardless
+// of the published elements' own z values — they're an annotation layer on
+// top of real content, not part of it.
+const GUEST_Z_BASE = 100000;
+const guestUid = () => Math.random().toString(36).slice(2, 10);
+
 // Shared ref so CanvasElement can read live scale without a re-render
 export const TransformContext = createContext({ current: { x: 0, y: 0, scale: 1 } });
 
 export default function Canvas({ pageId }) {
-  const isAdmin            = useCanvasStore((s) => s.isAdmin);
-  const pages              = useCanvasStore((s) => s.pages);
-  const addElement         = useCanvasStore((s) => s.addElement);
-  const deleteElement      = useCanvasStore((s) => s.deleteElement);
-  const updateElementStyle = useCanvasStore((s) => s.updateElementStyle);
-  const undo               = useCanvasStore((s) => s.undo);
-  const redo               = useCanvasStore((s) => s.redo);
+  const isAdmin              = useCanvasStore((s) => s.isAdmin);
+  const pages                = useCanvasStore((s) => s.pages);
+  const addElementStore      = useCanvasStore((s) => s.addElement);
+  const updateElementStore   = useCanvasStore((s) => s.updateElement);
+  const deleteElementStore   = useCanvasStore((s) => s.deleteElement);
+  const updateElementStyle   = useCanvasStore((s) => s.updateElementStyle);
+  const bringForwardStore    = useCanvasStore((s) => s.bringForward);
+  const sendBackwardStore    = useCanvasStore((s) => s.sendBackward);
+  const undo                 = useCanvasStore((s) => s.undo);
+  const redo                 = useCanvasStore((s) => s.redo);
 
-  const page     = pages.find((p) => p.id === pageId);
-  const elements = page?.elements ?? [];
+  const page = pages.find((p) => p.id === pageId);
+  const publishedElements = page?.elements ?? [];
+
+  // ── Guest session state — deliberately plain useState, never touching
+  // the persisted (zustand `persist`) store. Everyone can use the tools;
+  // only admin's changes are saved. A guest's own scribbles live only
+  // here, so a refresh clears them for free — there's no persistence to
+  // undo. ──────────────────────────────────────────────────────────────
+  const [guestElements, setGuestElements] = useState([]);
+  const guestElementsRef = useRef(guestElements);
+  useEffect(() => { guestElementsRef.current = guestElements; }, [guestElements]);
+
+  const addGuestElement = useCallback((patch) => {
+    const element = { id: guestUid(), rotation: 0, ...patch, z: GUEST_Z_BASE + guestElementsRef.current.length };
+    setGuestElements((prev) => [...prev, element]);
+    return element.id;
+  }, []);
+  const updateGuestElement = useCallback((id, patch) => {
+    setGuestElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  }, []);
+  const deleteGuestElement = useCallback((id) => {
+    setGuestElements((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+  const bringForwardGuest = useCallback((id) => {
+    setGuestElements((prev) => {
+      const max = prev.length ? Math.max(...prev.map((e) => e.z)) : GUEST_Z_BASE;
+      return prev.map((e) => (e.id === id ? { ...e, z: max + 1 } : e));
+    });
+  }, []);
+  const sendBackwardGuest = useCallback((id) => {
+    setGuestElements((prev) => {
+      const min = prev.length ? Math.min(...prev.map((e) => e.z)) : GUEST_Z_BASE;
+      return prev.map((e) => (e.id === id ? { ...e, z: min - 1 } : e));
+    });
+  }, []);
+
+  // Combined list for rendering — guests see the real page plus their own
+  // session-only additions on top; admin sees (and edits) only the real,
+  // persisted page.
+  const elements = isAdmin ? publishedElements : [...publishedElements, ...guestElements];
+
+  const isSessionElement = useCallback((id) => guestElementsRef.current.some((e) => e.id === id), []);
 
   // ── Transform stored in a ref — zero React re-renders on pan/zoom ──
   const transformRef = useRef({ x: 0, y: 0, scale: 1 });
@@ -86,21 +135,29 @@ export default function Canvas({ pageId }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]); // only on selection change, not on every element update
 
-  // ── Apply toolbar fill/stroke to selected element ──────────
+  // ── Apply toolbar fill/stroke to selected element — routes to the
+  // persisted store for a published element (admin only) or to local
+  // session state for a guest's own element. ─────────────────────────
   const handleFillChange = useCallback((color) => {
     setFillColor(color);
-    if (selectedId) updateElementStyle(pageId, selectedId, { fill: color });
-  }, [selectedId, pageId, updateElementStyle]);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) updateGuestElement(selectedId, { fill: color });
+    else if (isAdmin) updateElementStyle(pageId, selectedId, { fill: color });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
 
   const handleStrokeChange = useCallback((color) => {
     setStrokeColor(color);
-    if (selectedId) updateElementStyle(pageId, selectedId, { stroke: color });
-  }, [selectedId, pageId, updateElementStyle]);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) updateGuestElement(selectedId, { stroke: color });
+    else if (isAdmin) updateElementStyle(pageId, selectedId, { stroke: color });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
 
   const handleStrokeWidthChange = useCallback((w) => {
     setStrokeWidth(w);
-    if (selectedId) updateElementStyle(pageId, selectedId, { strokeWidth: w });
-  }, [selectedId, pageId, updateElementStyle]);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) updateGuestElement(selectedId, { strokeWidth: w });
+    else if (isAdmin) updateElementStyle(pageId, selectedId, { strokeWidth: w });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
 
   // ── Keyboard ──────────────────────────────────────────────
   // Use a ref so the handler always sees the latest selectedId without stale closure
@@ -119,8 +176,9 @@ export default function Canvas({ pageId }) {
       }
       if (e.key === "Escape") { setLightbox(null); setSelectedId(null); setActiveTool("select"); setDrawPreview(null); }
 
-      // Undo / Redo
-      if ((e.metaKey || e.ctrlKey) && !inInput) {
+      // Undo / Redo — admin only; guest scribbles have no history to undo,
+      // they just clear on refresh.
+      if ((e.metaKey || e.ctrlKey) && !inInput && isAdmin) {
         if (e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
         if ((e.key === "z" && e.shiftKey) || e.key === "y") { e.preventDefault(); redo(); }
       }
@@ -128,7 +186,12 @@ export default function Canvas({ pageId }) {
       // Delete selected element
       if ((e.key === "Backspace" || e.key === "Delete") && !inInput) {
         const sid = selectedIdRef.current;
-        if (sid) { e.preventDefault(); deleteElement(pageId, sid); setSelectedId(null); }
+        if (sid) {
+          e.preventDefault();
+          if (isSessionElement(sid)) deleteGuestElement(sid);
+          else if (isAdmin) deleteElementStore(pageId, sid);
+          setSelectedId(null);
+        }
       }
     };
     const up = (e) => {
@@ -140,7 +203,7 @@ export default function Canvas({ pageId }) {
     window.addEventListener("keydown", down);
     window.addEventListener("keyup",   up);
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
-  }, [undo, redo, deleteElement, pageId, activeTool]);
+  }, [undo, redo, deleteElementStore, isSessionElement, deleteGuestElement, pageId, activeTool, isAdmin]);
 
   // ── Wheel — runs completely outside React render ───────────
   const onWheel = useCallback((e) => {
@@ -192,13 +255,16 @@ export default function Canvas({ pageId }) {
       return;
     }
 
-    // Draw: admin + left button + non-select tool
-    if (!isAdmin || e.button !== 0 || activeTool === "select") return;
+    // Draw: left button + non-select tool — everyone can draw now; whether
+    // it's saved depends on isAdmin, decided at commit time below.
+    if (e.button !== 0 || activeTool === "select") return;
     e.preventDefault();
     e.stopPropagation();
     const { cx: sx, cy: sy } = screenToCanvas(e.clientX, e.clientY);
     drawStartRef.current = { sx, sy };
     setDrawPreview({ type: activeTool, x: sx, y: sy, w: 0, h: 0, fill: fillColor, stroke: strokeColor, strokeWidth });
+
+    const commit = (patch) => (isAdmin ? addElementStore(pageId, patch) : addGuestElement(patch));
 
     const onMove = (ev) => {
       const { cx, cy } = screenToCanvas(ev.clientX, ev.clientY);
@@ -223,25 +289,27 @@ export default function Canvas({ pageId }) {
         const x = Math.min(ox, ex), y = Math.min(oy, ey);
         const w = Math.max(20, Math.abs(ex - ox)), h = Math.max(20, Math.abs(ey - oy));
         if (activeTool === "arrow") {
-          addElement(pageId, { type: "arrow", x, y, w, h, x1: ox, y1: oy, x2: ex, y2: ey, stroke: strokeColor, strokeWidth, z: 0 });
+          commit({ type: "arrow", x, y, w, h, x1: ox, y1: oy, x2: ex, y2: ey, stroke: strokeColor, strokeWidth });
         } else if (activeTool === "text") {
-          addElement(pageId, { type: "text", text: "Text", x, y, w, h, fill: "transparent", color: "#EDEAD4", fontSize: 14, z: 0 });
+          commit({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: "#EDEAD4", fontSize: 14 });
         } else if (activeTool === "frame") {
-          addElement(pageId, { type: "frame", label: "Frame", x, y, w, h, stroke: strokeColor, strokeWidth, z: 0 });
+          commit({ type: "frame", label: "Frame", x, y, w, h, stroke: strokeColor, strokeWidth });
         } else {
-          addElement(pageId, { type: activeTool, x, y, w, h, fill: fillColor, stroke: strokeColor, strokeWidth, z: 0 });
+          commit({ type: activeTool, x, y, w, h, fill: fillColor, stroke: strokeColor, strokeWidth });
         }
       } else if (activeTool === "text") {
-        addElement(pageId, { type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: "#EDEAD4", fontSize: 14, z: 0 });
+        commit({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: "#EDEAD4", fontSize: 14 });
       }
       setDrawPreview(null);
       drawStartRef.current = null;
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, pageId, addElement, applyTransform, screenToCanvas]);
+  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, pageId, addElementStore, addGuestElement, applyTransform, screenToCanvas]);
 
-  // ── Drop image ────────────────────────────────────────────
+  // ── Drop image — admin only; guest image uploads would sit as
+  // multi-MB base64 strings in memory with no cleanup story, unlike the
+  // lightweight shapes/text the toolbar draws. ───────────────────────
   const onDrop = useCallback((e) => {
     if (!isAdmin) return;
     e.preventDefault();
@@ -252,30 +320,29 @@ export default function Canvas({ pageId }) {
     Array.from(e.dataTransfer.files).forEach((file) => {
       if (!file.type.startsWith("image/")) return;
       const reader = new FileReader();
-      reader.onload = (ev) => addElement(pageId, { type: "image", src: ev.target.result, x: cx - 150, y: cy - 100, w: 300, h: 200 });
+      reader.onload = (ev) => addElementStore(pageId, { type: "image", src: ev.target.result, x: cx - 150, y: cy - 100, w: 300, h: 200 });
       reader.readAsDataURL(file);
     });
-  }, [isAdmin, pageId, addElement]);
+  }, [isAdmin, pageId, addElementStore]);
 
   const onFileChange = useCallback((e) => {
     Array.from(e.target.files).forEach((file) => {
       const reader = new FileReader();
-      reader.onload = (ev) => addElement(pageId, { type: "image", src: ev.target.result, x: 100 + Math.random() * 200, y: 100 + Math.random() * 100, w: 320, h: 220 });
+      reader.onload = (ev) => addElementStore(pageId, { type: "image", src: ev.target.result, x: 100 + Math.random() * 200, y: 100 + Math.random() * 100, w: 320, h: 220 });
       reader.readAsDataURL(file);
     });
     e.target.value = "";
-  }, [pageId, addElement]);
+  }, [pageId, addElementStore]);
 
   return (
     <TransformContext.Provider value={transformRef}>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", position: "relative" }}>
 
-        {/* Viewer zoom label */}
-        {!isAdmin && (
-          <span ref={zoomLabelRef} style={{ ...zoomLabelStyle, position: "absolute", bottom: 16, right: 16, zIndex: 10 }}>
-            100%
-          </span>
-        )}
+        {/* Zoom label — always shown, independently positioned bottom-right
+            so it never affects the toolbar's centering below. */}
+        <span ref={zoomLabelRef} style={{ ...zoomLabelStyle, position: "absolute", bottom: 16, right: 16, zIndex: 10 }}>
+          100%
+        </span>
 
         {/* Canvas viewport */}
         <div
@@ -304,16 +371,24 @@ export default function Canvas({ pageId }) {
           >
             {[...elements]
               .sort((a, b) => (a.z ?? 0) - (b.z ?? 0))
-              .map((el) => (
-                <CanvasElement
-                  key={el.id}
-                  el={el}
-                  pageId={pageId}
-                  selected={selectedId === el.id}
-                  onSelect={setSelectedId}
-                  onEnlarge={setLightbox}
-                />
-              ))}
+              .map((el) => {
+                const isSession = isSessionElement(el.id);
+                const editable = isAdmin || isSession;
+                return (
+                  <CanvasElement
+                    key={el.id}
+                    el={el}
+                    editable={editable}
+                    selected={selectedId === el.id}
+                    onSelect={setSelectedId}
+                    onEnlarge={setLightbox}
+                    onUpdate={(patch) => (isSession ? updateGuestElement(el.id, patch) : updateElementStore(pageId, el.id, patch))}
+                    onDelete={() => (isSession ? deleteGuestElement(el.id) : deleteElementStore(pageId, el.id))}
+                    onBringForward={() => (isSession ? bringForwardGuest(el.id) : bringForwardStore(pageId, el.id))}
+                    onSendBackward={() => (isSession ? sendBackwardGuest(el.id) : sendBackwardStore(pageId, el.id))}
+                  />
+                );
+              })}
 
             {/* Draw preview ghost */}
             {drawPreview && <DrawPreview p={drawPreview} />}
@@ -322,31 +397,35 @@ export default function Canvas({ pageId }) {
           {elements.length === 0 && !drawPreview && (
             <div style={emptyStyle}>
               <p style={{ fontFamily: "'Space Grotesk',sans-serif", color: "rgba(237,234,212,0.15)", fontSize: 14 }}>
-                {isAdmin ? "Pick a tool below to draw, or drop images here" : "Nothing here yet"}
+                {isAdmin ? "Pick a tool below to draw, or drop images here" : "Pick a tool below to try it out — nothing is saved"}
               </p>
             </div>
           )}
         </div>
 
-        {/* ── Floating bottom toolbar — admin only ── */}
+        {/* ── Floating bottom toolbar — visible for everyone. Guests can
+            draw/edit freely; only admin's changes are persisted (see
+            CanvasToolbar's "Not saved" indicator for guests). Kept in its
+            own centered wrapper with nothing else sharing the row, so
+            nothing skews it off-center. ── */}
+        <div style={{
+          position: "absolute", bottom: 20, left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 50,
+          pointerEvents: "auto",
+        }}>
+          <CanvasToolbar
+            activeTool={activeTool}
+            onToolChange={(t) => { setActiveTool(t); setSelectedId(null); }}
+            fillColor={fillColor}     onFillChange={handleFillChange}
+            strokeColor={strokeColor} onStrokeChange={handleStrokeChange}
+            strokeWidth={strokeWidth} onStrokeWidthChange={handleStrokeWidthChange}
+            hasSelection={!!selectedId}
+            isAdmin={isAdmin}
+          />
+        </div>
         {isAdmin && (
-          <div style={{
-            position: "absolute", bottom: 20, left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 50, display: "flex", alignItems: "center", gap: 8,
-            pointerEvents: "auto",
-          }}>
-            <CanvasToolbar
-              activeTool={activeTool}
-              onToolChange={(t) => { setActiveTool(t); setSelectedId(null); }}
-              fillColor={fillColor}     onFillChange={handleFillChange}
-              strokeColor={strokeColor} onStrokeChange={handleStrokeChange}
-              strokeWidth={strokeWidth} onStrokeWidthChange={handleStrokeWidthChange}
-              hasSelection={!!selectedId}
-            />
-            <span ref={zoomLabelRef} style={zoomLabelStyle}>100%</span>
-            <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={onFileChange} />
-          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={onFileChange} />
         )}
 
         {/* Lightbox */}

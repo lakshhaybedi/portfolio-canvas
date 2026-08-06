@@ -20,6 +20,7 @@ export default function CanvasToolbar({
   strokeColor, onStrokeChange,
   strokeWidth, onStrokeWidthChange,
   hasSelection,
+  isAdmin,
 }) {
   const [picker, setPicker]   = useState(null); // "fill" | "stroke" | null
   const lowEndDevice = useIsLowEndDevice();
@@ -170,6 +171,22 @@ export default function CanvasToolbar({
           </button>
         ))}
       </div>
+
+      {!isAdmin && (
+        <>
+          <Divider />
+          <span
+            title="Draw and edit freely — nothing here is saved, it clears on refresh"
+            style={{
+              fontSize: 9, color: "rgba(237,234,212,0.4)", letterSpacing: "0.06em",
+              textTransform: "uppercase", fontFamily: "'Space Grotesk',sans-serif",
+              paddingRight: 2, whiteSpace: "nowrap",
+            }}
+          >
+            Not saved
+          </span>
+        </>
+      )}
     </div>
   );
 }
@@ -200,15 +217,18 @@ function SelectIcon() {
     </svg>
   );
 }
+// Four corner brackets, no fill/dashed rect — this is what actually reads
+// as "Frame" (a crop/viewfinder mark) distinct from the solid Rectangle
+// icon below. The previous version had one degenerate zero-length line and
+// corner ticks missing their vertical stroke, so it rendered as stray dots
+// instead of brackets.
 function FrameIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <rect x="3" y="3" width="8" height="8" stroke="currentColor" strokeWidth="1.4" strokeDasharray="2 1.5" rx="0.5"/>
-      <line x1="1" y1="3" x2="1" y2="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <line x1="1" y1="1" x2="3" y2="1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <line x1="13" y1="1" x2="11" y2="1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <line x1="1" y1="13" x2="3" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <line x1="13" y1="13" x2="11" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path
+        d="M2 5V2h3M9 2h3v3M12 9v3H9M5 12H2V9"
+        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -237,7 +257,7 @@ function ArrowIcon() {
 function TextIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M2 3h10M7 3v8M5 11h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M2.5 3h9M7 3v8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
   );
 }
