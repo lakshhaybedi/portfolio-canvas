@@ -5,11 +5,12 @@ import { DEFAULT_PAGE_ELEMENTS } from "./defaultCanvasData";
 import { findCareFlowPage } from "./findCareFlowData";
 import { tCloudFlowPage } from "./tCloudFlowData";
 import { standardBankFlowPage } from "./standardBankFlowData";
+import { maiaFlowPage } from "./maiaFlowData";
 
 // Seed pages added after initial launch — each keyed by a fixed page id so
 // ensureSeedPages (below) can add whichever ones a given visitor's
 // persisted store is still missing, without duplicating ones it already has.
-const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage];
+const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage, maiaFlowPage];
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);

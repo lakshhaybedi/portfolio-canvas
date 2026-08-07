@@ -79,6 +79,17 @@ const PROJECTS = [
     heroColor: "#3D82FF",
     previewImage: heroImageFor("elevance-health"),
   },
+  {
+    slug: "maia",
+    num: "04",
+    title: "MAIA Platform Onboarding",
+    company: "T-Mobile",
+    tags: ["Enterprise Platform", "Web", "Onboarding"],
+    year: "2024",
+    desc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
+    heroColor: "#E62689",
+    previewImage: heroImageFor("maia"),
+  },
 ];
 
 export default function Portfolio() {
