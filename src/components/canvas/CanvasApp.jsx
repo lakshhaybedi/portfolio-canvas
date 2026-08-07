@@ -16,19 +16,19 @@ export default function CanvasApp() {
     }
   }, [activePageId, pages, setActivePage]);
 
-  // Add the Find Care UX-flow page once, for visitors whose persisted store
-  // predates it. Must wait for zustand `persist` to actually finish reading
-  // localStorage first — calling this before hydration completes would add
-  // the page to the in-memory default state, only for hydration to then
-  // overwrite `pages` wholesale with the (still one-page) persisted array,
-  // silently discarding it.
+  // Add any seed pages (Find Care flow, T-Cloud flow, Standard Bank flow)
+  // a visitor's persisted store is still missing. Must wait for zustand
+  // `persist` to actually finish reading localStorage first — calling this
+  // before hydration completes would add the pages to the in-memory default
+  // state, only for hydration to then overwrite `pages` wholesale with the
+  // persisted array, silently discarding them.
   useEffect(() => {
     if (useCanvasStore.persist.hasHydrated()) {
-      useCanvasStore.getState().ensureFindCareFlowPage();
+      useCanvasStore.getState().ensureSeedPages();
       return;
     }
     return useCanvasStore.persist.onFinishHydration(() => {
-      useCanvasStore.getState().ensureFindCareFlowPage();
+      useCanvasStore.getState().ensureSeedPages();
     });
   }, []);
 

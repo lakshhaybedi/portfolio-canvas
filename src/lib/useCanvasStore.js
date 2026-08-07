@@ -3,6 +3,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_PAGE_ELEMENTS } from "./defaultCanvasData";
 import { findCareFlowPage } from "./findCareFlowData";
+import { tCloudFlowPage } from "./tCloudFlowData";
+import { standardBankFlowPage } from "./standardBankFlowData";
+
+// Seed pages added after initial launch — each keyed by a fixed page id so
+// ensureSeedPages (below) can add whichever ones a given visitor's
+// persisted store is still missing, without duplicating ones it already has.
+const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage];
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -80,16 +87,19 @@ export const useCanvasStore = create(
         set((s) => ({ pages: [...s.pages, page], activePageId: page.id }));
       },
 
-      // Idempotently adds the Find Care UX-flow page for anyone whose
-      // persisted store predates it — new visitors get it from the initial
-      // `pages` array below, but zustand `persist` rehydrates existing
-      // visitors' localStorage over that initial value, so a code change to
-      // the default alone would never reach them. Checked by id, not just
-      // page count, so it's a no-op once added (including after the admin
-      // renames or edits it).
-      ensureFindCareFlowPage() {
-        if (get().pages.some((p) => p.id === "find-care-flow")) return;
-        set((s) => ({ pages: [...s.pages, findCareFlowPage()] }));
+      // Idempotently adds any seed pages (SEED_PAGES above) a visitor's
+      // persisted store is still missing — new visitors get them from the
+      // initial `pages` array below, but zustand `persist` rehydrates
+      // existing visitors' localStorage over that initial value, so a code
+      // change to the default alone would never reach them. Checked by id,
+      // not just page count, so each is a one-time add (including after the
+      // admin renames or edits it) and adding a new seed page later doesn't
+      // re-add ones a visitor already has.
+      ensureSeedPages() {
+        const existingIds = new Set(get().pages.map((p) => p.id));
+        const missing = SEED_PAGES.map((make) => make()).filter((p) => !existingIds.has(p.id));
+        if (!missing.length) return;
+        set((s) => ({ pages: [...s.pages, ...missing] }));
       },
 
       renamePage(id, name) {
