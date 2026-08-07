@@ -140,66 +140,75 @@ export default function CanvasToolbar({
         )}
       </div>
 
-      {/* Stroke swatch */}
-      <div style={{ position: "relative" }}>
-        <button
-          title={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
-          aria-label={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
-          aria-expanded={picker === "stroke"}
-          onClick={() => togglePicker("stroke")}
-          style={{
-            width: SLOT - 4, height: SLOT - 4, boxSizing: "border-box",
-            background: "transparent",
-            border: picker === "stroke"
-              ? `3px solid #7C6AF7`
-              : `3px solid ${strokeColor}`,
-            borderRadius: 5, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "border-color 0.15s",
-          }}
-        >
-          <div style={{ width: 8, height: 8, borderRadius: "50%", ...swatchStyle(strokeColor) }} />
-        </button>
-        {picker === "stroke" && (
-          <PickerPopover>
-            <ColorPicker color={strokeColor} onChange={onStrokeChange} onClose={() => setPicker(null)} />
-          </PickerPopover>
-        )}
-      </div>
+      {/* Stroke swatch + width — meaningless for text (CanvasElement's text
+          render never reads el.stroke/el.strokeWidth at all), so shown only
+          outside text context. Leaving them visible was the actual cause of
+          "changing text colour changes the background instead" — with Fill/
+          Stroke/Text-colour all sitting in a row, Fill (positioned right
+          where a user's eye lands first) got clicked instead of the actual
+          text-colour swatch further down. Hiding the two dead controls
+          removes that ambiguity outright rather than just relabeling it. */}
+      {!showTextControls && (
+        <div style={{ position: "relative" }}>
+          <button
+            title={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
+            aria-label={hasSelection ? "Stroke colour (edits selection)" : "Stroke colour"}
+            aria-expanded={picker === "stroke"}
+            onClick={() => togglePicker("stroke")}
+            style={{
+              width: SLOT - 4, height: SLOT - 4, boxSizing: "border-box",
+              background: "transparent",
+              border: picker === "stroke"
+                ? `3px solid #7C6AF7`
+                : `3px solid ${strokeColor}`,
+              borderRadius: 5, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "border-color 0.15s",
+            }}
+          >
+            <div style={{ width: 8, height: 8, borderRadius: "50%", ...swatchStyle(strokeColor) }} />
+          </button>
+          {picker === "stroke" && (
+            <PickerPopover>
+              <ColorPicker color={strokeColor} onChange={onStrokeChange} onClose={() => setPicker(null)} />
+            </PickerPopover>
+          )}
+        </div>
+      )}
 
       <Divider />
 
-      {/* Stroke width */}
-      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {SW_OPTIONS.map(w => (
-          <button
-            key={w}
-            title={`${w}px stroke`}
-            aria-label={`${w}px stroke width`}
-            aria-pressed={strokeWidth === w}
-            onClick={() => onStrokeWidthChange(w)}
-            style={{
-              width: SLOT - 8, height: SLOT, boxSizing: "border-box",
-              background: strokeWidth === w ? "rgba(124,106,247,0.25)" : "transparent",
-              border: strokeWidth === w ? "1px solid rgba(124,106,247,0.5)" : "1px solid transparent",
-              borderRadius: 5, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <div style={{
-              width: 12,
-              height: w,
-              background: strokeWidth === w ? "#7C6AF7" : "rgba(237,234,212,0.4)",
-              borderRadius: 99,
-            }} />
-          </button>
-        ))}
-      </div>
+      {!showTextControls && (
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {SW_OPTIONS.map(w => (
+            <button
+              key={w}
+              title={`${w}px stroke`}
+              aria-label={`${w}px stroke width`}
+              aria-pressed={strokeWidth === w}
+              onClick={() => onStrokeWidthChange(w)}
+              style={{
+                width: SLOT - 8, height: SLOT, boxSizing: "border-box",
+                background: strokeWidth === w ? "rgba(124,106,247,0.25)" : "transparent",
+                border: strokeWidth === w ? "1px solid rgba(124,106,247,0.5)" : "1px solid transparent",
+                borderRadius: 5, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <div style={{
+                width: 12,
+                height: w,
+                background: strokeWidth === w ? "#7C6AF7" : "rgba(237,234,212,0.4)",
+                borderRadius: 99,
+              }} />
+            </button>
+          ))}
+        </div>
+      )}
 
       {showTextControls && (
         <>
-          <Divider />
-          {/* Font size — a plain editable number, like Figma's own field,
+          {/* Text size — a plain editable number, like Figma's own field,
               not a fixed preset list; text can reasonably be any size. */}
           <div style={{
             width: 44, height: SLOT, boxSizing: "border-box",
@@ -213,8 +222,8 @@ export default function CanvasToolbar({
               min={1}
               max={400}
               value={fontSize}
-              aria-label="Font size"
-              title="Font size"
+              aria-label="Text size"
+              title="Text size"
               onChange={e => {
                 const n = Math.max(1, Math.min(400, Math.round(Number(e.target.value)) || 1));
                 onFontSizeChange(n);
@@ -228,11 +237,11 @@ export default function CanvasToolbar({
             <span style={{ fontSize: 9, color: "rgba(237,234,212,0.4)", padding: "0 6px 0 1px" }}>px</span>
           </div>
 
-          {/* Font colour */}
+          {/* Text colour */}
           <div style={{ position: "relative" }}>
             <button
-              title={hasSelection ? "Font colour (edits selection)" : "Font colour"}
-              aria-label={hasSelection ? "Font colour (edits selection)" : "Font colour"}
+              title={hasSelection ? "Text colour (edits selection)" : "Text colour"}
+              aria-label={hasSelection ? "Text colour (edits selection)" : "Text colour"}
               aria-expanded={picker === "font"}
               onClick={() => togglePicker("font")}
               style={{
