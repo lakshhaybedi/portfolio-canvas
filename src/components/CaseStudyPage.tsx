@@ -271,16 +271,18 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
       </AnimatePresence>
 
       {/* ── Sticky nav ── */}
-      {/* Middle column is `minmax(0, 1fr)`, not `auto` — an unconstrained
-          `auto` column has no ceiling and can push Back/Year off-screen if
-          its content ever gets wider than the space actually available.
-          `minmax(0, 1fr)` caps it to whatever's left after Back/Year. The
-          switcher itself (prev arrow / dropdown / next arrow) stays a fixed
-          width regardless of project count, so this no longer needs to
-          scroll horizontally the way the old per-project tab strip did. */}
+      {/* Side columns are equal `minmax(0, 1fr)` tracks so the middle
+          (switcher) column sits on the nav's true visual center regardless
+          of "← Back" vs the year text being different widths — with one
+          `auto` side, the middle column's center drifts toward whichever
+          side is narrower. Sides can still shrink instead of overflowing
+          if the switcher ever needs more room than a narrow viewport has
+          (the switcher's own width is bounded — a fixed arrow/dropdown/
+          arrow cluster — unlike the old per-project tab strip that grew
+          with project count). */}
       <nav className="case-nav" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-        display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto",
+        display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
         alignItems: "center",
         padding: "0 48px", height: 64,
         background: lowEndDevice ? "rgba(10,10,10,0.94)" : "rgba(10,10,10,0.75)",
@@ -474,6 +476,28 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >
                 {study.overview}
               </motion.p>
+              <motion.div
+                initial="hidden" animate="visible" variants={reveal} transition={{ delay: 0.28 }}
+                style={{ marginTop: 32 }}
+              >
+                <Link
+                  href={`/canvas?page=${study.canvasPageId}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 10,
+                    padding: "14px 24px",
+                    background: "transparent", color: accentText,
+                    border: `1px solid ${accentText}`,
+                    fontSize: 12, fontWeight: 700, letterSpacing: "0.08em",
+                    textTransform: "uppercase", textDecoration: "none",
+                    borderRadius: 8, transition: "background 0.2s, color 0.2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = accentText; e.currentTarget.style.color = badgeOnAccent; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = accentText; }}
+                >
+                  View in Canvas
+                  <span style={{ fontSize: 16, fontWeight: 400, lineHeight: 1 }}>↗</span>
+                </Link>
+              </motion.div>
             </div>
 
             {/* Hero image or placeholder */}

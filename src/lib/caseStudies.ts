@@ -23,6 +23,9 @@ export type CaseStudy = {
   company: string;
   year: string;
   tags: string[];
+  // Id of this project's canvas page (see SEED_PAGES in useCanvasStore.js)
+  // — powers the case-study page's "View in Canvas" link.
+  canvasPageId: string;
   // Homepage-only — a shorter blurb than `overview` (written for a project
   // row you're scanning, not a page you've committed to reading) and a
   // hover-row accent distinct from `accent` (that one's tuned for contrast
@@ -86,8 +89,9 @@ export const CASE_STUDIES: CaseStudy[] = [
     index: "01",
     title: "T-Cloud Dashboard",
     company: "T-Mobile & MAIA",
-    year: "2026",
-    tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
+    year: "2023–2024",
+    tags: ["Enterprise B2B"],
+    canvasPageId: "tcloud-flow",
     homeDesc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
     heroColor: "#E10074",
     accent: "#E20074",
@@ -147,8 +151,9 @@ export const CASE_STUDIES: CaseStudy[] = [
     index: "02",
     title: "MAIA Platform Onboarding",
     company: "T-Mobile & MAIA",
-    year: "2026",
-    tags: ["Enterprise Platform", "Web", "Onboarding"],
+    year: "2023–2024",
+    tags: ["Enterprise B2B"],
+    canvasPageId: "maia-flow",
     homeDesc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
     heroColor: "#E62689",
     accent: "#E91E8C",
@@ -212,8 +217,9 @@ export const CASE_STUDIES: CaseStudy[] = [
     index: "03",
     title: "Standard Bank",
     company: "Standard Bank Africa",
-    year: "2026",
-    tags: ["FinTech", "Mobile", "Multi-Market"],
+    year: "2022–2023",
+    tags: ["FinTech"],
+    canvasPageId: "standard-bank-flow",
     homeDesc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
     // Requested #0033A9 measures 1.78:1 against the homepage row's hover
     // background (var(--bg-elevated)) — fails even the 3:1 large-text
@@ -277,8 +283,9 @@ export const CASE_STUDIES: CaseStudy[] = [
     index: "04",
     title: "Find Care Experience",
     company: "Elevance Health",
-    year: "2023",
-    tags: ["Healthcare", "Web App", "Appointment Flow"],
+    year: "2025–2026",
+    tags: ["Healthcare"],
+    canvasPageId: "find-care-flow",
     homeDesc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
     heroColor: "#3D82FF",
     accent: "#7C6AF7",
