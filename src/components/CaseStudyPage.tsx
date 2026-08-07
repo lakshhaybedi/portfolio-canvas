@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { CASE_STUDIES, CaseStudy } from "@/lib/caseStudies";
@@ -19,7 +19,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   const [lightbox, setLightbox]   = useState<number | null>(null);
   const [activeScreen, setActive] = useState(0);
   const [hoveredScreen, setHoveredScreen] = useState<number | null>(null);
-  const [navHovered, setNavHov]   = useState<string | null>(null);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const navMenuRef = useRef<HTMLDivElement>(null);
   const [sidebarWidth, setSidebarWidth] = useState(300);
   const [resizing, setResizing]   = useState(false);
 
@@ -74,6 +75,22 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   useEffect(() => {
     document.body.classList.toggle("has-fine-pointer", isFinePointer);
   }, [isFinePointer]);
+
+  // Nav's "jump to project" menu — closes on an outside click or Escape,
+  // same pattern as the canvas toolbar's shape-picker menu.
+  useEffect(() => {
+    if (!navMenuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target as Node)) setNavMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setNavMenuOpen(false); };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [navMenuOpen]);
 
   useEffect(() => {
     if (!study || !isFinePointer) return;
@@ -254,14 +271,13 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
       </AnimatePresence>
 
       {/* ── Sticky nav ── */}
-      {/* Tabs column is `minmax(0, 1fr)`, not `auto` — with only 3 case
-          studies the tab strip's natural width always fit, but a 4th (and
-          any future) project can make it wider than the viewport has room
-          for. An `auto` middle column has no ceiling and pushed Back/Year
-          off two-thirds of viewports once four tabs' worth of text and
-          padding exceeded the space actually available. `minmax(0, 1fr)`
-          caps it to whatever's left after Back/Year, and .case-nav-tabs
-          (globals.css) scrolls horizontally instead of clipping. */}
+      {/* Middle column is `minmax(0, 1fr)`, not `auto` — an unconstrained
+          `auto` column has no ceiling and can push Back/Year off-screen if
+          its content ever gets wider than the space actually available.
+          `minmax(0, 1fr)` caps it to whatever's left after Back/Year. The
+          switcher itself (prev arrow / dropdown / next arrow) stays a fixed
+          width regardless of project count, so this no longer needs to
+          scroll horizontally the way the old per-project tab strip did. */}
       <nav className="case-nav" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
         display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto",
@@ -288,54 +304,120 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
           ← Back
         </Link>
 
-        {/* Project tabs — centred; scrolls horizontally on narrow screens
-            instead of clipping (see .case-nav-tabs in globals.css) */}
-        <div className="case-nav-tabs" style={{ display: "flex", alignItems: "stretch", height: 64 }}>
-          {CASE_STUDIES.map((c) => {
-            const isCurrent = c.slug === slug;
-            const isHov     = navHovered === c.slug;
-            return (
-              <Link
-                key={c.slug}
-                href={`/work/${c.slug}`}
-                onMouseEnter={() => { setNavHov(c.slug); setLarge(false); }}
-                onMouseLeave={() => setNavHov(null)}
-                style={{
-                  // `center` aligns the two spans' box midpoints, not their
-                  // text — with a 10px number next to an 11px label, equal
-                  // line-heights still left a visible vertical offset since
-                  // centered boxes of different heights don't share a
-                  // baseline. `baseline` aligns the actual glyphs.
-                  display: "flex", alignItems: "baseline", gap: 8,
-                  padding: "0 20px",
-                  textDecoration: "none",
-                  borderBottom: isCurrent ? `3px solid ${c.accent}` : "3px solid transparent",
-                  transition: "border-color 0.25s, background 0.2s",
-                  background: isHov && !isCurrent ? "rgba(237,234,212,0.05)" : "transparent",
-                  position: "relative",
-                }}
-              >
-                <span style={{
-                  fontSize: 10, fontWeight: 700, lineHeight: 1,
-                  color: isCurrent ? c.accentText : "var(--muted)",
-                  transition: "color 0.2s",
-                  letterSpacing: "0.06em",
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {c.index}
-                </span>
-                <span style={{
-                  fontSize: 11, fontWeight: isCurrent ? 700 : 500, lineHeight: 1,
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  color: isCurrent ? "var(--fg)" : isHov ? "rgba(237,234,212,0.8)" : "var(--muted)",
-                  transition: "color 0.2s",
-                  whiteSpace: "nowrap",
-                }}>
-                  {c.title}
-                </span>
-              </Link>
-            );
-          })}
+        {/* Project switcher — prev/next arrows for adjacent projects (the
+            common case) plus a dropdown that lists every project by name,
+            replacing a horizontally-scrolling tab strip. A strip reading
+            every title inline degrades past a handful of projects — it's
+            either a wall of tiny labels or, as of the 4th project, wider
+            than most viewports have room for (see the gridTemplateColumns
+            comment above). This scales to as many case studies as exist
+            without the nav itself getting wider or noisier. */}
+        <div ref={navMenuRef} style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+          position: "relative", height: 64,
+        }}>
+          <Link
+            href={prev ? `/work/${prev.slug}` : "#"}
+            aria-label={prev ? `Previous project: ${prev.title}` : undefined}
+            aria-disabled={!prev}
+            title={prev ? prev.title : undefined}
+            tabIndex={prev ? 0 : -1}
+            onClick={(e) => { if (!prev) e.preventDefault(); }}
+            style={navArrowStyle(!!prev)}
+            onMouseEnter={(e) => { if (prev) e.currentTarget.style.background = "rgba(237,234,212,0.08)"; }}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            ‹
+          </Link>
+
+          <button
+            onClick={() => setNavMenuOpen((o) => !o)}
+            aria-expanded={navMenuOpen}
+            aria-haspopup="menu"
+            style={{
+              display: "flex", alignItems: "baseline", gap: 8,
+              padding: "0 14px", height: 40,
+              background: navMenuOpen ? "rgba(237,234,212,0.08)" : "transparent",
+              border: "none", borderRadius: 8, cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => { if (!navMenuOpen) e.currentTarget.style.background = "rgba(237,234,212,0.05)"; }}
+            onMouseLeave={(e) => { if (!navMenuOpen) e.currentTarget.style.background = "transparent"; }}
+          >
+            <span style={{
+              fontSize: 10, fontWeight: 700, lineHeight: 1,
+              color: study.accentText, letterSpacing: "0.06em",
+              fontVariantNumeric: "tabular-nums",
+            }}>
+              {study.index}
+            </span>
+            <span style={{
+              fontSize: 11, fontWeight: 700, lineHeight: 1,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              color: "var(--fg)", whiteSpace: "nowrap",
+            }}>
+              {study.title}
+            </span>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{
+              transform: navMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0,
+            }}>
+              <path d="M1 2.5l3 3 3-3" stroke="var(--muted)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+          </button>
+
+          <Link
+            href={next ? `/work/${next.slug}` : "#"}
+            aria-label={next ? `Next project: ${next.title}` : undefined}
+            aria-disabled={!next}
+            title={next ? next.title : undefined}
+            tabIndex={next ? 0 : -1}
+            onClick={(e) => { if (!next) e.preventDefault(); }}
+            style={navArrowStyle(!!next)}
+            onMouseEnter={(e) => { if (next) e.currentTarget.style.background = "rgba(237,234,212,0.08)"; }}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            ›
+          </Link>
+
+          {navMenuOpen && (
+            <div role="menu" style={{
+              position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)",
+              background: "#141416", border: "1px solid var(--border)", borderRadius: 10,
+              padding: 6, minWidth: 240, boxShadow: "0 16px 48px rgba(0,0,0,0.5)", zIndex: 500,
+            }}>
+              {CASE_STUDIES.map((c) => {
+                const isCurrent = c.slug === slug;
+                return (
+                  <Link
+                    key={c.slug}
+                    href={`/work/${c.slug}`}
+                    role="menuitem"
+                    onClick={() => setNavMenuOpen(false)}
+                    style={{
+                      display: "flex", alignItems: "baseline", gap: 10,
+                      padding: "8px 10px", borderRadius: 6, textDecoration: "none",
+                      background: isCurrent ? "rgba(237,234,212,0.06)" : "transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!isCurrent) e.currentTarget.style.background = "rgba(237,234,212,0.05)"; }}
+                    onMouseLeave={(e) => { if (!isCurrent) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color: isCurrent ? c.accentText : "var(--muted)",
+                      letterSpacing: "0.06em", fontVariantNumeric: "tabular-nums", flexShrink: 0,
+                    }}>
+                      {c.index}
+                    </span>
+                    <span style={{
+                      fontSize: 12, fontWeight: isCurrent ? 700 : 500, letterSpacing: "0.02em",
+                      color: isCurrent ? "var(--fg)" : "var(--muted-strong)",
+                    }}>
+                      {c.title}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Year — right aligned */}
@@ -889,6 +971,19 @@ function OutcomeCard({ outcome, accent, accentText, index }: {
       </p>
     </motion.div>
   );
+}
+
+function navArrowStyle(enabled: boolean): CSSProperties {
+  return {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: 28, height: 28, borderRadius: 6,
+    fontSize: 16, lineHeight: 1, textDecoration: "none",
+    color: enabled ? "var(--fg)" : "var(--border)",
+    cursor: enabled ? "pointer" : "default",
+    pointerEvents: enabled ? "auto" : "none",
+    transition: "background 0.15s",
+    flexShrink: 0,
+  };
 }
 
 function NavCard({ study, direction }: { study: CaseStudy; direction: "prev" | "next" }) {

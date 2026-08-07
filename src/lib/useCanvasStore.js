@@ -17,6 +17,13 @@ import { maiaFlowPage } from "./maiaFlowData";
 // visitors who already have that page, not just brand-new ones.
 const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage, maiaFlowPage];
 
+// Exported so the sidebar can group these apart from admin-editable pages
+// (e.g. the main "Portfolio" page) without guessing by id-naming convention.
+// Computed once at module load — cheap even though each factory rebuilds
+// its full elements array, since this only runs once per page load, not
+// per render.
+export const SEED_PAGE_IDS = new Set(SEED_PAGES.map((make) => make().id));
+
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }

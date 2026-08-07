@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, useAnimationControls, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
@@ -34,66 +34,32 @@ const SCROLL_CUE_GAP = SCROLL_CUE_PERIOD * SCROLL_CUE_GAP_RATIO;
 const SCROLL_CUE_DASH = SCROLL_CUE_PERIOD - SCROLL_CUE_GAP;
 const SCROLL_CUE_RING_OPACITY = 0.85;
 
-// Reuses the same hero images already established on each case-study page
-// (single source of truth in caseStudies.ts) rather than duplicating URLs
-// or introducing new placeholder assets just for this hover preview.
-function heroImageFor(slug: string) {
-  return CASE_STUDIES.find((c) => c.slug === slug)?.heroImage;
-}
+// Homepage project list — derived from CASE_STUDIES (caseStudies.ts) rather
+// than a second hand-maintained array. Adding or reordering a case study
+// now only means editing one file; this used to be two arrays that had to
+// be kept in sync by hand (and drifted the moment one was, e.g. a new
+// project or a reorder landed in one but not the other).
+const PROJECTS = CASE_STUDIES.map((c) => ({
+  slug: c.slug,
+  num: c.index,
+  title: c.title,
+  company: c.company,
+  tags: c.tags,
+  year: c.year,
+  desc: c.homeDesc,
+  heroColor: c.heroColor,
+  previewImage: c.heroImage,
+}));
 
-const PROJECTS = [
-  {
-    slug: "t-cloud",
-    num: "01",
-    title: "T-Cloud Dashboard",
-    company: "T-Mobile & MAIA",
-    tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
-    year: "2026",
-    desc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
-    heroColor: "#E10074",
-    previewImage: heroImageFor("t-cloud"),
-  },
-  {
-    slug: "maia",
-    num: "02",
-    title: "MAIA Platform Onboarding",
-    company: "T-Mobile & MAIA",
-    tags: ["Enterprise Platform", "Web", "Onboarding"],
-    year: "2026",
-    desc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
-    heroColor: "#E62689",
-    previewImage: heroImageFor("maia"),
-  },
-  {
-    slug: "standard-bank",
-    num: "03",
-    title: "Standard Bank",
-    company: "Standard Bank Africa",
-    tags: ["FinTech", "Mobile", "Multi-Market"],
-    year: "2026",
-    desc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
-    // Requested #0033A9 measures 1.78:1 against the row's hover background
-    // (var(--bg-elevated)) — fails even the 3:1 large-text minimum this
-    // title needs. Lightened ~30% toward white (same hue) to clear 3:1
-    // with a real margin (3.83:1) while staying close to the original navy.
-    heroColor: "#4C70C3",
-    previewImage: heroImageFor("standard-bank"),
-  },
-  {
-    slug: "elevance-health",
-    num: "04",
-    title: "Find Care Experience",
-    company: "Elevance Health",
-    tags: ["Healthcare", "Web App", "Appointment Flow"],
-    year: "2023",
-    desc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
-    heroColor: "#3D82FF",
-    previewImage: heroImageFor("elevance-health"),
-  },
-];
+// Every tag used across all projects, for the "Selected Work" filter pills
+// — derived, not hand-maintained, so a new project's tags show up in the
+// filter row automatically instead of needing a second edit.
+const ALL_TAGS = Array.from(new Set(PROJECTS.flatMap((p) => p.tags))).sort();
 
 export default function Portfolio() {
   const [hovered, setHovered] = useState<number | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const visibleProjects = activeTag ? PROJECTS.filter((p) => p.tags.includes(activeTag)) : PROJECTS;
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [cursorLarge, setCursorLarge] = useState(false);
   const [scrollCueHovered, setScrollCueHovered] = useState(false);
@@ -445,6 +411,20 @@ export default function Portfolio() {
           </span>
         </motion.div>
 
+        {/* Tag filter — a flat list of every project reads fine at 4 rows;
+            past a handful it's just scrolling past ones you don't care
+            about. Filtering by the same tags each row already shows keeps
+            "Selected Work" a curated highlight reel instead of an
+            ever-growing wall. */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 32 }} role="group" aria-label="Filter projects by tag">
+          <FilterPill active={activeTag === null} onClick={() => setActiveTag(null)}>All</FilterPill>
+          {ALL_TAGS.map((tag) => (
+            <FilterPill key={tag} active={activeTag === tag} onClick={() => setActiveTag((t) => (t === tag ? null : tag))}>
+              {tag}
+            </FilterPill>
+          ))}
+        </div>
+
         {/* A standalone line, not a wrapping border: this needs the same
             -24px bleed as each row's own margin (below) to span the same
             width, but if it were a `borderTop` on the div that *wraps* the
@@ -454,11 +434,21 @@ export default function Portfolio() {
             instead of matching it. Keeping it a sibling avoids that. */}
         <div style={{ height: 1, background: "var(--border)", margin: "0 -24px" }} />
         <div>
-          {PROJECTS.map((p, i) => {
+          {visibleProjects.length === 0 && (
+            <div style={{ padding: "48px 0", textAlign: "center", color: "var(--muted)", fontSize: 14 }}>
+              No projects tagged &ldquo;{activeTag}&rdquo; yet.
+            </div>
+          )}
+          {visibleProjects.map((p) => {
+            // Original index into the full (unfiltered) PROJECTS array —
+            // `hovered`/`previewProject` key off this, not position within
+            // the filtered list, so the cursor-preview image still resolves
+            // to the right project regardless of which filter is active.
+            const i = PROJECTS.indexOf(p);
             const isOpen = hovered === i;
             return (
               <motion.div
-                key={i}
+                key={p.slug}
                 initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
                 transition={{ duration: 0.85, ease: easeOutExpo, delay: i * 0.08 }}
               >
@@ -799,5 +789,27 @@ export default function Portfolio() {
       <PortfolioFolder />
       <WindowManager />
     </>
+  );
+}
+
+function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+        textTransform: "uppercase", cursor: "pointer",
+        border: `1px solid ${active ? "var(--fg)" : "var(--border)"}`,
+        background: active ? "var(--fg)" : "transparent",
+        color: active ? "var(--fg-invert)" : "var(--muted)",
+        padding: "6px 14px", borderRadius: 999,
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.borderColor = "var(--border-strong)"; e.currentTarget.style.color = "var(--muted-strong)"; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; } }}
+    >
+      {children}
+    </button>
   );
 }

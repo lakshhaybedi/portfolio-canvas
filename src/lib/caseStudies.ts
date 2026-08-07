@@ -23,6 +23,16 @@ export type CaseStudy = {
   company: string;
   year: string;
   tags: string[];
+  // Homepage-only — a shorter blurb than `overview` (written for a project
+  // row you're scanning, not a page you've committed to reading) and a
+  // hover-row accent distinct from `accent` (that one's tuned for contrast
+  // against the case-study page itself; this one's tuned for the
+  // homepage's dark hover row, and the two aren't interchangeable — e.g.
+  // Standard Bank's teal `accent` reads poorly there, so `heroColor` is a
+  // different blue). Single source of truth: the homepage derives its
+  // project list from this array instead of keeping its own copy.
+  homeDesc: string;
+  heroColor: string;
   accent: string;
   // `accent` as a solid fill (backgrounds, borders, dots) always has enough
   // contrast against the page's near-black bg, but two of the three brand
@@ -78,6 +88,8 @@ export const CASE_STUDIES: CaseStudy[] = [
     company: "T-Mobile & MAIA",
     year: "2026",
     tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
+    homeDesc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
+    heroColor: "#E10074",
     accent: "#E20074",
     // #E20074 is 4.23:1 on the page bg as text (fails AA 4.5:1) and 2.59:1
     // for white-on-fill (badge) — E62689 (15% mixed toward white) clears
@@ -137,6 +149,8 @@ export const CASE_STUDIES: CaseStudy[] = [
     company: "T-Mobile & MAIA",
     year: "2026",
     tags: ["Enterprise Platform", "Web", "Onboarding"],
+    homeDesc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
+    heroColor: "#E62689",
     accent: "#E91E8C",
     // Same magenta family as T-Cloud's #E20074 — reuses T-Cloud's already-
     // verified lightened text colour (E62689, 4.5:1+) instead of re-deriving
@@ -200,6 +214,12 @@ export const CASE_STUDIES: CaseStudy[] = [
     company: "Standard Bank Africa",
     year: "2026",
     tags: ["FinTech", "Mobile", "Multi-Market"],
+    homeDesc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
+    // Requested #0033A9 measures 1.78:1 against the homepage row's hover
+    // background (var(--bg-elevated)) — fails even the 3:1 large-text
+    // minimum this title needs. Lightened ~30% toward white (same hue) to
+    // clear 3:1 with a real margin (3.83:1) while staying close to navy.
+    heroColor: "#4C70C3",
     accent: "#00B4AA",
     // Already 7.6:1 as text — no lightening needed. White-on-fill for the
     // badge is only 2.6:1 though (fails), so the badge uses near-black text.
@@ -259,6 +279,8 @@ export const CASE_STUDIES: CaseStudy[] = [
     company: "Elevance Health",
     year: "2023",
     tags: ["Healthcare", "Web App", "Appointment Flow"],
+    homeDesc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
+    heroColor: "#3D82FF",
     accent: "#7C6AF7",
     // Already 5.0:1 as text — no lightening needed. White-on-fill for the
     // badge is only 4.0:1 though (fails), so the badge uses near-black text.
