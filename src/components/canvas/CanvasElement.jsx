@@ -14,7 +14,7 @@ const HANDLE = 10;
  * state (a guest editing something they drew this session), so this
  * component doesn't need to know or care which.
  */
-export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart, autoEdit }) {
+export default function CanvasElement({ el, editable, selected, showHandles, isMultiSelected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart, onGroupMoveStart, onGroupMove, autoEdit }) {
   const transformRef = useContext(TransformContext);
 
   // Captures whether this element was *already* selected before the
@@ -26,6 +26,13 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   // click as if the element were already selected, jumping straight to
   // text-edit mode instead of selecting first.
   const wasSelectedRef = useRef(false);
+  // True for the duration between a pointerdown that actually moved the
+  // mouse and the click event that follows it — the browser still fires a
+  // native "click" after a drag on the same element, and without this,
+  // that trailing click's onSelect(el.id) would collapse a multi-selection
+  // right back down to just this one element the instant a group-drag
+  // finishes.
+  const dragMovedRef = useRef(false);
 
   // ── Drag ──────────────────────────────────────────────────
   // onInteractionStart fires on the *first actual pointermove*, not at
@@ -37,19 +44,30 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   const onPointerDownMove = useCallback((e) => {
     if (!editable) return;
     wasSelectedRef.current = selected;
+    dragMovedRef.current = false;
     e.stopPropagation();
-    onSelect(el.id);
+    // Selecting on pointerdown would collapse a marquee'd multi-selection
+    // to just this element before the drag even starts, making it
+    // impossible to drag the group — skip it here and let the trailing
+    // click (if the pointer never actually moved) do the selecting instead.
+    if (isMultiSelected) onGroupMoveStart?.();
+    else onSelect(el.id);
     const startX = e.clientX, startY = e.clientY;
     const origX = el.x, origY = el.y;
     let snapshotted = false;
 
     const onMove = (ev) => {
+      dragMovedRef.current = true;
       if (!snapshotted) { snapshotted = true; onInteractionStart?.(); }
       const s = transformRef.current.scale;
-      onUpdate({
-        x: origX + (ev.clientX - startX) / s,
-        y: origY + (ev.clientY - startY) / s,
-      });
+      if (isMultiSelected) {
+        onGroupMove?.((ev.clientX - startX) / s, (ev.clientY - startY) / s);
+      } else {
+        onUpdate({
+          x: origX + (ev.clientX - startX) / s,
+          y: origY + (ev.clientY - startY) / s,
+        });
+      }
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
@@ -57,7 +75,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [el.id, el.x, el.y, editable, selected, transformRef, onUpdate, onSelect, onInteractionStart]);
+  }, [el.id, el.x, el.y, editable, selected, isMultiSelected, transformRef, onUpdate, onSelect, onInteractionStart, onGroupMoveStart, onGroupMove]);
 
   // ── Resize ────────────────────────────────────────────────
   const onPointerDownResize = useCallback((e) => {
@@ -134,6 +152,10 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   const handleClick = (e) => {
     e.stopPropagation();
     if (!editable) { if (el.type === "image") onEnlarge(el); return; }
+    // A real drag just happened (single move or group move) — the browser
+    // still fires this click afterward, but it shouldn't also re-select
+    // (which would collapse a group selection) or jump into text-edit mode.
+    if (dragMovedRef.current) { dragMovedRef.current = false; return; }
     if (el.type === "text" && wasSelectedRef.current) { setIsEditingText(true); return; }
     onSelect(el.id);
   };
@@ -191,7 +213,14 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
                 if (!textEditStartedRef.current) { textEditStartedRef.current = true; onInteractionStart?.(); }
                 onUpdate({ text: e.target.value });
               }}
-              onBlur={() => { textEditStartedRef.current = false; setIsEditingText(false); }}
+              onBlur={() => {
+                textEditStartedRef.current = false;
+                setIsEditingText(false);
+                // A text box left empty (new, never typed into, or emptied
+                // back out) isn't a real element worth keeping around —
+                // matches Figma discarding empty text layers on blur.
+                if (!(el.text ?? "").trim()) onDelete();
+              }}
               onPointerDown={(e) => e.stopPropagation()}
               style={{
                 width: "100%", height: "100%", background: "transparent",
@@ -249,7 +278,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
       )}
 
       {/* ── Selection handles ── */}
-      {editable && selected && el.type !== "arrow" && (
+      {editable && showHandles && el.type !== "arrow" && (
         <>
           <div
             onPointerDown={onPointerDownResize}
@@ -271,7 +300,7 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
         </>
       )}
 
-      {editable && selected && el.type === "arrow" && (
+      {editable && showHandles && el.type === "arrow" && (
         <FloatingToolbar onBringForward={onBringForward} onSendBackward={onSendBackward} onDelete={onDelete} />
       )}
     </div>

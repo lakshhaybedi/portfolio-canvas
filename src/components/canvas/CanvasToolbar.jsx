@@ -101,34 +101,32 @@ export default function CanvasToolbar({
           without knowing Shift+Cmd+Z. Explicit buttons make both always
           visible and give real enabled/disabled feedback via canUndo/
           canRedo instead of a shortcut that silently no-ops when history is
-          empty. Admin-only — guest session scribbles have no history. */}
-      {isAdmin && (
-        <>
-          <button
-            title="Undo  ⌘Z"
-            aria-label="Undo"
-            disabled={!canUndo}
-            onClick={onUndo}
-            style={iconButtonStyle(canUndo)}
-            onMouseEnter={e => { if (canUndo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
-            onMouseLeave={e => { if (canUndo) e.currentTarget.style.background = "transparent"; }}
-          >
-            <UndoIcon />
-          </button>
-          <button
-            title="Redo  ⇧⌘Z"
-            aria-label="Redo"
-            disabled={!canRedo}
-            onClick={onRedo}
-            style={iconButtonStyle(canRedo)}
-            onMouseEnter={e => { if (canRedo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
-            onMouseLeave={e => { if (canRedo) e.currentTarget.style.background = "transparent"; }}
-          >
-            <RedoIcon />
-          </button>
-          <Divider />
-        </>
-      )}
+          empty. Available to guests too now — Canvas.jsx routes these to a
+          session-only history stack for non-admins, still cleared on
+          refresh, just recoverable with Cmd+Z/this button up to that point. */}
+      <button
+        title="Undo  ⌘Z"
+        aria-label="Undo"
+        disabled={!canUndo}
+        onClick={onUndo}
+        style={iconButtonStyle(canUndo)}
+        onMouseEnter={e => { if (canUndo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+        onMouseLeave={e => { if (canUndo) e.currentTarget.style.background = "transparent"; }}
+      >
+        <UndoIcon />
+      </button>
+      <button
+        title="Redo  ⇧⌘Z"
+        aria-label="Redo"
+        disabled={!canRedo}
+        onClick={onRedo}
+        style={iconButtonStyle(canRedo)}
+        onMouseEnter={e => { if (canRedo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+        onMouseLeave={e => { if (canRedo) e.currentTarget.style.background = "transparent"; }}
+      >
+        <RedoIcon />
+      </button>
+      <Divider />
 
       {STANDALONE_TOOLS.map((t) => (
         <ToolButton key={t.id} tool={t} active={activeTool === t.id} onClick={() => selectTool(t.id)} />

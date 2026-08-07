@@ -155,6 +155,21 @@ export const useCanvasStore = create(
         }));
       },
 
+      // Batch delete for marquee multi-select — one snapshot for the whole
+      // group, not one per element, so a single Cmd+Z restores everything
+      // that was selected instead of bringing elements back one at a time.
+      deleteElements(pageId, ids) {
+        get()._snapshot();
+        const idSet = new Set(ids);
+        set((s) => ({
+          pages: s.pages.map((p) =>
+            p.id !== pageId
+              ? p
+              : { ...p, elements: p.elements.filter((el) => !idSet.has(el.id)) }
+          ),
+        }));
+      },
+
       bringForward(pageId, id) {
         get()._snapshot();
         set((s) => ({

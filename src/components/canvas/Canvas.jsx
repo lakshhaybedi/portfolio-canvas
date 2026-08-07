@@ -59,6 +59,7 @@ export default function Canvas({ pageId }) {
   const addElementStore      = useCanvasStore((s) => s.addElement);
   const updateElementStore   = useCanvasStore((s) => s.updateElement);
   const deleteElementStore   = useCanvasStore((s) => s.deleteElement);
+  const deleteElementsStore  = useCanvasStore((s) => s.deleteElements);
   const updateElementStyle   = useCanvasStore((s) => s.updateElementStyle);
   const bringForwardStore    = useCanvasStore((s) => s.bringForward);
   const sendBackwardStore    = useCanvasStore((s) => s.sendBackward);
@@ -80,29 +81,79 @@ export default function Canvas({ pageId }) {
   const guestElementsRef = useRef(guestElements);
   useEffect(() => { guestElementsRef.current = guestElements; }, [guestElements]);
 
+  // Guest undo/redo — a parallel, non-persisted history stack mirroring the
+  // admin store's _history/_future exactly, just scoped to this session's
+  // own guestElements instead of the real pages. Every guestElements array
+  // is always replaced wholesale (spread/map/filter, never mutated in
+  // place), so a snapshot only needs to hold the array *reference* at that
+  // moment — no deep clone required, unlike the store's JSON round-trip
+  // (which has to cover a more complex multi-page shape).
+  const [guestHistory, setGuestHistory] = useState([]);
+  const [guestFuture,  setGuestFuture]  = useState([]);
+
+  const snapshotGuest = useCallback(() => {
+    setGuestHistory((h) => [...h.slice(-49), guestElementsRef.current]);
+    setGuestFuture([]);
+  }, []);
+
+  const guestUndo = useCallback(() => {
+    setGuestHistory((h) => {
+      if (!h.length) return h;
+      const prev = h[h.length - 1];
+      setGuestFuture((f) => [guestElementsRef.current, ...f.slice(0, 49)]);
+      setGuestElements(prev);
+      return h.slice(0, -1);
+    });
+  }, []);
+
+  const guestRedo = useCallback(() => {
+    setGuestFuture((f) => {
+      if (!f.length) return f;
+      const next = f[0];
+      setGuestHistory((h) => [...h.slice(-49), guestElementsRef.current]);
+      setGuestElements(next);
+      return f.slice(1);
+    });
+  }, []);
+
+  // Create/delete/reorder are each already one discrete, meaningful action
+  // (not a continuous drag), so — same as the admin store's addElement/
+  // deleteElement/bringForward/sendBackward — these snapshot immediately
+  // rather than waiting for a "first real mutation" signal.
   const addGuestElement = useCallback((patch) => {
+    snapshotGuest();
     const element = { id: guestUid(), rotation: 0, ...patch, z: GUEST_Z_BASE + guestElementsRef.current.length };
     setGuestElements((prev) => [...prev, element]);
     return element.id;
-  }, []);
+  }, [snapshotGuest]);
   const updateGuestElement = useCallback((id, patch) => {
     setGuestElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   }, []);
   const deleteGuestElement = useCallback((id) => {
+    snapshotGuest();
     setGuestElements((prev) => prev.filter((e) => e.id !== id));
-  }, []);
+  }, [snapshotGuest]);
+  // Batch delete for marquee multi-select — one snapshot for the whole
+  // group, matching deleteElements on the admin store.
+  const deleteGuestElements = useCallback((ids) => {
+    snapshotGuest();
+    const idSet = new Set(ids);
+    setGuestElements((prev) => prev.filter((e) => !idSet.has(e.id)));
+  }, [snapshotGuest]);
   const bringForwardGuest = useCallback((id) => {
+    snapshotGuest();
     setGuestElements((prev) => {
       const max = prev.length ? Math.max(...prev.map((e) => e.z)) : GUEST_Z_BASE;
       return prev.map((e) => (e.id === id ? { ...e, z: max + 1 } : e));
     });
-  }, []);
+  }, [snapshotGuest]);
   const sendBackwardGuest = useCallback((id) => {
+    snapshotGuest();
     setGuestElements((prev) => {
       const min = prev.length ? Math.min(...prev.map((e) => e.z)) : GUEST_Z_BASE;
       return prev.map((e) => (e.id === id ? { ...e, z: min - 1 } : e));
     });
-  }, []);
+  }, [snapshotGuest]);
 
   // Combined list for rendering — guests see the real page plus their own
   // session-only additions on top; admin sees (and edits) only the real,
@@ -110,6 +161,32 @@ export default function Canvas({ pageId }) {
   const elements = isAdmin ? publishedElements : [...publishedElements, ...guestElements];
 
   const isSessionElement = useCallback((id) => guestElementsRef.current.some((e) => e.id === id), []);
+
+  // ── Group move — dragging any element that's part of a >1 marquee
+  // selection moves the whole group together, not just the one under the
+  // cursor. groupDragOriginRef captures every selected element's position
+  // once at drag start; each subsequent pointermove reapplies that same
+  // (dx,dy) offset to all of them, rather than compounding per-frame
+  // deltas onto positions that are also being written to (React state
+  // updates are async, so reading "current" x/y mid-drag would race).
+  const groupDragOriginRef = useRef(null);
+  const beginGroupMove = useCallback(() => {
+    const origins = {};
+    selectedIdsRef.current.forEach((id) => {
+      const el = elements.find((e) => e.id === id);
+      if (el) origins[id] = { x: el.x, y: el.y };
+    });
+    groupDragOriginRef.current = origins;
+  }, [elements]);
+  const applyGroupMove = useCallback((dx, dy) => {
+    const origins = groupDragOriginRef.current;
+    if (!origins) return;
+    Object.entries(origins).forEach(([id, pos]) => {
+      const patch = { x: pos.x + dx, y: pos.y + dy };
+      if (isSessionElement(id)) updateGuestElement(id, patch);
+      else updateElementStore(pageId, id, patch);
+    });
+  }, [isSessionElement, updateGuestElement, updateElementStore, pageId]);
 
   // ── Transform stored in a ref — zero React re-renders on pan/zoom ──
   const transformRef = useRef({ x: 0, y: 0, scale: 1 });
@@ -172,6 +249,7 @@ export default function Canvas({ pageId }) {
   const [fontSize,    setFontSize]    = useState(14);
   const [fontColor,   setFontColor]   = useState("#EDEAD4");
   const [drawPreview, setDrawPreview] = useState(null);
+  const [marquee, setMarquee] = useState(null); // {x,y,w,h} while rubber-band selecting
   const drawStartRef = useRef(null);
   // The pointerup that commits a new text element also switches activeTool
   // to "select" (so the *next* click doesn't spawn another box). The browser
@@ -183,6 +261,23 @@ export default function Canvas({ pageId }) {
 
   // React state only for things that change the DOM structure
   const [selectedId, setSelectedId]   = useState(null);
+  // Marquee/rubber-band multi-select — the full set of currently-selected
+  // ids. selectedId stays the "solo" selection (drives the style panel,
+  // resize/rotate handles, autoEdit) and is kept in sync as a singleton
+  // whenever exactly one element is selected; selectedIds is the source of
+  // truth for "is this element part of the current selection" (outline)
+  // and for group move/delete once more than one id is in it.
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const selectedIdsRef = useRef(selectedIds);
+  useEffect(() => { selectedIdsRef.current = selectedIds; }, [selectedIds]);
+  const selectSingle = useCallback((id) => {
+    setSelectedId(id);
+    setSelectedIds(new Set([id]));
+  }, []);
+  const clearSelection = useCallback(() => {
+    setSelectedId(null);
+    setSelectedIds(new Set());
+  }, []);
   // Set for exactly one render right after a text element is created by
   // clicking with the text tool — tells that specific CanvasElement to
   // mount straight into edit mode instead of requiring a separate click to
@@ -259,8 +354,10 @@ export default function Canvas({ pageId }) {
   // the size field gains focus — the gesture boundary — not per intermediate
   // value.
   const beginStyleEdit = useCallback(() => {
-    if (selectedId && isAdmin && !isSessionElement(selectedId)) snapshotStore();
-  }, [selectedId, isAdmin, isSessionElement, snapshotStore]);
+    if (!selectedId) return;
+    if (isSessionElement(selectedId)) snapshotGuest();
+    else if (isAdmin) snapshotStore();
+  }, [selectedId, isAdmin, isSessionElement, snapshotStore, snapshotGuest]);
 
   const handleFillChange = useCallback((color) => {
     setFillColor(color);
@@ -315,23 +412,33 @@ export default function Canvas({ pageId }) {
         spaceRef.current = true;
         setCursorStyle("grab");
       }
-      if (e.key === "Escape") { setLightbox(null); setSelectedId(null); setActiveTool("select"); setDrawPreview(null); }
+      if (e.key === "Escape") { setLightbox(null); clearSelection(); setActiveTool("select"); setDrawPreview(null); }
 
-      // Undo / Redo — admin only; guest scribbles have no history to undo,
-      // they just clear on refresh.
-      if ((e.metaKey || e.ctrlKey) && !inInput && isAdmin) {
-        if (e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
-        if ((e.key === "z" && e.shiftKey) || e.key === "y") { e.preventDefault(); redo(); }
+      // Undo / Redo — routes to whichever history the current user actually
+      // has: admin edits undo through the persisted store, guest scribbles
+      // undo through the session-only guestHistory stack (still cleared on
+      // refresh either way, just recoverable with Cmd+Z while it lasts).
+      if ((e.metaKey || e.ctrlKey) && !inInput) {
+        const doUndo = isAdmin ? undo : guestUndo;
+        const doRedo = isAdmin ? redo : guestRedo;
+        if (e.key === "z" && !e.shiftKey) { e.preventDefault(); doUndo(); }
+        if ((e.key === "z" && e.shiftKey) || e.key === "y") { e.preventDefault(); doRedo(); }
       }
 
-      // Delete selected element
+      // Delete selected element(s) — batches a marquee multi-selection into
+      // a single deleteElements/deleteGuestElements call so undo restores
+      // the whole group in one step, not one Cmd+Z per element.
       if ((e.key === "Backspace" || e.key === "Delete") && !inInput) {
-        const sid = selectedIdRef.current;
-        if (sid) {
+        const ids = selectedIdsRef.current.size
+          ? [...selectedIdsRef.current]
+          : (selectedIdRef.current ? [selectedIdRef.current] : []);
+        if (ids.length) {
           e.preventDefault();
-          if (isSessionElement(sid)) deleteGuestElement(sid);
-          else if (isAdmin) deleteElementStore(pageId, sid);
-          setSelectedId(null);
+          const guestIds = ids.filter((id) => isSessionElement(id));
+          const adminIds = ids.filter((id) => !isSessionElement(id));
+          if (guestIds.length) deleteGuestElements(guestIds);
+          if (adminIds.length && isAdmin) deleteElementsStore(pageId, adminIds);
+          clearSelection();
         }
       }
     };
@@ -344,7 +451,7 @@ export default function Canvas({ pageId }) {
     window.addEventListener("keydown", down);
     window.addEventListener("keyup",   up);
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
-  }, [undo, redo, deleteElementStore, isSessionElement, deleteGuestElement, pageId, activeTool, isAdmin]);
+  }, [undo, redo, guestUndo, guestRedo, deleteElementsStore, isSessionElement, deleteGuestElements, clearSelection, pageId, activeTool, isAdmin]);
 
   // ── Wheel — runs completely outside React render ───────────
   const onWheel = useCallback((e) => {
@@ -396,6 +503,53 @@ export default function Canvas({ pageId }) {
       return;
     }
 
+    // Marquee select — select tool, left-click-drag starting on empty
+    // canvas (elements call stopPropagation on their own pointerdown, so
+    // reaching here at all means this click started on the background, not
+    // on a shape). Draws a selection rectangle and multi-selects whatever
+    // it overlaps, like Figma's rubber-band select. A plain click with no
+    // drag falls through untouched to the container's onClick deselect.
+    if (activeTool === "select" && e.button === 0) {
+      e.preventDefault();
+      const { cx: sx, cy: sy } = screenToCanvas(e.clientX, e.clientY);
+      let moved = false;
+      const onMove = (ev) => {
+        moved = true;
+        const { cx, cy } = screenToCanvas(ev.clientX, ev.clientY);
+        setMarquee({ x: Math.min(sx, cx), y: Math.min(sy, cy), w: Math.abs(cx - sx), h: Math.abs(cy - sy) });
+      };
+      const onUp = (ev) => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup",   onUp);
+        if (moved) {
+          // Same trailing-click race as text creation (see suppressClickRef
+          // above) — a drag that ends on the container also fires a native
+          // click right after, which would otherwise immediately wipe the
+          // selection this drag just made.
+          suppressClickRef.current = true;
+          const { cx: ex, cy: ey } = screenToCanvas(ev.clientX, ev.clientY);
+          const box = { x: Math.min(sx, ex), y: Math.min(sy, ey), w: Math.abs(ex - sx), h: Math.abs(ey - sy) };
+          if (box.w > 2 || box.h > 2) {
+            // Only elements this user could actually edit are selectable —
+            // a guest marqueeing over published content shouldn't be able
+            // to move or delete it.
+            const hits = elements
+              .filter((el) => isAdmin || isSessionElement(el.id))
+              .filter((el) => el.x < box.x + box.w && el.x + el.w > box.x && el.y < box.y + box.h && el.y + el.h > box.y)
+              .map((el) => el.id);
+            setSelectedIds(new Set(hits));
+            setSelectedId(hits.length === 1 ? hits[0] : null);
+          } else {
+            clearSelection();
+          }
+        }
+        setMarquee(null);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup",   onUp);
+      return;
+    }
+
     // Draw: left button + non-select tool — everyone can draw now; whether
     // it's saved depends on isAdmin, decided at commit time below.
     if (e.button !== 0 || activeTool === "select") return;
@@ -408,7 +562,7 @@ export default function Canvas({ pageId }) {
     const commit = (patch) => (isAdmin ? addElementStore(pageId, patch) : addGuestElement(patch));
     const commitText = (patch) => {
       const id = commit(patch);
-      setSelectedId(id);
+      selectSingle(id);
       setAutoEditId(id);
       setActiveTool("select");
       suppressClickRef.current = true;
@@ -450,22 +604,24 @@ export default function Canvas({ pageId }) {
           // select and another to edit — commitText selects the new
           // element, switches back to the select tool (so the *next* click
           // doesn't spawn yet another text box), and flags it to mount
-          // straight into edit mode.
-          commitText({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: fontColor, fontSize });
+          // straight into edit mode. Starts with empty text (not a "Text"
+          // placeholder to type over) — CanvasElement deletes it on blur if
+          // still empty, matching Figma's "empty text layer vanishes" rule.
+          commitText({ type: "text", text: "", x, y, w, h, fill: "transparent", color: fontColor, fontSize });
         } else if (activeTool === "frame") {
           commit({ type: "frame", label: "Frame", x, y, w, h, stroke: strokeColor, strokeWidth });
         } else {
           commit({ type: activeTool, x, y, w, h, fill: fillColor, stroke: strokeColor, strokeWidth });
         }
       } else if (activeTool === "text") {
-        commitText({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: fontColor, fontSize });
+        commitText({ type: "text", text: "", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: fontColor, fontSize });
       }
       setDrawPreview(null);
       drawStartRef.current = null;
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup",   onUp);
-  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, fontColor, fontSize, pageId, addElementStore, addGuestElement, scheduleApply, screenToCanvas]);
+  }, [isAdmin, activeTool, fillColor, strokeColor, strokeWidth, fontColor, fontSize, pageId, addElementStore, addGuestElement, scheduleApply, screenToCanvas, elements, isSessionElement, clearSelection, selectSingle]);
 
   // ── Drop image — admin only; guest image uploads would sit as
   // multi-MB base64 strings in memory with no cleanup story, unlike the
@@ -550,7 +706,7 @@ export default function Canvas({ pageId }) {
           onDragOver={(e) => e.preventDefault()}
           onClick={() => {
             if (suppressClickRef.current) { suppressClickRef.current = false; return; }
-            if (activeTool === "select") setSelectedId(null);
+            if (activeTool === "select") clearSelection();
           }}
           style={{
             flex: 1, overflow: "hidden", position: "relative",
@@ -596,13 +752,21 @@ export default function Canvas({ pageId }) {
               .map((el) => {
                 const isSession = isSessionElement(el.id);
                 const editable = isAdmin || isSession;
+                const isMultiSelected = selectedIds.size > 1 && selectedIds.has(el.id);
                 return (
                   <CanvasElement
                     key={el.id}
                     el={el}
                     editable={editable}
-                    selected={selectedId === el.id}
-                    onSelect={setSelectedId}
+                    selected={selectedIds.has(el.id)}
+                    // Resize/rotate handles and the floating layer toolbar
+                    // only make sense for a single selected element — with
+                    // several selected they'd render once per element,
+                    // which is just noise, and there's no single element to
+                    // resize/rotate as a group anyway.
+                    showHandles={selectedIds.has(el.id) && selectedIds.size === 1}
+                    isMultiSelected={isMultiSelected}
+                    onSelect={selectSingle}
                     onEnlarge={setLightbox}
                     onUpdate={(patch) => (isSession ? updateGuestElement(el.id, patch) : updateElementStore(pageId, el.id, patch))}
                     onDelete={() => (isSession ? deleteGuestElement(el.id) : deleteElementStore(pageId, el.id))}
@@ -612,11 +776,13 @@ export default function Canvas({ pageId }) {
                     // (fired once at pointerdown/focus), not per pointermove
                     // or keystroke — updateElement itself never snapshots
                     // (it's called continuously mid-drag), so without this,
-                    // Cmd+Z had nothing to revert to for moves/resizes/
+                    // there'd be nothing to revert to for moves/resizes/
                     // rotates/text edits, only for style changes and
-                    // create/delete/reorder. Session-only guest elements
-                    // still have no undo, matching the earlier design.
-                    onInteractionStart={isSession ? undefined : snapshotStore}
+                    // create/delete/reorder. Guests get their own
+                    // session-only history now too, not just admin.
+                    onInteractionStart={isSession ? snapshotGuest : snapshotStore}
+                    onGroupMoveStart={beginGroupMove}
+                    onGroupMove={applyGroupMove}
                     autoEdit={el.id === autoEditId}
                   />
                 );
@@ -624,6 +790,17 @@ export default function Canvas({ pageId }) {
 
             {/* Draw preview ghost */}
             {drawPreview && <DrawPreview p={drawPreview} />}
+
+            {/* Marquee selection rectangle */}
+            {marquee && (
+              <div style={{
+                position: "absolute", left: marquee.x, top: marquee.y,
+                width: marquee.w, height: marquee.h,
+                background: "rgba(124,106,247,0.12)",
+                border: "1px solid rgba(124,106,247,0.65)",
+                pointerEvents: "none", zIndex: 999,
+              }} />
+            )}
           </div>
 
           {elements.length === 0 && !drawPreview && (
@@ -648,7 +825,7 @@ export default function Canvas({ pageId }) {
         }}>
           <CanvasToolbar
             activeTool={activeTool}
-            onToolChange={(t) => { setActiveTool(t); setSelectedId(null); }}
+            onToolChange={(t) => { setActiveTool(t); clearSelection(); }}
             fillColor={fillColor}     onFillChange={handleFillChange}
             strokeColor={strokeColor} onStrokeChange={handleStrokeChange}
             strokeWidth={strokeWidth} onStrokeWidthChange={handleStrokeWidthChange}
@@ -656,9 +833,15 @@ export default function Canvas({ pageId }) {
             fontColor={fontColor} onFontColorChange={handleFontColorChange}
             onStyleEditStart={beginStyleEdit}
             showTextControls={showTextControls}
-            hasSelection={!!selectedId}
+            hasSelection={selectedIds.size > 0}
             isAdmin={isAdmin}
-            onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
+            // Undo/redo is available to everyone now — admin edits undo
+            // through the persisted store, guest scribbles undo through
+            // their own session-only history (still gone on refresh).
+            onUndo={isAdmin ? undo : guestUndo}
+            onRedo={isAdmin ? redo : guestRedo}
+            canUndo={isAdmin ? canUndo : guestHistory.length > 0}
+            canRedo={isAdmin ? canRedo : guestFuture.length > 0}
           />
         </div>
         {isAdmin && (
