@@ -76,7 +76,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     index: "01",
     title: "T-Cloud Dashboard",
     company: "T-Mobile & MAIA",
-    year: "2024",
+    year: "2026",
     tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
     accent: "#E20074",
     // #E20074 is 4.23:1 on the page bg as text (fails AA 4.5:1) and 2.59:1
@@ -131,11 +131,74 @@ export const CASE_STUDIES: CaseStudy[] = [
   },
 
   {
-    slug: "standard-bank",
+    slug: "maia",
     index: "02",
+    title: "MAIA Platform Onboarding",
+    company: "T-Mobile & MAIA",
+    year: "2026",
+    tags: ["Enterprise Platform", "Web", "Onboarding"],
+    accent: "#E91E8C",
+    // Same magenta family as T-Cloud's #E20074 — reuses T-Cloud's already-
+    // verified lightened text colour (E62689, 4.5:1+) instead of re-deriving
+    // a new one for a hue this close.
+    accentText: "#E62689",
+    badgeOnAccent: "#FFFFFF",
+    heroImage: "/canvas-flow/maia/welcome.png",
+    slides: [
+      { src: "/canvas-flow/maia/welcome.png", label: "Overview & Problem", caption: "MAIA is the platform other products, T-Cloud included, are built on top of — the request-to-access flow had to work as a confusing front door for none of them." },
+      { src: "/canvas-flow/maia/all-applications.png", label: "Requesting Access", caption: "A searchable table of every requestable application, replacing a per-app support ticket with a single self-service request." },
+      { src: "/canvas-flow/maia/configuration-complete.png", label: "Key Design Decision", caption: "Configuration Complete closes the loop with real approve / deny / pending status, plus three explicit next steps instead of a silent redirect." },
+      { src: "/canvas-flow/maia/dashboard-populated.png", label: "The Destination", caption: "Where every request lands once access clears — violations, alerts, and tickets surfaced at a glance instead of a screen the user has to learn from scratch." },
+      { src: "/canvas-flow/maia/resource-library.png", label: "Ongoing Support", caption: "MAIA 101 stays one click away from onboarding, not filed under a help menu nobody opens until something's already broken." },
+    ],
+    overview:
+      "The screen every MAIA customer sees first, before they've touched anything else on the platform. MAIA sits underneath products like T-Cloud, giving operations teams a shared, self-service way to request access to the applications they're accountable for instead of filing a ticket and waiting on IT. A platform used as the foundation for other products can't afford a confusing front door: if the first five minutes don't work, every team building on top of MAIA inherits that friction. The brief was a request-to-access flow honest about the fact that MAIA can't unilaterally grant access, an optional guided tour that respects a \"skip\" click, and a dashboard that admits when there's nothing to show yet instead of faking data.",
+    screens: [
+      { src: "/canvas-flow/maia/welcome.png", label: "Welcome", caption: "Self-service application access framed around what changes once approval lands, not a bare form." },
+      { src: "/canvas-flow/maia/all-applications.png", label: "All Applications", caption: "Every requestable application in one searchable table, no separate ticket per app." },
+      { src: "/canvas-flow/maia/configuration-complete.png", label: "Configuration Complete", caption: "Per-app approve / deny / pending status, plus three explicit next steps instead of a blank dashboard." },
+      { src: "/canvas-flow/maia/dashboard-empty.png", label: "Dashboard — Before Access", caption: "An honest empty state while approvals are pending, not a dashboard pretending there's data." },
+      { src: "/canvas-flow/maia/dashboard-populated.png", label: "Dashboard — After Access", caption: "The same dashboard once access clears — violations, alerts, and Jira tickets surfaced at a glance." },
+      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Portfolio-wide inventory: violations, compliance score, and monthly cloud spend per application." },
+      { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Severity-ranked alerts across every application the user now has visibility into." },
+      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from onboarding instead of buried in a help menu." },
+    ],
+    scopeConstraints: [
+      { label: "Platform, not one product", desc: "MAIA underlies multiple downstream products, T-Cloud among them. Onboarding had to read as generic infrastructure a new hire could land on regardless of which specific app brought them there, not framed around any one product's vocabulary." },
+      { label: "Request, not grant", desc: "MAIA routes access requests to application owners, it can't approve them itself. The flow had to stay honest about approved / denied / pending states rather than implying access is instant, which shaped the entire post-request screen." },
+      { label: "Permanently skippable", desc: "A returning admin setting up their fifth new hire shouldn't be forced through the same 13-step guided tour as someone's actual first login. Skip is available at every step, not just at the start." },
+      { label: "Timeline & budget", desc: "A 10-week engagement shared across two other in-flight MAIA workstreams. Scoped tightly to the onboarding and first-run tour, not a redesign of the dashboard or applications views those flows land on." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "Three Explicit Next Steps, Not One Drop-Off",
+        desc: "Finishing the access-request wizard used to dump the user straight onto an empty dashboard with nothing to look at yet. Configuration Complete now offers three concrete next moves instead: take the guided tour, browse developer tools, or open the resource library, so \"you're done\" doesn't read as a dead end.",
+      },
+      {
+        num: "2",
+        title: "The Empty Dashboard Says So",
+        desc: "Before access is approved, the dashboard showed the same layout as after, just with every widget silently reading zero. Indistinguishable from a broken page. It now explicitly states access is pending, so an empty state reads as expected, not as a bug report waiting to happen.",
+      },
+      {
+        num: "3",
+        title: "Reference Team Member as a First-Class Step",
+        desc: "New users rarely know their own access needs precisely enough to self-serve confidently. Letting them name an existing team member as a reference, surfaced as its own onboarding step rather than a buried optional field, gives approvers real context instead of a blind request.",
+      },
+    ],
+    outcomes: [
+      { num: "3", title: "Next steps instead of 1 dead end", desc: "Configuration Complete's tour / dev tools / resource library split replaced a single silent redirect to an empty dashboard." },
+      { num: "13", title: "Step guided tour, fully skippable", desc: "Every tour step carries its own Skip control, so it never becomes a tax on someone who's onboarded before." },
+      { num: "0", title: "Fake data in empty states", desc: "The pre-access dashboard states plainly that access is pending instead of rendering the same widgets with silently zeroed-out values." },
+    ],
+  },
+
+  {
+    slug: "standard-bank",
+    index: "03",
     title: "Standard Bank",
     company: "Standard Bank Africa",
-    year: "2024",
+    year: "2026",
     tags: ["FinTech", "Mobile", "Multi-Market"],
     accent: "#00B4AA",
     // Already 7.6:1 as text — no lightening needed. White-on-fill for the
@@ -191,7 +254,7 @@ export const CASE_STUDIES: CaseStudy[] = [
 
   {
     slug: "elevance-health",
-    index: "03",
+    index: "04",
     title: "Find Care Experience",
     company: "Elevance Health",
     year: "2023",
@@ -244,69 +307,6 @@ export const CASE_STUDIES: CaseStudy[] = [
       { num: "+29%", title: "Task completion rate", desc: "Appointment management (58%→83%), claims lookup (61%→87%), and document download (71%→94%) measured over a 60-day post-launch cohort." },
       { num: "↓", title: "Support call volume", desc: "Appointment changes and claims status were top call drivers. Both saw measurable reduction in the first quarter after launch." },
       { num: "6", title: "Polaris patterns adopted", desc: "Appointment card, form validation states, coverage alert, document row, inline error, and confirmation banner, adopted across 6 product teams within 6 months." },
-    ],
-  },
-
-  {
-    slug: "maia",
-    index: "04",
-    title: "MAIA Platform Onboarding",
-    company: "T-Mobile",
-    year: "2024",
-    tags: ["Enterprise Platform", "Web", "Onboarding"],
-    accent: "#E91E8C",
-    // Same magenta family as T-Cloud's #E20074 — reuses T-Cloud's already-
-    // verified lightened text colour (E62689, 4.5:1+) instead of re-deriving
-    // a new one for a hue this close.
-    accentText: "#E62689",
-    badgeOnAccent: "#FFFFFF",
-    heroImage: "/canvas-flow/maia/welcome.png",
-    slides: [
-      { src: "/canvas-flow/maia/welcome.png", label: "Overview & Problem", caption: "MAIA is the platform other products, T-Cloud included, are built on top of — the request-to-access flow had to work as a confusing front door for none of them." },
-      { src: "/canvas-flow/maia/all-applications.png", label: "Requesting Access", caption: "A searchable table of every requestable application, replacing a per-app support ticket with a single self-service request." },
-      { src: "/canvas-flow/maia/configuration-complete.png", label: "Key Design Decision", caption: "Configuration Complete closes the loop with real approve / deny / pending status, plus three explicit next steps instead of a silent redirect." },
-      { src: "/canvas-flow/maia/dashboard-populated.png", label: "The Destination", caption: "Where every request lands once access clears — violations, alerts, and tickets surfaced at a glance instead of a screen the user has to learn from scratch." },
-      { src: "/canvas-flow/maia/resource-library.png", label: "Ongoing Support", caption: "MAIA 101 stays one click away from onboarding, not filed under a help menu nobody opens until something's already broken." },
-    ],
-    overview:
-      "The screen every MAIA customer sees first, before they've touched anything else on the platform. MAIA sits underneath products like T-Cloud, giving operations teams a shared, self-service way to request access to the applications they're accountable for instead of filing a ticket and waiting on IT. A platform used as the foundation for other products can't afford a confusing front door: if the first five minutes don't work, every team building on top of MAIA inherits that friction. The brief was a request-to-access flow honest about the fact that MAIA can't unilaterally grant access, an optional guided tour that respects a \"skip\" click, and a dashboard that admits when there's nothing to show yet instead of faking data.",
-    screens: [
-      { src: "/canvas-flow/maia/welcome.png", label: "Welcome", caption: "Self-service application access framed around what changes once approval lands, not a bare form." },
-      { src: "/canvas-flow/maia/all-applications.png", label: "All Applications", caption: "Every requestable application in one searchable table, no separate ticket per app." },
-      { src: "/canvas-flow/maia/configuration-complete.png", label: "Configuration Complete", caption: "Per-app approve / deny / pending status, plus three explicit next steps instead of a blank dashboard." },
-      { src: "/canvas-flow/maia/dashboard-empty.png", label: "Dashboard — Before Access", caption: "An honest empty state while approvals are pending, not a dashboard pretending there's data." },
-      { src: "/canvas-flow/maia/dashboard-populated.png", label: "Dashboard — After Access", caption: "The same dashboard once access clears — violations, alerts, and Jira tickets surfaced at a glance." },
-      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Portfolio-wide inventory: violations, compliance score, and monthly cloud spend per application." },
-      { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Severity-ranked alerts across every application the user now has visibility into." },
-      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from onboarding instead of buried in a help menu." },
-    ],
-    scopeConstraints: [
-      { label: "Platform, not one product", desc: "MAIA underlies multiple downstream products, T-Cloud among them. Onboarding had to read as generic infrastructure a new hire could land on regardless of which specific app brought them there, not framed around any one product's vocabulary." },
-      { label: "Request, not grant", desc: "MAIA routes access requests to application owners, it can't approve them itself. The flow had to stay honest about approved / denied / pending states rather than implying access is instant, which shaped the entire post-request screen." },
-      { label: "Permanently skippable", desc: "A returning admin setting up their fifth new hire shouldn't be forced through the same 13-step guided tour as someone's actual first login. Skip is available at every step, not just at the start." },
-      { label: "Timeline & budget", desc: "A 10-week engagement shared across two other in-flight MAIA workstreams. Scoped tightly to the onboarding and first-run tour, not a redesign of the dashboard or applications views those flows land on." },
-    ],
-    decisions: [
-      {
-        num: "1",
-        title: "Three Explicit Next Steps, Not One Drop-Off",
-        desc: "Finishing the access-request wizard used to dump the user straight onto an empty dashboard with nothing to look at yet. Configuration Complete now offers three concrete next moves instead: take the guided tour, browse developer tools, or open the resource library, so \"you're done\" doesn't read as a dead end.",
-      },
-      {
-        num: "2",
-        title: "The Empty Dashboard Says So",
-        desc: "Before access is approved, the dashboard showed the same layout as after, just with every widget silently reading zero. Indistinguishable from a broken page. It now explicitly states access is pending, so an empty state reads as expected, not as a bug report waiting to happen.",
-      },
-      {
-        num: "3",
-        title: "Reference Team Member as a First-Class Step",
-        desc: "New users rarely know their own access needs precisely enough to self-serve confidently. Letting them name an existing team member as a reference, surfaced as its own onboarding step rather than a buried optional field, gives approvers real context instead of a blind request.",
-      },
-    ],
-    outcomes: [
-      { num: "3", title: "Next steps instead of 1 dead end", desc: "Configuration Complete's tour / dev tools / resource library split replaced a single silent redirect to an empty dashboard." },
-      { num: "13", title: "Step guided tour, fully skippable", desc: "Every tour step carries its own Skip control, so it never becomes a tax on someone who's onboarded before." },
-      { num: "0", title: "Fake data in empty states", desc: "The pre-access dashboard states plainly that access is pending instead of rendering the same widgets with silently zeroed-out values." },
     ],
   },
 ];

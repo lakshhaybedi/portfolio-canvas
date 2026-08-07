@@ -8,8 +8,13 @@ import { standardBankFlowPage } from "./standardBankFlowData";
 import { maiaFlowPage } from "./maiaFlowData";
 
 // Seed pages added after initial launch — each keyed by a fixed page id so
-// ensureSeedPages (below) can add whichever ones a given visitor's
-// persisted store is still missing, without duplicating ones it already has.
+// syncSeedPages (below) can add whichever ones a given visitor's persisted
+// store is still missing, and refresh ones it already has. These are
+// reference material generated from data files, not admin-hand-edited
+// content (unlike the main "Portfolio" page), so keeping them in sync with
+// the latest data on every load — rather than only adding them once — is
+// the right call: a later addition to e.g. maiaFlowData.js should reach
+// visitors who already have that page, not just brand-new ones.
 const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage, maiaFlowPage];
 
 function uid() {
@@ -88,19 +93,23 @@ export const useCanvasStore = create(
         set((s) => ({ pages: [...s.pages, page], activePageId: page.id }));
       },
 
-      // Idempotently adds any seed pages (SEED_PAGES above) a visitor's
-      // persisted store is still missing — new visitors get them from the
-      // initial `pages` array below, but zustand `persist` rehydrates
-      // existing visitors' localStorage over that initial value, so a code
-      // change to the default alone would never reach them. Checked by id,
-      // not just page count, so each is a one-time add (including after the
-      // admin renames or edits it) and adding a new seed page later doesn't
-      // re-add ones a visitor already has.
-      ensureSeedPages() {
-        const existingIds = new Set(get().pages.map((p) => p.id));
-        const missing = SEED_PAGES.map((make) => make()).filter((p) => !existingIds.has(p.id));
-        if (!missing.length) return;
-        set((s) => ({ pages: [...s.pages, ...missing] }));
+      // Adds any seed pages (SEED_PAGES above) a visitor's persisted store
+      // is still missing, and refreshes the ones it already has to the
+      // latest data-file content — new visitors get them from the initial
+      // `pages` array below, but zustand `persist` rehydrates existing
+      // visitors' localStorage over that initial value, so a code change to
+      // the default alone would never reach them on its own. Existing pages
+      // are replaced in place (same array position, so the sidebar order
+      // doesn't jump around), not removed and re-appended.
+      syncSeedPages() {
+        set((s) => {
+          const fresh = SEED_PAGES.map((make) => make());
+          const freshById = new Map(fresh.map((p) => [p.id, p]));
+          const existingIds = new Set(s.pages.map((p) => p.id));
+          const updated = s.pages.map((p) => freshById.get(p.id) ?? p);
+          const missing = fresh.filter((p) => !existingIds.has(p.id));
+          return { pages: [...updated, ...missing] };
+        });
       },
 
       renamePage(id, name) {

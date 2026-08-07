@@ -254,9 +254,17 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
       </AnimatePresence>
 
       {/* ── Sticky nav ── */}
+      {/* Tabs column is `minmax(0, 1fr)`, not `auto` — with only 3 case
+          studies the tab strip's natural width always fit, but a 4th (and
+          any future) project can make it wider than the viewport has room
+          for. An `auto` middle column has no ceiling and pushed Back/Year
+          off two-thirds of viewports once four tabs' worth of text and
+          padding exceeded the space actually available. `minmax(0, 1fr)`
+          caps it to whatever's left after Back/Year, and .case-nav-tabs
+          (globals.css) scrolls horizontally instead of clipping. */}
       <nav className="case-nav" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-        display: "grid", gridTemplateColumns: "1fr auto 1fr",
+        display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto",
         alignItems: "center",
         padding: "0 48px", height: 64,
         background: lowEndDevice ? "rgba(10,10,10,0.94)" : "rgba(10,10,10,0.75)",

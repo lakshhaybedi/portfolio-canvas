@@ -35,6 +35,15 @@ const ROW2_Y = 580, ROW2_CY = ROW2_Y + H / 2;
 const ROW3_Y = 1000, ROW3_CY = ROW3_Y + H / 2;
 const ROW4_Y = 1420;
 
+// Developer Experience section — positioned well below the onboarding flow
+// above (row 4 ends at y=1645) so the two persona/modules read as visually
+// distinct sections, not a continuation of the same journey.
+const DEV_TITLE_Y = 2050;
+const HUB_Y = 2100;
+const HUB_CX = 240; // horizontal center of the hub screen (x=60, w=360)
+const SPOKE_Y = 2520;
+const CHAIN_Y = 2940, CHAIN_CY = CHAIN_Y + H / 2;
+
 export const MAIA_FLOW_ELEMENTS = [
   text("maia-title", "MAIA — First-Time User Onboarding", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
   text("maia-subtitle", "Real screens from the Maia 2.0 prototype — requesting application access, an optional guided tour, and the resulting dashboard.", 60, 80, 1600, 28, 13, DIM, 100),
@@ -115,6 +124,59 @@ export const MAIA_FLOW_ELEMENTS = [
   arrow("maia-arr-dash-alerts", 1080, ROW3_Y + H, 1920, ROW4_Y, ACCENT),
   text("maia-lbl-dash-alerts", "Alerts", 1740, ROW4_Y - 30, 300, 20, 11, DIM),
   img("maia-alerts", `${BASE}/alerts.png`, 1740, ROW4_Y, W, H, 10),
+
+  // ── Developer Experience — a separate persona/module (the "Ankit
+  // Brodiya" admin login vs. the onboarding flow's "Asha Chandran"), not a
+  // continuation of the onboarding journey above. Real screens from the
+  // "Developer Experience" section of the same Figma file (node
+  // 4007:293292): a dev-facing dashboard hub fanning out into applications
+  // (with its own drill-down + tabs), violations, resources, activities,
+  // alerts, a "scope of work" switcher (Myself vs. Manager view of the same
+  // screens), and a contribution marketplace. The source section has ~45
+  // frames across these groups, mostly hover-state variants of the same
+  // tables (e.g. 5 near-identical "Applications" hover states) — condensed
+  // to one representative screen per meaningfully distinct destination.
+  text("maia-dev-title", "Developer Experience — Application Management", 60, DEV_TITLE_Y, 1400, 32, 20, "#EDEAD4", 100),
+
+  img("maia-dev-dashboard", `${BASE}/dev-dashboard.png`, 60, HUB_Y, W, H, 10),
+
+  arrow("maia-arr-dev-apps", HUB_CX, HUB_Y + H, 240, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-apps", "Applications tab", 60, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-applications", `${BASE}/dev-applications.png`, 60, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-violations", HUB_CX, HUB_Y + H, 660, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-violations", "Open Violations", 480, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-violations", `${BASE}/dev-violations.png`, 480, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-resources", HUB_CX, HUB_Y + H, 1080, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-resources", "Resources tab", 900, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-resources", `${BASE}/dev-resources.png`, 900, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-activities", HUB_CX, HUB_Y + H, 1500, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-activities", "Activities tab", 1320, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-activities", `${BASE}/dev-activities.png`, 1320, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-alerts", HUB_CX, HUB_Y + H, 1920, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-alerts", "Alerts", 1740, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-alerts", `${BASE}/dev-alerts.png`, 1740, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-scope", HUB_CX, HUB_Y + H, 2340, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-scope", "Switch to Manager scope", 2160, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-scope", `${BASE}/dev-scope-manager.png`, 2160, SPOKE_Y, W, H, 10),
+
+  arrow("maia-arr-dev-contrib", HUB_CX, HUB_Y + H, 2760, SPOKE_Y, ACCENT),
+  text("maia-lbl-dev-contrib", "MAIA Contribution Center", 2580, SPOKE_Y - 30, 300, 20, 11, DIM),
+  img("maia-dev-contrib", `${BASE}/dev-contribution-center.png`, 2580, SPOKE_Y, W, H, 10),
+
+  // Applications → detail drill-down chain, continuing straight down from
+  // the Applications spoke rather than fanning out again.
+  arrow("maia-arr-dev-app-detail", 240, SPOKE_Y + H, 240, CHAIN_Y, ACCENT),
+  text("maia-lbl-dev-app-detail", "Open an application", 245, CHAIN_Y - 30, 250, 20, 10, DIM),
+  img("maia-dev-app-overview", `${BASE}/dev-app-overview.png`, 60, CHAIN_Y, W, H, 10),
+
+  arrow("maia-arr-dev-app-services", 420, CHAIN_CY, 480, CHAIN_CY, ACCENT),
+  text("maia-lbl-dev-app-services", "App Services tab", 425, CHAIN_CY - 32, 200, 20, 10, DIM),
+  img("maia-dev-app-services", `${BASE}/dev-app-services.png`, 480, CHAIN_Y, W, H, 10),
 ];
 
 export function maiaFlowPage() {

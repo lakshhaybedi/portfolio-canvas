@@ -48,18 +48,29 @@ const PROJECTS = [
     title: "T-Cloud Dashboard",
     company: "T-Mobile & MAIA",
     tags: ["Enterprise B2B", "Web & Tablet", "Dashboard"],
-    year: "2024",
+    year: "2026",
     desc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
     heroColor: "#E10074",
     previewImage: heroImageFor("t-cloud"),
   },
   {
-    slug: "standard-bank",
+    slug: "maia",
     num: "02",
+    title: "MAIA Platform Onboarding",
+    company: "T-Mobile & MAIA",
+    tags: ["Enterprise Platform", "Web", "Onboarding"],
+    year: "2026",
+    desc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
+    heroColor: "#E62689",
+    previewImage: heroImageFor("maia"),
+  },
+  {
+    slug: "standard-bank",
+    num: "03",
     title: "Standard Bank",
     company: "Standard Bank Africa",
     tags: ["FinTech", "Mobile", "Multi-Market"],
-    year: "2024",
+    year: "2026",
     desc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
     // Requested #0033A9 measures 1.78:1 against the row's hover background
     // (var(--bg-elevated)) — fails even the 3:1 large-text minimum this
@@ -70,7 +81,7 @@ const PROJECTS = [
   },
   {
     slug: "elevance-health",
-    num: "03",
+    num: "04",
     title: "Find Care Experience",
     company: "Elevance Health",
     tags: ["Healthcare", "Web App", "Appointment Flow"],
@@ -78,17 +89,6 @@ const PROJECTS = [
     desc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
     heroColor: "#3D82FF",
     previewImage: heroImageFor("elevance-health"),
-  },
-  {
-    slug: "maia",
-    num: "04",
-    title: "MAIA Platform Onboarding",
-    company: "T-Mobile",
-    tags: ["Enterprise Platform", "Web", "Onboarding"],
-    year: "2024",
-    desc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
-    heroColor: "#E62689",
-    previewImage: heroImageFor("maia"),
   },
 ];
 
@@ -791,7 +791,7 @@ export default function Portfolio() {
             </motion.a>
           </div>
           <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            © 2024 Lakshhay Bedi
+            © 2026 Lakshhay Bedi
           </span>
         </motion.div>
       </section>

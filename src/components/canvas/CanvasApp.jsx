@@ -16,19 +16,19 @@ export default function CanvasApp() {
     }
   }, [activePageId, pages, setActivePage]);
 
-  // Add any seed pages (Find Care flow, T-Cloud flow, Standard Bank flow)
-  // a visitor's persisted store is still missing. Must wait for zustand
-  // `persist` to actually finish reading localStorage first — calling this
-  // before hydration completes would add the pages to the in-memory default
-  // state, only for hydration to then overwrite `pages` wholesale with the
-  // persisted array, silently discarding them.
+  // Add/refresh any seed pages (Find Care flow, T-Cloud flow, Standard Bank
+  // flow, MAIA flow) against a visitor's persisted store. Must wait for
+  // zustand `persist` to actually finish reading localStorage first —
+  // calling this before hydration completes would sync the pages into the
+  // in-memory default state, only for hydration to then overwrite `pages`
+  // wholesale with the persisted array, silently discarding the sync.
   useEffect(() => {
     if (useCanvasStore.persist.hasHydrated()) {
-      useCanvasStore.getState().ensureSeedPages();
+      useCanvasStore.getState().syncSeedPages();
       return;
     }
     return useCanvasStore.persist.onFinishHydration(() => {
-      useCanvasStore.getState().ensureSeedPages();
+      useCanvasStore.getState().syncSeedPages();
     });
   }, []);
 

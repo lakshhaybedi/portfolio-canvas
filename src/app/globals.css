@@ -45,6 +45,17 @@
 
 html { scroll-behavior: smooth; }
 
+/* Case-study sticky nav's project-tab strip: scrolls horizontally instead
+   of wrapping or overflowing the viewport once there are more tabs than
+   fit (see the gridTemplateColumns comment in CaseStudyPage.tsx). Applies
+   at every width, not just mobile — a 4th project already made the
+   unconstrained-width version break well above the old mobile breakpoint. */
+.case-nav-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.case-nav-tabs::-webkit-scrollbar { display: none; }
+
 body {
   background: var(--bg);
   color: var(--fg);
@@ -210,14 +221,4 @@ button:focus-visible,
     grid-template-columns: 1fr !important;
     gap: 6px !important;
   }
-
-  /* Case-study sticky nav: the project-tab strip has no wrap/scroll, so it
-     was clipping mid-word and making the last tab unreachable. Let it
-     scroll horizontally instead of stretching to fit. */
-  .case-nav { grid-template-columns: auto minmax(0, 1fr) auto !important; }
-  .case-nav-tabs {
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-  .case-nav-tabs::-webkit-scrollbar { display: none !important; }
 }
