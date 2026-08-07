@@ -284,12 +284,14 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
         display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
         alignItems: "center",
-        padding: "0 48px", height: 64,
+        height: 64,
         background: lowEndDevice ? "rgba(10,10,10,0.94)" : "rgba(10,10,10,0.75)",
         backdropFilter: lowEndDevice ? undefined : "blur(12px)",
         borderBottom: "1px solid var(--border)",
       }}>
-        {/* Back */}
+        {/* Back — padding lives in globals.css (.case-nav) so a narrow-
+            viewport media query can shrink it without an inline/CSS
+            specificity fight. */}
         <Link
           href="/"
           onMouseEnter={() => setLarge(true)}
@@ -298,7 +300,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             display: "flex", alignItems: "center", gap: 8,
             fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
             textTransform: "uppercase", textDecoration: "none", color: "var(--fg)",
-            transition: "opacity 0.2s", width: "fit-content",
+            transition: "opacity 0.2s", width: "fit-content", whiteSpace: "nowrap",
           }}
           onMouseOver={(e) => (e.currentTarget.style.opacity = "0.5")}
           onMouseOut={(e)  => (e.currentTarget.style.opacity = "1")}
@@ -353,7 +355,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             }}>
               {study.index}
             </span>
-            <span style={{
+            <span className="case-nav-title" style={{
               fontSize: 11, fontWeight: 700, lineHeight: 1,
               letterSpacing: "0.08em", textTransform: "uppercase",
               color: "var(--fg)", whiteSpace: "nowrap",
@@ -424,7 +426,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
 
         {/* Year — right aligned */}
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", color: "var(--muted)" }}>
+          <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", color: "var(--muted)", whiteSpace: "nowrap" }}>
             {study.year}
           </span>
         </div>
@@ -482,6 +484,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >
                 <Link
                   href={`/canvas?page=${study.canvasPageId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 10,
                     padding: "14px 24px",

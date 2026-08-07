@@ -43,7 +43,14 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-html { scroll-behavior: smooth; }
+/* overflow-x here (not just on body) matters: `position: fixed` elements
+   anchor to the initial containing block, which tracks html's layout box —
+   if some descendant escapes containment and widens that box past the
+   visual viewport (the case-study screens carousel's horizontally-
+   scrolling buttons did, despite their own overflow-x: auto), fixed
+   elements like the sticky nav size themselves against the WIDER box
+   instead of the real viewport, clipping content at the right edge. */
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   background: var(--bg);
@@ -89,6 +96,8 @@ button:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
+.case-nav { padding: 0 48px; }
 
 /* ── Case-study screens sidebar: reveal an "expand" cue on hover so the
    thumbnail's click-to-lightbox affordance isn't just implied by cursor. ── */
@@ -143,6 +152,15 @@ button:focus-visible,
      the hero content wraps taller on narrow screens — mobile users don't
      need the nudge to scroll anyway. */
   .hero-scroll-cue { display: none !important; }
+
+  /* Case-study sticky nav: at narrow widths, "← Back" + full project title
+     + "YYYY–YYYY" together no longer fit on one line and wrap, breaking the
+     nav out of its fixed 64px height. Tighter side padding plus hiding the
+     project title (the switcher still works via the index/chevron, prev/
+     next arrows, and the dropdown) reclaims enough width that nothing
+     wraps regardless of how long a given project's title is. */
+  .case-nav { padding: 0 16px !important; }
+  .case-nav-title { display: none !important; }
 
   /* Case-study page: text+image hero and the 1fr/300px body grid don't
      stack on their own. The screens sidebar becomes a scroll-locked

@@ -396,7 +396,11 @@ export default function Portfolio() {
       </div>
 
       {/* ── Work ── */}
-      <section id="work" style={{ padding: "100px 48px" }}>
+      {/* Bottom padding dropped — the Interactive Canvas card right below
+          brings its own 72px padding, and stacking that on top of this
+          section's usual 100px plus About's 100px top padding tripled up
+          into a huge gap of mostly-empty space around the card. */}
+      <section id="work" style={{ padding: "100px 48px 0" }}>
         <motion.div
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
           style={{ marginBottom: 48 }}
@@ -648,7 +652,10 @@ export default function Portfolio() {
       </motion.section>
 
       {/* ── About ── */}
-      <section id="about" style={{ padding: "100px 48px", borderTop: "1px solid var(--border)" }}>
+      {/* Top padding trimmed to match the Work-section fix above — the
+          Interactive Canvas card's own 72px bottom padding already
+          supplies the gap before this section starts. */}
+      <section id="about" style={{ padding: "60px 48px 100px", borderTop: "1px solid var(--border)" }}>
         <motion.div
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
           style={{ marginBottom: 64 }}
