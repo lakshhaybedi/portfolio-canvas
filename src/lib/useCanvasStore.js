@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_PAGE_ELEMENTS } from "./defaultCanvasData";
+import { findCareFlowPage } from "./findCareFlowData";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -77,6 +78,18 @@ export const useCanvasStore = create(
         const n = get().pages.length + 1;
         const page = { id: uid(), name: `Page ${n}`, elements: [] };
         set((s) => ({ pages: [...s.pages, page], activePageId: page.id }));
+      },
+
+      // Idempotently adds the Find Care UX-flow page for anyone whose
+      // persisted store predates it — new visitors get it from the initial
+      // `pages` array below, but zustand `persist` rehydrates existing
+      // visitors' localStorage over that initial value, so a code change to
+      // the default alone would never reach them. Checked by id, not just
+      // page count, so it's a no-op once added (including after the admin
+      // renames or edits it).
+      ensureFindCareFlowPage() {
+        if (get().pages.some((p) => p.id === "find-care-flow")) return;
+        set((s) => ({ pages: [...s.pages, findCareFlowPage()] }));
       },
 
       renamePage(id, name) {

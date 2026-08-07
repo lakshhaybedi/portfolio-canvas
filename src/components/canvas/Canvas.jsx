@@ -238,6 +238,41 @@ export default function Canvas({ pageId }) {
 
   useEffect(() => () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); }, []);
 
+  // ── Zoom/pan controls — a mouse-wheel/trackpad-only way to navigate the
+  // canvas excludes anyone who can't do a precise pinch or two-finger pan
+  // (motor impairments, some trackpads/mice, screen-magnifier users who
+  // need predictable fixed steps). These give the same transform math a
+  // set of discrete, keyboard-operable buttons. Anchored on the viewport's
+  // own center (not the cursor, unlike wheel-zoom) since a button has no
+  // meaningful cursor position of its own.
+  const zoomStep = useCallback((factor) => {
+    const rect = containerRef.current.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    const t = transformRef.current;
+    const newScale = CLAMP(t.scale * factor, MIN_SCALE, MAX_SCALE);
+    const ratio = newScale / t.scale;
+    transformRef.current = { scale: newScale, x: cx - ratio * (cx - t.x), y: cy - ratio * (cy - t.y) };
+    applyTransform();
+  }, [applyTransform]);
+
+  const resetZoom = useCallback(() => {
+    const rect = containerRef.current.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    const t = transformRef.current;
+    const ratio = 1 / t.scale;
+    transformRef.current = { scale: 1, x: cx - ratio * (cx - t.x), y: cy - ratio * (cy - t.y) };
+    applyTransform();
+  }, [applyTransform]);
+
+  // Fixed screen-space nudge, not scaled by zoom — panning should move the
+  // same visible distance regardless of how far in you've zoomed.
+  const PAN_STEP = 120;
+  const panBy = useCallback((dx, dy) => {
+    const t = transformRef.current;
+    transformRef.current = { ...t, x: t.x + dx, y: t.y + dy };
+    applyTransform();
+  }, [applyTransform]);
+
   // ── Tool state ─────────────────────────────────────────────
   const [activeTool,  setActiveTool]  = useState("select");
   // New shapes start unfilled with a red outline — a deliberate "unstyled
@@ -423,6 +458,12 @@ export default function Canvas({ pageId }) {
         const doRedo = isAdmin ? redo : guestRedo;
         if (e.key === "z" && !e.shiftKey) { e.preventDefault(); doUndo(); }
         if ((e.key === "z" && e.shiftKey) || e.key === "y") { e.preventDefault(); doRedo(); }
+        // Zoom — keyboard equivalents of the on-screen zoom buttons, for
+        // anyone who can't do a precise trackpad pinch. "=" so Cmd+Plus
+        // works without needing Shift on US keyboard layouts.
+        if (e.key === "=" || e.key === "+") { e.preventDefault(); zoomStep(1.2); }
+        if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomStep(1 / 1.2); }
+        if (e.key === "0") { e.preventDefault(); resetZoom(); }
       }
 
       // Delete selected element(s) — batches a marquee multi-selection into
@@ -451,7 +492,7 @@ export default function Canvas({ pageId }) {
     window.addEventListener("keydown", down);
     window.addEventListener("keyup",   up);
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
-  }, [undo, redo, guestUndo, guestRedo, deleteElementsStore, isSessionElement, deleteGuestElements, clearSelection, pageId, activeTool, isAdmin]);
+  }, [undo, redo, guestUndo, guestRedo, deleteElementsStore, isSessionElement, deleteGuestElements, clearSelection, pageId, activeTool, isAdmin, zoomStep, resetZoom]);
 
   // ── Wheel — runs completely outside React render ───────────
   const onWheel = useCallback((e) => {
@@ -692,11 +733,64 @@ export default function Canvas({ pageId }) {
           </div>
         )}
 
-        {/* Zoom label — always shown, independently positioned bottom-right
-            so it never affects the toolbar's centering below. */}
-        <span ref={zoomLabelRef} style={{ ...zoomLabelStyle, position: "absolute", bottom: 16, right: 16, zIndex: 10 }}>
-          100%
-        </span>
+        {/* Zoom/pan controls — mouse-wheel pinch and two-finger pan exclude
+            anyone who can't do those precisely (motor impairments, some
+            trackpads/mice, screen-magnifier users who want fixed discrete
+            steps). Real, keyboard-operable <button>s give the same
+            transform math an accessible alternative path. Independently
+            positioned bottom-right so it never affects the toolbar's
+            centering below. */}
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute", bottom: 16, right: 16, zIndex: 10,
+            display: "flex", flexDirection: "column", alignItems: "stretch", gap: 6,
+          }}
+        >
+          <div
+            role="group"
+            aria-label="Pan canvas"
+            style={{
+              display: "grid", gridTemplateColumns: "repeat(3, 26px)", gridTemplateRows: "repeat(3, 26px)",
+              gap: 2, background: "rgba(18,18,18,0.9)", border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 8, padding: 4, alignSelf: "flex-end",
+            }}
+          >
+            <span />
+            <NavButton title="Pan up" onClick={() => panBy(0, PAN_STEP)}><ChevronUpIcon /></NavButton>
+            <span />
+            <NavButton title="Pan left" onClick={() => panBy(PAN_STEP, 0)}><ChevronLeftIcon /></NavButton>
+            <NavButton title="Center view — reset pan" onClick={() => panBy(-transformRef.current.x, -transformRef.current.y)}><HomeIcon /></NavButton>
+            <NavButton title="Pan right" onClick={() => panBy(-PAN_STEP, 0)}><ChevronRightIcon /></NavButton>
+            <span />
+            <NavButton title="Pan down" onClick={() => panBy(0, -PAN_STEP)}><ChevronDownIcon /></NavButton>
+            <span />
+          </div>
+
+          <div
+            role="group"
+            aria-label="Zoom canvas"
+            style={{
+              display: "flex", alignItems: "center", gap: 2,
+              background: "rgba(18,18,18,0.9)", border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 8, padding: 4,
+            }}
+          >
+            <NavButton title="Zoom out" onClick={() => zoomStep(1 / 1.2)}><MinusIcon /></NavButton>
+            <button
+              title="Reset zoom to 100%"
+              aria-label="Reset zoom to 100%"
+              onClick={resetZoom}
+              style={{
+                ...zoomLabelStyle, background: "transparent", border: "none",
+                cursor: "pointer", padding: "4px 8px", minWidth: 44,
+              }}
+            >
+              <span ref={zoomLabelRef}>100%</span>
+            </button>
+            <NavButton title="Zoom in" onClick={() => zoomStep(1.2)}><PlusIcon /></NavButton>
+          </div>
+        </div>
 
         {/* Canvas viewport */}
         <div
@@ -900,6 +994,51 @@ function DrawPreview({ p }) {
       pointerEvents: "none", opacity: 0.7, zIndex: 999, boxSizing: "border-box",
     }} />
   );
+}
+
+// ── Zoom/pan control button — a plain <button> (not a div with an onClick)
+// so it's tab-focusable and Enter/Space-activatable for free; `title` also
+// backs the aria-label so screen readers get a real name, not just "button".
+function NavButton({ title, onClick, children }) {
+  return (
+    <button
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      style={{
+        width: 26, height: 26, boxSizing: "border-box",
+        background: "transparent", border: "none", borderRadius: 5,
+        color: "rgba(237,234,212,0.6)", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background 0.12s, color 0.12s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#EDEAD4"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(237,234,212,0.6)"; }}
+    >
+      {children}
+    </button>
+  );
+}
+function ChevronUpIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2.5 9l4.5-4.5L11.5 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function ChevronDownIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2.5 5l4.5 4.5L11.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function ChevronLeftIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function ChevronRightIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2.5L9.5 7 5 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function HomeIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 6.5L7 2l5 4.5M3.5 5.5V12h7V5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function PlusIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>;
+}
+function MinusIcon() {
+  return <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>;
 }
 
 // ── Static styles ─────────────────────────────────────────
