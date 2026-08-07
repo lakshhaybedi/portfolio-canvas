@@ -14,7 +14,7 @@ const HANDLE = 10;
  * state (a guest editing something they drew this session), so this
  * component doesn't need to know or care which.
  */
-export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart }) {
+export default function CanvasElement({ el, editable, selected, onSelect, onEnlarge, onUpdate, onDelete, onBringForward, onSendBackward, onInteractionStart, autoEdit }) {
   const transformRef = useContext(TransformContext);
 
   // Captures whether this element was *already* selected before the
@@ -122,7 +122,13 @@ export default function CanvasElement({ el, editable, selected, onSelect, onEnla
   // happened in the first place. Fixed to match Figma: one click selects
   // (drag works normally, nothing here blocks it), a second click *while
   // already selected* enters edit mode.
-  const [isEditingText, setIsEditingText] = useState(false);
+  // `autoEdit` is only meaningful on this element's *first* render — Canvas
+  // .jsx sets it for one tick right after creating a new text element by
+  // clicking with the text tool, so it mounts straight into edit mode
+  // instead of needing a separate click to select and another to edit. The
+  // lazy initializer form only runs once at mount, so it's safe even though
+  // autoEditId gets cleared again almost immediately.
+  const [isEditingText, setIsEditingText] = useState(() => !!autoEdit);
   useEffect(() => { if (!selected) setIsEditingText(false); }, [selected]);
 
   const handleClick = (e) => {

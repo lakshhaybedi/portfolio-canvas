@@ -34,9 +34,11 @@ export default function CanvasToolbar({
   strokeWidth, onStrokeWidthChange,
   fontSize,    onFontSizeChange,
   fontColor,   onFontColorChange,
+  onStyleEditStart,
   showTextControls,
   hasSelection,
   isAdmin,
+  onUndo, onRedo, canUndo, canRedo,
 }) {
   const [picker, setPicker]   = useState(null); // "fill" | "stroke" | "font" | null
   const [shapeMenuOpen, setShapeMenuOpen] = useState(false);
@@ -66,7 +68,17 @@ export default function CanvasToolbar({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onToolChange]);
 
-  const togglePicker = (which) => { setShapeMenuOpen(false); setPicker(p => p === which ? null : which); };
+  // Snapshots once when a picker *opens* for editing (the gesture boundary
+  // for a colour edit — everything typed/dragged inside it afterward is
+  // one continuous change), not on close/toggle-off.
+  const togglePicker = (which) => {
+    setShapeMenuOpen(false);
+    setPicker(p => {
+      const next = p === which ? null : which;
+      if (next) onStyleEditStart?.();
+      return next;
+    });
+  };
 
   const selectTool = (id) => { onToolChange(id); closeMenus(); };
 
@@ -84,6 +96,40 @@ export default function CanvasToolbar({
         userSelect: "none",
       }}
     >
+      {/* Undo/redo — a keyboard-only Cmd/Ctrl+Z is easy to lose track of
+          ("did that even register?"), and gives no way to redo at all
+          without knowing Shift+Cmd+Z. Explicit buttons make both always
+          visible and give real enabled/disabled feedback via canUndo/
+          canRedo instead of a shortcut that silently no-ops when history is
+          empty. Admin-only — guest session scribbles have no history. */}
+      {isAdmin && (
+        <>
+          <button
+            title="Undo  ⌘Z"
+            aria-label="Undo"
+            disabled={!canUndo}
+            onClick={onUndo}
+            style={iconButtonStyle(canUndo)}
+            onMouseEnter={e => { if (canUndo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+            onMouseLeave={e => { if (canUndo) e.currentTarget.style.background = "transparent"; }}
+          >
+            <UndoIcon />
+          </button>
+          <button
+            title="Redo  ⇧⌘Z"
+            aria-label="Redo"
+            disabled={!canRedo}
+            onClick={onRedo}
+            style={iconButtonStyle(canRedo)}
+            onMouseEnter={e => { if (canRedo) e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+            onMouseLeave={e => { if (canRedo) e.currentTarget.style.background = "transparent"; }}
+          >
+            <RedoIcon />
+          </button>
+          <Divider />
+        </>
+      )}
+
       {STANDALONE_TOOLS.map((t) => (
         <ToolButton key={t.id} tool={t} active={activeTool === t.id} onClick={() => selectTool(t.id)} />
       ))}
@@ -224,6 +270,7 @@ export default function CanvasToolbar({
               value={fontSize}
               aria-label="Text size"
               title="Text size"
+              onFocus={() => onStyleEditStart?.()}
               onChange={e => {
                 const n = Math.max(1, Math.min(400, Math.round(Number(e.target.value)) || 1));
                 onFontSizeChange(n);
@@ -297,6 +344,19 @@ function swatchStyle(color) {
     backgroundImage: `linear-gradient(${color}, ${color}), ${checker}`,
     backgroundSize: "auto, 8px 8px, 8px 8px",
     backgroundPosition: "0 0, 0 0, 4px 4px",
+  };
+}
+
+function iconButtonStyle(enabled) {
+  return {
+    width: SLOT, height: SLOT, boxSizing: "border-box",
+    background: "transparent",
+    border: "none", borderRadius: 7,
+    color: enabled ? "rgba(237,234,212,0.75)" : "rgba(237,234,212,0.2)",
+    cursor: enabled ? "pointer" : "default",
+    flexShrink: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    transition: "background 0.12s, color 0.12s",
   };
 }
 
@@ -496,6 +556,22 @@ function ChevronIcon() {
   return (
     <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
       <path d="M2 3l2 2 2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+function UndoIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+      <path d="M3 4H9.5a3 3 0 0 1 0 6H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M5 1.5L2 4l3 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+function RedoIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+      <path d="M11 4H4.5a3 3 0 0 0 0 6H9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M9 1.5L12 4l-3 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }

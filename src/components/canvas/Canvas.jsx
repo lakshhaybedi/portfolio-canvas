@@ -65,6 +65,8 @@ export default function Canvas({ pageId }) {
   const snapshotStore        = useCanvasStore((s) => s._snapshot);
   const undo                 = useCanvasStore((s) => s.undo);
   const redo                 = useCanvasStore((s) => s.redo);
+  const canUndo               = useCanvasStore((s) => s._history.length > 0);
+  const canRedo               = useCanvasStore((s) => s._future.length > 0);
 
   const page = pages.find((p) => p.id === pageId);
   const publishedElements = page?.elements ?? [];
@@ -171,14 +173,52 @@ export default function Canvas({ pageId }) {
   const [fontColor,   setFontColor]   = useState("#EDEAD4");
   const [drawPreview, setDrawPreview] = useState(null);
   const drawStartRef = useRef(null);
+  // The pointerup that commits a new text element also switches activeTool
+  // to "select" (so the *next* click doesn't spawn another box). The browser
+  // then fires a native "click" for that same gesture on the container,
+  // whose deselect-on-click handler below re-reads activeTool — which is
+  // now "select" — and wipes the selection it was just given. This flag
+  // suppresses exactly that one trailing click.
+  const suppressClickRef = useRef(false);
 
   // React state only for things that change the DOM structure
   const [selectedId, setSelectedId]   = useState(null);
+  // Set for exactly one render right after a text element is created by
+  // clicking with the text tool — tells that specific CanvasElement to
+  // mount straight into edit mode instead of requiring a separate click to
+  // select, then another to start typing. Cleared on the next tick; since
+  // it only needs to be true for the new element's *first* render (a
+  // useState lazy initializer, not a live prop), clearing it doesn't undo
+  // the edit-mode it already kicked off.
+  const [autoEditId,  setAutoEditId]  = useState(null);
+  // Clears the very next tick after being set — the new CanvasElement only
+  // needs to see autoEditId===its own id for its first render (captured
+  // into a useState lazy initializer there), so this doesn't need to stay
+  // true, just needs to not still be pointing at this id if the user later
+  // deselects and reselects the same element (which shouldn't force edit
+  // mode again).
+  useEffect(() => {
+    if (autoEditId == null) return;
+    const t = setTimeout(() => setAutoEditId(null), 0);
+    return () => clearTimeout(t);
+  }, [autoEditId]);
   const [lightbox,   setLightbox]     = useState(null);
   const [cursorStyle, setCursorStyle] = useState("default");
   const spaceRef    = useRef(false);
   const isPanRef    = useRef(false);
   const fileInputRef = useRef(null);
+
+  // Guest-mode landing toast — explains the session-only editing model up
+  // front rather than letting someone draw for a while and only discover
+  // on refresh that none of it stuck. Re-shows if isAdmin goes back to
+  // false (locking out of admin), not just on first mount.
+  const [showGuestToast, setShowGuestToast] = useState(false);
+  useEffect(() => {
+    if (isAdmin) { setShowGuestToast(false); return; }
+    setShowGuestToast(true);
+    const t = setTimeout(() => setShowGuestToast(false), 8000);
+    return () => clearTimeout(t);
+  }, [isAdmin]);
 
   // helper: screen → canvas coords
   const screenToCanvas = useCallback((clientX, clientY) => {
@@ -209,20 +249,36 @@ export default function Canvas({ pageId }) {
   // ── Apply toolbar fill/stroke to selected element — routes to the
   // persisted store for a published element (admin only) or to local
   // session state for a guest's own element. ─────────────────────────
+  //
+  // These use plain updateElement (no auto-snapshot), not updateElementStyle
+  // — dragging across the colour picker's gradient square fires onChange on
+  // every pointermove, and updateElementStyle snapshots on *every* call, so
+  // one colour pick was flooding undo history with dozens of entries (the
+  // same bug the drag/resize/rotate fix addressed, just in a different
+  // control). beginStyleEdit below snapshots once, when a picker opens or
+  // the size field gains focus — the gesture boundary — not per intermediate
+  // value.
+  const beginStyleEdit = useCallback(() => {
+    if (selectedId && isAdmin && !isSessionElement(selectedId)) snapshotStore();
+  }, [selectedId, isAdmin, isSessionElement, snapshotStore]);
+
   const handleFillChange = useCallback((color) => {
     setFillColor(color);
     if (!selectedId) return;
     if (isSessionElement(selectedId)) updateGuestElement(selectedId, { fill: color });
-    else if (isAdmin) updateElementStyle(pageId, selectedId, { fill: color });
-  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+    else if (isAdmin) updateElementStore(pageId, selectedId, { fill: color });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStore, updateGuestElement]);
 
   const handleStrokeChange = useCallback((color) => {
     setStrokeColor(color);
     if (!selectedId) return;
     if (isSessionElement(selectedId)) updateGuestElement(selectedId, { stroke: color });
-    else if (isAdmin) updateElementStyle(pageId, selectedId, { stroke: color });
-  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+    else if (isAdmin) updateElementStore(pageId, selectedId, { stroke: color });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStore, updateGuestElement]);
 
+  // Stroke width is a discrete button click, not a drag — each click is
+  // already exactly one meaningful change, so updateElementStyle's per-call
+  // snapshot is correct here as-is.
   const handleStrokeWidthChange = useCallback((w) => {
     setStrokeWidth(w);
     if (!selectedId) return;
@@ -234,15 +290,15 @@ export default function Canvas({ pageId }) {
     setFontSize(size);
     if (!selectedId) return;
     if (isSessionElement(selectedId)) updateGuestElement(selectedId, { fontSize: size });
-    else if (isAdmin) updateElementStyle(pageId, selectedId, { fontSize: size });
-  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+    else if (isAdmin) updateElementStore(pageId, selectedId, { fontSize: size });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStore, updateGuestElement]);
 
   const handleFontColorChange = useCallback((color) => {
     setFontColor(color);
     if (!selectedId) return;
     if (isSessionElement(selectedId)) updateGuestElement(selectedId, { color });
-    else if (isAdmin) updateElementStyle(pageId, selectedId, { color });
-  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStyle, updateGuestElement]);
+    else if (isAdmin) updateElementStore(pageId, selectedId, { color });
+  }, [selectedId, pageId, isAdmin, isSessionElement, updateElementStore, updateGuestElement]);
 
   // ── Keyboard ──────────────────────────────────────────────
   // Use a ref so the handler always sees the latest selectedId without stale closure
@@ -350,6 +406,13 @@ export default function Canvas({ pageId }) {
     setDrawPreview({ type: activeTool, x: sx, y: sy, w: 0, h: 0, fill: fillColor, stroke: strokeColor, strokeWidth });
 
     const commit = (patch) => (isAdmin ? addElementStore(pageId, patch) : addGuestElement(patch));
+    const commitText = (patch) => {
+      const id = commit(patch);
+      setSelectedId(id);
+      setAutoEditId(id);
+      setActiveTool("select");
+      suppressClickRef.current = true;
+    };
 
     const onMove = (ev) => {
       const { cx, cy } = screenToCanvas(ev.clientX, ev.clientY);
@@ -382,14 +445,20 @@ export default function Canvas({ pageId }) {
         if (activeTool === "arrow") {
           commit({ type: "arrow", x, y, w, h, x1: ox, y1: oy, x2: ex, y2: ey, stroke: strokeColor, strokeWidth });
         } else if (activeTool === "text") {
-          commit({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: fontColor, fontSize });
+          // Clicking with the text tool should go straight into typing, not
+          // just spawn an unselected box that needs a separate click to
+          // select and another to edit — commitText selects the new
+          // element, switches back to the select tool (so the *next* click
+          // doesn't spawn yet another text box), and flags it to mount
+          // straight into edit mode.
+          commitText({ type: "text", text: "Text", x, y, w, h, fill: "transparent", color: fontColor, fontSize });
         } else if (activeTool === "frame") {
           commit({ type: "frame", label: "Frame", x, y, w, h, stroke: strokeColor, strokeWidth });
         } else {
           commit({ type: activeTool, x, y, w, h, fill: fillColor, stroke: strokeColor, strokeWidth });
         }
       } else if (activeTool === "text") {
-        commit({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: fontColor, fontSize });
+        commitText({ type: "text", text: "Text", x: ox, y: oy, w: 160, h: 48, fill: "transparent", color: fontColor, fontSize });
       }
       setDrawPreview(null);
       drawStartRef.current = null;
@@ -435,6 +504,38 @@ export default function Canvas({ pageId }) {
     <TransformContext.Provider value={transformRef}>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", position: "relative" }}>
 
+        {showGuestToast && (
+          <div
+            role="status"
+            style={{
+              position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
+              zIndex: 60, display: "flex", alignItems: "center", gap: 10,
+              background: "rgba(18,18,18,0.97)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 10, padding: "9px 10px 9px 14px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+              fontFamily: "'Space Grotesk',sans-serif", fontSize: 12.5,
+              color: "rgba(237,234,212,0.85)", maxWidth: "min(90vw, 480px)",
+            }}
+          >
+            <span>
+              You can draw and edit anything here — nothing is saved unless you&apos;re logged in as admin. Refreshing clears it.
+            </span>
+            <button
+              onClick={() => setShowGuestToast(false)}
+              aria-label="Dismiss"
+              style={{
+                flexShrink: 0, width: 20, height: 20, borderRadius: 5,
+                background: "transparent", border: "none",
+                color: "rgba(237,234,212,0.45)", cursor: "pointer",
+                fontSize: 13, lineHeight: 1,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#EDEAD4")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(237,234,212,0.45)")}
+            >✕</button>
+          </div>
+        )}
+
         {/* Zoom label — always shown, independently positioned bottom-right
             so it never affects the toolbar's centering below. */}
         <span ref={zoomLabelRef} style={{ ...zoomLabelStyle, position: "absolute", bottom: 16, right: 16, zIndex: 10 }}>
@@ -447,7 +548,10 @@ export default function Canvas({ pageId }) {
           onPointerDown={onPointerDown}
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
-          onClick={() => { if (activeTool === "select") setSelectedId(null); }}
+          onClick={() => {
+            if (suppressClickRef.current) { suppressClickRef.current = false; return; }
+            if (activeTool === "select") setSelectedId(null);
+          }}
           style={{
             flex: 1, overflow: "hidden", position: "relative",
             background: "#0d0d0d",
@@ -513,6 +617,7 @@ export default function Canvas({ pageId }) {
                     // create/delete/reorder. Session-only guest elements
                     // still have no undo, matching the earlier design.
                     onInteractionStart={isSession ? undefined : snapshotStore}
+                    autoEdit={el.id === autoEditId}
                   />
                 );
               })}
@@ -549,9 +654,11 @@ export default function Canvas({ pageId }) {
             strokeWidth={strokeWidth} onStrokeWidthChange={handleStrokeWidthChange}
             fontSize={fontSize}   onFontSizeChange={handleFontSizeChange}
             fontColor={fontColor} onFontColorChange={handleFontColorChange}
+            onStyleEditStart={beginStyleEdit}
             showTextControls={showTextControls}
             hasSelection={!!selectedId}
             isAdmin={isAdmin}
+            onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
           />
         </div>
         {isAdmin && (
