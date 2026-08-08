@@ -86,9 +86,9 @@ const SB_SLIDE_5 = "/case-studies/slides/sb-05-design-system.png";
 // MAIA — portfolio slides (same Figma-frame-export approach)
 const MI_SLIDE_1 = "/case-studies/slides/maia-02-context.png";
 const MI_SLIDE_2 = "/case-studies/slides/maia-04-decisions.png";
-const MI_SLIDE_3 = "/case-studies/slides/maia-07-virtual-tour.png";
-const MI_SLIDE_4 = "/case-studies/slides/maia-08-core-platform.png";
-const MI_SLIDE_5 = "/case-studies/slides/maia-13-design-system.png";
+const MI_SLIDE_3 = "/case-studies/slides/maia-08-virtual-tour.png";
+const MI_SLIDE_4 = "/case-studies/slides/maia-09-core-platform.png";
+const MI_SLIDE_5 = "/case-studies/slides/maia-15-design-system.png";
 
 export const CASE_STUDIES: CaseStudy[] = [
   {

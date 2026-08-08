@@ -38,77 +38,126 @@ const defaultPage = () => ({
 // syncSeedPages — it's admin-hand-editable, so blanket-overwriting it on
 // every load would clobber real customization. But its slide images were
 // auto-generated from defaultCanvasData.js, and that generated content has
-// gone stale twice now: first the original CDN URLs, then a first round of
-// local re-exports (5 slides per project, ids tc-0..4/sb-0..4/eh-0..4).
-// This map lists every URL either round could have produced, per id, so
-// the migration below can tell "still exactly what some past auto-
-// generation produced, never hand-edited" apart from a genuine admin
-// customization. The second round also restructured the deck (cover slides
-// inserted, full per-project decks, a new 4th MAIA column) — the old ids
-// no longer line up 1:1 with the new content at the same id, so a still-
-// pristine page gets its *whole* elements array replaced wholesale rather
-// than patched field-by-field.
+// gone stale three times now: the original CDN URLs, a first round of
+// local re-exports (5 slides per project, ids tc-0..4/sb-0..4/eh-0..4),
+// and a second round that expanded to full per-project decks and added a
+// 4th MAIA column (ids tc-0..9/sb-0..10/eh-0..9/mi-0..12). This map lists
+// every URL any of those rounds could have produced, per id, so the
+// migration below can tell "still exactly what some past auto-generation
+// produced, never hand-edited" apart from a genuine admin customization.
+// Each round also restructured the deck (cover slides inserted, then
+// section-divider frames inserted) — old ids don't line up 1:1 with the
+// new content at the same id once that happens, so a still-pristine page
+// gets its *whole* elements array replaced wholesale rather than patched
+// field-by-field.
 const STALE_DEFAULT_IMAGE_URLS = {
   "tc-0": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/4c99d97a-f62e-44f1-98b1-48808c3827af/1.png",
     "/case-studies/slides/tcloud-01-context.png",
+    "/case-studies/slides/tcloud-01-cover.png",
   ],
   "tc-1": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/8cc2e4ee-373e-43c8-9c50-04603d0abdef/2.png",
     "/case-studies/slides/tcloud-02-decisions.png",
+    "/case-studies/slides/tcloud-02-context.png",
   ],
   "tc-2": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/07ddbcd7-a854-4935-8ddb-b97c6309c7aa/3.png",
     "/case-studies/slides/tcloud-03-widget-system.png",
+    "/case-studies/slides/tcloud-03-approach.png",
   ],
   "tc-3": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e3b790ff-5453-4a62-8070-683d51b8cd1f/4.png",
     "/case-studies/slides/tcloud-04-hierarchy.png",
+    "/case-studies/slides/tcloud-04-decisions.png",
   ],
   "tc-4": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/6006386b-f801-447d-9c7b-53dba0cb6a0d/5.png",
     "/case-studies/slides/tcloud-05-design-system.png",
+    "/case-studies/slides/tcloud-05-widget-system.png",
   ],
+  "tc-5": ["/case-studies/slides/tcloud-06-hierarchy.png"],
+  "tc-6": ["/case-studies/slides/tcloud-07-surfaces.png"],
+  "tc-7": ["/case-studies/slides/tcloud-08-outcomes.png"],
+  "tc-8": ["/case-studies/slides/tcloud-09-insights.png"],
+  "tc-9": ["/case-studies/slides/tcloud-10-design-system.png"],
   "sb-0": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e91f85ac-621e-4272-acd4-23aea05d6209/2301.png",
     "/case-studies/slides/sb-01-context.png",
+    "/case-studies/slides/sb-01-cover.png",
   ],
   "sb-1": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/43a6e294-89e5-4e9d-829b-2771a697cded/2302.png",
     "/case-studies/slides/sb-02-decisions.png",
+    "/case-studies/slides/sb-02-context.png",
   ],
   "sb-2": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/a4792eaa-1035-4619-ac7d-9414ccd71819/2303.png",
     "/case-studies/slides/sb-03-payment-flow.png",
+    "/case-studies/slides/sb-03-approach.png",
   ],
   "sb-3": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/1e4ced7a-f8a0-4676-9e89-1c30422cb3d2/2304.png",
     "/case-studies/slides/sb-04-verification.png",
+    "/case-studies/slides/sb-04-decisions.png",
   ],
   "sb-4": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/af608b01-7d67-40f4-afde-31b73a4250f6/2305.png",
     "/case-studies/slides/sb-05-design-system.png",
+    "/case-studies/slides/sb-05-flow-architecture.png",
   ],
+  "sb-5": ["/case-studies/slides/sb-06-payment-flow.png"],
+  "sb-6": ["/case-studies/slides/sb-07-verification.png"],
+  "sb-7": ["/case-studies/slides/sb-08-market-modularity.png"],
+  "sb-8": ["/case-studies/slides/sb-09-outcomes.png"],
+  "sb-9": ["/case-studies/slides/sb-10-insights.png"],
+  "sb-10": ["/case-studies/slides/sb-11-design-system.png"],
   "eh-0": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/61452706-3c67-43a7-9255-1df9f1a239e9/2306.png",
     "/case-studies/slides/anthem-01-context.png",
+    "/case-studies/slides/anthem-01-cover.png",
   ],
   "eh-1": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/40c65dac-78e6-4561-abd3-b01aead2378c/2307.png",
     "/case-studies/slides/anthem-02-decisions.png",
+    "/case-studies/slides/anthem-02-context.png",
   ],
   "eh-2": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/f8e103d9-4c9f-4b05-b23d-4b049cc91bdf/2308.png",
     "/case-studies/slides/anthem-03-appointment-flow.png",
+    "/case-studies/slides/anthem-03-approach.png",
   ],
   "eh-3": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e5ff90fc-76ee-49ba-a7c2-af2d4ec3fb15/2309.png",
     "/case-studies/slides/anthem-04-getcare-flow.png",
+    "/case-studies/slides/anthem-04-decisions.png",
   ],
   "eh-4": [
     "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/5f64a66d-9c97-4531-8de0-91735c22f9cc/2310.png",
     "/case-studies/slides/anthem-05-design-system.png",
+    "/case-studies/slides/anthem-05-findcare-architecture.png",
   ],
+  "eh-5": ["/case-studies/slides/anthem-06-appointment-flow.png"],
+  "eh-6": ["/case-studies/slides/anthem-07-getcare-flow.png"],
+  "eh-7": ["/case-studies/slides/anthem-08-outcomes.png"],
+  "eh-8": ["/case-studies/slides/anthem-09-insights.png"],
+  "eh-9": ["/case-studies/slides/anthem-10-design-system.png"],
+  // MAIA is only ever one generation old (the column didn't exist before
+  // the full-deck round), so each id has a single prior URL rather than a
+  // CDN/local pair.
+  "mi-0":  ["/case-studies/slides/maia-01-cover.png"],
+  "mi-1":  ["/case-studies/slides/maia-02-context.png"],
+  "mi-2":  ["/case-studies/slides/maia-03-approach.png"],
+  "mi-3":  ["/case-studies/slides/maia-04-decisions.png"],
+  "mi-4":  ["/case-studies/slides/maia-05-constraints.png"],
+  "mi-5":  ["/case-studies/slides/maia-06-first-time-user.png"],
+  "mi-6":  ["/case-studies/slides/maia-07-virtual-tour.png"],
+  "mi-7":  ["/case-studies/slides/maia-08-core-platform.png"],
+  "mi-8":  ["/case-studies/slides/maia-09-data-density.png"],
+  "mi-9":  ["/case-studies/slides/maia-10-supporting-systems.png"],
+  "mi-10": ["/case-studies/slides/maia-11-outcomes.png"],
+  "mi-11": ["/case-studies/slides/maia-12-insights.png"],
+  "mi-12": ["/case-studies/slides/maia-13-design-system.png"],
 };
 
 export const useCanvasStore = create(
