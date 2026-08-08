@@ -83,6 +83,12 @@ const SB_SLIDE_2 = "/case-studies/slides/sb-02-decisions.png";
 const SB_SLIDE_3 = "/case-studies/slides/sb-03-payment-flow.png";
 const SB_SLIDE_4 = "/case-studies/slides/sb-04-verification.png";
 const SB_SLIDE_5 = "/case-studies/slides/sb-05-design-system.png";
+// MAIA — portfolio slides (same Figma-frame-export approach)
+const MI_SLIDE_1 = "/case-studies/slides/maia-02-context.png";
+const MI_SLIDE_2 = "/case-studies/slides/maia-04-decisions.png";
+const MI_SLIDE_3 = "/case-studies/slides/maia-07-virtual-tour.png";
+const MI_SLIDE_4 = "/case-studies/slides/maia-08-core-platform.png";
+const MI_SLIDE_5 = "/case-studies/slides/maia-13-design-system.png";
 
 export const CASE_STUDIES: CaseStudy[] = [
   {
@@ -163,13 +169,17 @@ export const CASE_STUDIES: CaseStudy[] = [
     // a new one for a hue this close.
     accentText: "#E62689",
     badgeOnAccent: "#FFFFFF",
-    heroImage: "/canvas-flow/maia/welcome.png",
+    // Hero uses a real screen (like Standard Bank/Elevance above) rather
+    // than a narrative deck slide — the onboarding tour's first tooltip
+    // fits the overview copy below ("the screen every MAIA customer sees
+    // first") better than a static dashboard shot would.
+    heroImage: "/canvas-flow/maia/onboarding-tour.png",
     slides: [
-      { src: "/canvas-flow/maia/welcome.png", label: "Overview & Problem", caption: "MAIA is the platform other products, T-Cloud included, are built on top of — the request-to-access flow had to work as a confusing front door for none of them." },
-      { src: "/canvas-flow/maia/all-applications.png", label: "Requesting Access", caption: "A searchable table of every requestable application, replacing a per-app support ticket with a single self-service request." },
-      { src: "/canvas-flow/maia/configuration-complete.png", label: "Key Design Decision", caption: "Configuration Complete closes the loop with real approve / deny / pending status, plus three explicit next steps instead of a silent redirect." },
-      { src: "/canvas-flow/maia/dashboard-populated.png", label: "The Destination", caption: "Where every request lands once access clears — violations, alerts, and tickets surfaced at a glance instead of a screen the user has to learn from scratch." },
-      { src: "/canvas-flow/maia/resource-library.png", label: "Ongoing Support", caption: "MAIA 101 stays one click away from onboarding, not filed under a help menu nobody opens until something's already broken." },
+      { src: MI_SLIDE_1, label: "Context & Problem",  caption: "New operators were dropped into a full enterprise dashboard with nothing in it — access is granted in ServiceNow, not MAIA, so nothing could tell a new user which applications were theirs." },
+      { src: MI_SLIDE_2, label: "Key Decisions",      caption: "Three choices that shaped the first session: stepped portfolio configuration, a contextual virtual tour that overlays the live dashboard, and smart resource discovery." },
+      { src: MI_SLIDE_3, label: "The Virtual Tour",   caption: "A 13-step guided walkthrough that never leaves the live dashboard — plays on first login, re-accessible from Help, skippable at every step." },
+      { src: MI_SLIDE_4, label: "Core Platform Pages", caption: "Four pages, one grammar — clear headers, meaningful counts, and one filter model (Application, Platform, Account, Manage) reused on every table." },
+      { src: MI_SLIDE_5, label: "Design System",      caption: "Built for density, speed and operator clarity — trust signals first, progressive disclosure, and every count carrying a route to the thing it counts." },
     ],
     overview:
       "The screen every MAIA customer sees first, before they've touched anything else on the platform. MAIA sits underneath products like T-Cloud, giving operations teams a shared, self-service way to request access to the applications they're accountable for instead of filing a ticket and waiting on IT. A platform used as the foundation for other products can't afford a confusing front door: if the first five minutes don't work, every team building on top of MAIA inherits that friction. The brief was a request-to-access flow honest about the fact that MAIA can't unilaterally grant access, an optional guided tour that respects a \"skip\" click, and a dashboard that admits when there's nothing to show yet instead of faking data.",

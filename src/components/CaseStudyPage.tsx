@@ -809,18 +809,6 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                 >
                   <div className="case-screen-thumb" style={{
                     position: "relative",
-                    // Capped height so panel width (user-resizable, see the
-                    // drag handle below) doesn't drive how many screens fit
-                    // on screen at once. A first version stretched the image
-                    // to `width: 100%` with `objectFit: cover` to fill that
-                    // fixed height — which worked at first, but as the panel
-                    // gets wider the box becomes a wider rectangle at the
-                    // same height, so cover crops progressively more off the
-                    // top/bottom to fill it. `contain` + natural width fixes
-                    // that: the full screenshot always stays visible at a
-                    // consistent 170px height, however wide the panel gets —
-                    // it just centers instead of stretching to fill.
-                    height: 170,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: "var(--bg-elevated)",
                     borderRadius: 6, overflow: "hidden",
@@ -830,9 +818,26 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   }}>
                     <img
                       src={screen.src} alt={screen.label}
+                      // No fixed container height: width tracks the panel
+                      // (user-resizable, see the drag handle below) up to
+                      // maxHeight, so dragging the handle wider actually
+                      // grows the thumbnail instead of just widening empty
+                      // space around a static-sized image. `width`/`height`
+                      // both `auto` (not `width: 100%`) is deliberate —
+                      // with an explicit width, the browser clips to
+                      // maxHeight without recomputing width to match,
+                      // squashing the image; `auto`+`auto` lets it size
+                      // from the intrinsic ratio and satisfy both caps at
+                      // once. maxHeight only engages for wide landscape
+                      // screenshots at the panel's widest settings, so a
+                      // single slide can't dominate the list; screens are a
+                      // mix of landscape desktop captures and portrait
+                      // mobile ones (e.g. Standard Bank), so a shared
+                      // aspect-ratio box would either crop or letterbox one
+                      // of the two — sizing from the image's real ratio
+                      // avoids both.
                       style={{
-                        maxWidth: "100%", height: "100%", width: "auto", display: "block",
-                        objectFit: "contain",
+                        width: "auto", height: "auto", maxWidth: "100%", maxHeight: 260, display: "block",
                         opacity: highlighted ? 1 : 0.7, transition: "opacity 0.25s",
                       }}
                     />
