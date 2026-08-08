@@ -144,8 +144,10 @@ button:focus-visible,
   .work-row-desc  { padding-left: 0 !important; }
 
   /* "View in Canvas" CTA card: less outer margin + inner padding so the
-     headline has room; the row itself already wraps via inline flexWrap. */
-  .canvas-cta-section { margin: 0 20px !important; }
+     headline has room; the row itself already wraps via inline flexWrap.
+     Keeps a (smaller) vertical margin so the card still reads as inset
+     rather than butting against the sections above and below. */
+  .canvas-cta-section { margin: 32px 20px !important; }
   .canvas-cta-row { padding: 40px 24px !important; }
 
   /* Decorative "scroll" hint can collide with the availability badge once

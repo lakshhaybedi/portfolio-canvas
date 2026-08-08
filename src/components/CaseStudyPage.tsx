@@ -331,7 +331,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             onMouseEnter={(e) => { if (prev) e.currentTarget.style.background = "rgba(237,234,212,0.08)"; }}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            ‹
+            <NavChevron direction="left" />
           </Link>
 
           <button
@@ -339,7 +339,11 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             aria-expanded={navMenuOpen}
             aria-haspopup="menu"
             style={{
-              display: "flex", alignItems: "baseline", gap: 8,
+              // `center`, not `baseline`: with a fixed height, baseline
+              // alignment parks the flex line at the TOP of the box rather
+              // than centring it, which floated this text ~15px above the
+              // Back link, arrows, and year that share the 64px nav row.
+              display: "flex", alignItems: "center", gap: 8,
               padding: "0 14px", height: 40,
               background: navMenuOpen ? "rgba(237,234,212,0.08)" : "transparent",
               border: "none", borderRadius: 8, cursor: "pointer",
@@ -380,7 +384,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
             onMouseEnter={(e) => { if (next) e.currentTarget.style.background = "rgba(237,234,212,0.08)"; }}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            ›
+            <NavChevron direction="right" />
           </Link>
 
           {navMenuOpen && (
@@ -1001,12 +1005,32 @@ function OutcomeCard({ outcome, accent, accentText, index }: {
   );
 }
 
+// Prev/next chevrons. Drawn as SVG rather than the ‹ › glyphs they replaced:
+// at a usable size those characters render as hairline-thin strokes that read
+// as decoration rather than controls, and their weight/size varies by font.
+// A stroked path gives a consistent, visibly-clickable arrow.
+function NavChevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      width="18" height="18" viewBox="0 0 24 24" fill="none"
+      aria-hidden="true"
+      style={{ transform: direction === "left" ? "rotate(180deg)" : "none" }}
+    >
+      <path
+        d="M9 5l7 7-7 7"
+        stroke="currentColor" strokeWidth="2.2"
+        strokeLinecap="round" strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function navArrowStyle(enabled: boolean): CSSProperties {
   return {
     display: "flex", alignItems: "center", justifyContent: "center",
-    width: 28, height: 28, borderRadius: 6,
-    fontSize: 16, lineHeight: 1, textDecoration: "none",
-    color: enabled ? "var(--fg)" : "var(--border)",
+    width: 36, height: 36, borderRadius: 8,
+    lineHeight: 1, textDecoration: "none",
+    color: enabled ? "var(--fg)" : "var(--border-strong)",
     cursor: enabled ? "pointer" : "default",
     pointerEvents: enabled ? "auto" : "none",
     transition: "background 0.15s",

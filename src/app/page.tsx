@@ -585,7 +585,14 @@ export default function Portfolio() {
         className="canvas-cta-section"
         initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
         style={{
-          margin: "0 48px",
+          // This is a bordered, elevated card, not a full-bleed section, so
+          // it needs to sit off its neighbours rather than butt against the
+          // last project row above and the About rule below. The surrounding
+          // sections deliberately contribute no padding here (see Work's
+          // zeroed bottom), so this margin is the single place the card's
+          // outer spacing is defined — kept below the horizontal 48px since
+          // vertical space compounds with the card's own inner padding.
+          margin: "40px 48px",
           borderRadius: 16,
           overflow: "hidden",
           background: "var(--bg-elevated)",
@@ -602,7 +609,7 @@ export default function Portfolio() {
 
         <div className="canvas-cta-row" style={{
           position: "relative", zIndex: 1,
-          padding: "72px 64px",
+          padding: "56px 64px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 48,
           flexWrap: "wrap",
         }}>
@@ -652,10 +659,13 @@ export default function Portfolio() {
       </motion.section>
 
       {/* ── About ── */}
-      {/* Top padding trimmed to match the Work-section fix above — the
-          Interactive Canvas card's own 72px bottom padding already
-          supplies the gap before this section starts. */}
-      <section id="about" style={{ padding: "60px 48px 100px", borderTop: "1px solid var(--border)" }}>
+      {/* Top padding is deliberately well under the site's usual 100px
+          section rhythm: the canvas card above already contributes 56px of
+          inner padding plus a 40px bottom margin, and at the full 100px all
+          three stacked into a conspicuous void between the card's last line
+          of copy and this heading. Bottom stays 100px — it faces Contact
+          directly, with nothing else contributing space. */}
+      <section id="about" style={{ padding: "48px 48px 100px", borderTop: "1px solid var(--border)" }}>
         <motion.div
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
           style={{ marginBottom: 64 }}
