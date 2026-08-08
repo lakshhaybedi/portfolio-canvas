@@ -66,10 +66,10 @@ const TC_SLIDE_5 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672
 // T-Cloud — hero screen
 const TC_HERO        = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/be2b0c3f-73d2-40af-aff1-7a4e136594c9/Cost_Optimization.png";
 // T-Cloud — raw screens (full resolution)
-const TC_SCR_MAIN    = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/59614753-9ba1-4fb1-9ada-f220b20e09ce/Dashboard_Screen_1.png";
-const TC_SCR_EMPTY   = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/4e2a76af-2f40-4473-b4f5-b137a8f67743/Dashboard_Screen_10.png";
-const TC_SCR_ASSET   = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/657743f8-1d8d-4a23-b0a3-64e3533e511d/Security_360-Overview.png";
-const TC_SCR_WIDGET  = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/6e422788-d364-4f5b-94ef-f5bf55d78f7c/Dashboard_Screen_16.png";
+const TC_SCR_MAIN    = "/case-studies/t-cloud/main-dashboard.png";
+const TC_SCR_EMPTY   = "/case-studies/t-cloud/new-dashboard.png";
+const TC_SCR_ASSET   = "/case-studies/t-cloud/asset-overview.png";
+const TC_SCR_WIDGET  = "/case-studies/t-cloud/widget-catalog.png";
 // Elevance Health — portfolio slides
 const EH_SLIDE_1 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/61452706-3c67-43a7-9255-1df9f1a239e9/2306.png";
 const EH_SLIDE_2 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/40c65dac-78e6-4561-abd3-b01aead2378c/2307.png";
@@ -179,6 +179,8 @@ export const CASE_STUDIES: CaseStudy[] = [
       { src: "/canvas-flow/maia/dashboard-empty.png", label: "Dashboard — Before Access", caption: "An honest empty state while approvals are pending, not a dashboard pretending there's data." },
       { src: "/canvas-flow/maia/dashboard-populated.png", label: "Dashboard — After Access", caption: "The same dashboard once access clears — violations, alerts, and Jira tickets surfaced at a glance." },
       { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Portfolio-wide inventory: violations, compliance score, and monthly cloud spend per application." },
+      { src: "/canvas-flow/maia/resources.png", label: "Resources", caption: "Every cloud resource — health, idle status, and monthly cost — filterable by application, platform, and account." },
+      { src: "/canvas-flow/maia/activities.png", label: "Activities", caption: "A single log for tickets, provisioning, onboarding, and decommissioning across the platform, not four separate places to check." },
       { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Severity-ranked alerts across every application the user now has visibility into." },
       { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from onboarding instead of buried in a help menu." },
     ],
@@ -242,10 +244,21 @@ export const CASE_STUDIES: CaseStudy[] = [
     overview:
       "One payment flow, seven regulatory regimes, and a user base where opening the app is itself a decision point. Data costs money in every market this shipped to. Standard Bank needed a single mobile wallet experience across Uganda, Ghana, Lesotho, Rwanda, Botswana, Tanzania, and Mozambique, each running different mobile money operators, different regulators, and a different baseline comfort with digital financial services. The brief wasn't “make a nice app.” It was “don't lose the trust it took years to build.”",
     screens: [
-      { src: "/case-studies/standard-bank/payment-details.png",   label: "Payment Details",     caption: "Fee transparency before commit — the breakdown is surfaced here, before OTP, not after", portrait: true },
-      { src: "/case-studies/standard-bank/otp-verify.png",        label: "One-Time PIN",         caption: "OTP verification with a plain-language resend path and fallback to email", portrait: true },
-      { src: "/case-studies/standard-bank/add-beneficiary.png",   label: "Add Beneficiary",      caption: "Beneficiary details captured in-flow, operator resolved automatically from the wallet", portrait: true },
-      { src: "/case-studies/standard-bank/beneficiary-added.png", label: "Beneficiary Saved",    caption: "Save-for-next-time confirmation — the prompt that cut repeat sends by 40%", portrait: true },
+      { src: "/case-studies/standard-bank/01-dashboard.png",         label: "Dashboard",           caption: "Accounts home — Money Box balance and the entry point into every transfer.", portrait: true },
+      { src: "/case-studies/standard-bank/02-menu.png",               label: "Menu",                 caption: "Pay, Mobile Wallet, and Transfer surfaced from the same home screen, no deeper navigation required.", portrait: true },
+      { src: "/case-studies/standard-bank/03-mobile-wallet.png",      label: "Mobile Wallet",        caption: "Once-off payment, pay a saved beneficiary, or add a new one — three entry points for three different repeat-use patterns.", portrait: true },
+      { src: "/case-studies/standard-bank/04-recipient.png",          label: "Recipient",            caption: "Recipient and amount confirmed before fees or OTP ever enter the flow.", portrait: true },
+      { src: "/case-studies/standard-bank/05-select-service.png",     label: "Select Service",       caption: "Operator-aware selection — only the wallets reachable from the user's market are shown.", portrait: true },
+      { src: "/case-studies/standard-bank/06-payment-details.png",    label: "Payment Details",      caption: "Fee transparency before commit — the breakdown is surfaced here, before OTP, not after.", portrait: true },
+      { src: "/case-studies/standard-bank/07-payment-complete.png",   label: "Payment Complete",     caption: "Receipt with transaction ID and reference, plus an in-flow prompt to save the beneficiary.", portrait: true },
+      { src: "/case-studies/standard-bank/08-choose-account.png",     label: "Choose Account",       caption: "Verifying the receiving wallet operator and number before the transfer is authorized.", portrait: true },
+      { src: "/case-studies/standard-bank/09-review-details.png",     label: "Review Details",       caption: "Transaction fee and tax broken out as their own line items ahead of the OTP step.", portrait: true },
+      { src: "/case-studies/standard-bank/10-otp-entry.png",          label: "OTP Entry",            caption: "One-time PIN sent to the registered number, with a plain-language resend path.", portrait: true },
+      { src: "/case-studies/standard-bank/11-otp-verified.png",       label: "OTP Verified",         caption: "A real failure path, not just a happy-path form — resend and email fallback stay visible.", portrait: true },
+      { src: "/case-studies/standard-bank/12-confirmation.png",       label: "Confirmation",         caption: "Payment successful, with transaction ID, reference, and a direct path to save the beneficiary.", portrait: true },
+      { src: "/case-studies/standard-bank/13-save-beneficiary.png",   label: "Save Beneficiary",     caption: "Saving a beneficiary sits inside the payment flow itself, not a separate contacts area.", portrait: true },
+      { src: "/case-studies/standard-bank/14-beneficiary-saved.png",  label: "Beneficiary Saved",    caption: "Operator, reference, and notification preference captured in the same step as the nickname.", portrait: true },
+      { src: "/case-studies/standard-bank/15-save-confirmation.png",  label: "Beneficiary Confirmed", caption: "Save-for-next-time confirmation — the prompt that cut repeat sends by 40%.", portrait: true },
     ],
     scopeConstraints: [
       { label: "Engineering scope", desc: "Seven markets, one UI, one shipping team. Per-market forks were explicitly ruled out. Anything that couldn't be solved with configuration instead of a rebuild wasn't viable, because the org couldn't support seven codebases long-term." },
@@ -304,10 +317,13 @@ export const CASE_STUDIES: CaseStudy[] = [
     overview:
       "Every extra click between a member and an appointment is a click that ends in a call center instead. Call centers are the most expensive support channel a health insurer runs. Anthem members needing to find a provider, manage an appointment, or check a claim were routed through multiple disconnected portals, each reflecting the insurer's internal plan structure rather than what a member was actually trying to do. This was a cost-structure problem wearing a UX problem's clothes.",
     screens: [
-      { src: "/case-studies/elevance-health/care-dashboard.png",       label: "Care Dashboard",       caption: "Task-based navigation replacing the legacy plan-centric architecture — find care, manage benefits, view appointments" },
-      { src: "/case-studies/elevance-health/cancel-appointment.png",   label: "Cancel Appointment",   caption: "Reason captured inline before cancellation — the contextual-action pattern replacing buried settings-menu flows" },
-      { src: "/case-studies/elevance-health/appointment-canceled.png", label: "Appointment Canceled", caption: "Confirmation state with an automatic email receipt, no separate confirmation screen to navigate to" },
-      { src: "/case-studies/elevance-health/get-care-now.png",         label: "Get Care Now",         caption: "Unified care pathway — virtual and in-person options surfaced from a single entry point" },
+      { src: "/case-studies/elevance-health/01-find-care-landing.png",   label: "Care Dashboard",         caption: "Task-based navigation replacing the legacy plan-centric architecture — find care, manage benefits, view appointments." },
+      { src: "/case-studies/elevance-health/02-get-care-now.png",        label: "Get Care Now",           caption: "Unified care pathway — virtual, retail, urgent, and emergency options compared by cost and wait time from a single entry point." },
+      { src: "/case-studies/elevance-health/03-locations-near-you.png",  label: "Locations Near You",     caption: "Geolocated provider list with office hours and available services surfaced inline, no separate page to open." },
+      { src: "/case-studies/elevance-health/04-select-date-time.png",    label: "Select Date & Time",     caption: "Calendar and open slots in one view — rescheduling doesn't require re-entering visit details already on file." },
+      { src: "/case-studies/elevance-health/05-confirm-booking.png",     label: "Appointment Rescheduled", caption: "Review and success state combined — provider, address, and confirmation email shown in the same card." },
+      { src: "/case-studies/elevance-health/06-cancel-appointment.png",  label: "Appointment Canceled",    caption: "Confirmation state with an automatic email receipt, no separate confirmation screen to navigate to." },
+      { src: "/case-studies/elevance-health/07-manage-appointments.png", label: "Manage Appointments",     caption: "Reschedule and cancel actions sit inline on the appointment card, in the same place the member notices the problem." },
     ],
     scopeConstraints: [
       { label: "Design system", desc: "Built inside and contributed back to Polaris, Anthem's existing enterprise system. New patterns had to be justified as reusable across other product teams, not one-off solutions for this flow alone." },
