@@ -56,13 +56,14 @@ export type CaseStudy = {
   outcomes: Decision[];
 };
 
-// ── CDN image constants ──
-// T-Cloud — portfolio slides
-const TC_SLIDE_1 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/4c99d97a-f62e-44f1-98b1-48808c3827af/1.png";
-const TC_SLIDE_2 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/8cc2e4ee-373e-43c8-9c50-04603d0abdef/2.png";
-const TC_SLIDE_3 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/07ddbcd7-a854-4935-8ddb-b97c6309c7aa/3.png";
-const TC_SLIDE_4 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e3b790ff-5453-4a62-8070-683d51b8cd1f/4.png";
-const TC_SLIDE_5 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/6006386b-f801-447d-9c7b-53dba0cb6a0d/5.png";
+// ── Image constants ──
+// T-Cloud — portfolio slides (full-page frame exports from the Figma case
+// study deck, not raw UI screenshots — each one is a complete designed page)
+const TC_SLIDE_1 = "/case-studies/slides/tcloud-01-context.png";
+const TC_SLIDE_2 = "/case-studies/slides/tcloud-02-decisions.png";
+const TC_SLIDE_3 = "/case-studies/slides/tcloud-03-widget-system.png";
+const TC_SLIDE_4 = "/case-studies/slides/tcloud-04-hierarchy.png";
+const TC_SLIDE_5 = "/case-studies/slides/tcloud-05-design-system.png";
 // T-Cloud — hero screen
 const TC_HERO        = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/be2b0c3f-73d2-40af-aff1-7a4e136594c9/Cost_Optimization.png";
 // T-Cloud — raw screens (full resolution)
@@ -70,18 +71,18 @@ const TC_SCR_MAIN    = "/case-studies/t-cloud/main-dashboard.png";
 const TC_SCR_EMPTY   = "/case-studies/t-cloud/new-dashboard.png";
 const TC_SCR_ASSET   = "/case-studies/t-cloud/asset-overview.png";
 const TC_SCR_WIDGET  = "/case-studies/t-cloud/widget-catalog.png";
-// Elevance Health — portfolio slides
-const EH_SLIDE_1 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/61452706-3c67-43a7-9255-1df9f1a239e9/2306.png";
-const EH_SLIDE_2 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/40c65dac-78e6-4561-abd3-b01aead2378c/2307.png";
-const EH_SLIDE_3 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/f8e103d9-4c9f-4b05-b23d-4b049cc91bdf/2308.png";
-const EH_SLIDE_4 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e5ff90fc-76ee-49ba-a7c2-af2d4ec3fb15/2309.png";
-const EH_SLIDE_5 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/5f64a66d-9c97-4531-8de0-91735c22f9cc/2310.png";
-// Standard Bank — portfolio slides
-const SB_SLIDE_1 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e91f85ac-621e-4272-acd4-23aea05d6209/2301.png";
-const SB_SLIDE_2 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/43a6e294-89e5-4e9d-829b-2771a697cded/2302.png";
-const SB_SLIDE_3 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/a4792eaa-1035-4619-ac7d-9414ccd71819/2303.png";
-const SB_SLIDE_4 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/1e4ced7a-f8a0-4676-9e89-1c30422cb3d2/2304.png";
-const SB_SLIDE_5 = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/af608b01-7d67-40f4-afde-31b73a4250f6/2305.png";
+// Elevance Health — portfolio slides (same Figma-frame-export approach)
+const EH_SLIDE_1 = "/case-studies/slides/anthem-01-context.png";
+const EH_SLIDE_2 = "/case-studies/slides/anthem-02-decisions.png";
+const EH_SLIDE_3 = "/case-studies/slides/anthem-03-appointment-flow.png";
+const EH_SLIDE_4 = "/case-studies/slides/anthem-04-getcare-flow.png";
+const EH_SLIDE_5 = "/case-studies/slides/anthem-05-design-system.png";
+// Standard Bank — portfolio slides (same Figma-frame-export approach)
+const SB_SLIDE_1 = "/case-studies/slides/sb-01-context.png";
+const SB_SLIDE_2 = "/case-studies/slides/sb-02-decisions.png";
+const SB_SLIDE_3 = "/case-studies/slides/sb-03-payment-flow.png";
+const SB_SLIDE_4 = "/case-studies/slides/sb-04-verification.png";
+const SB_SLIDE_5 = "/case-studies/slides/sb-05-design-system.png";
 
 export const CASE_STUDIES: CaseStudy[] = [
   {
@@ -104,11 +105,11 @@ export const CASE_STUDIES: CaseStudy[] = [
     overview:
       "A dashboard that turns incident response from a five-tab scavenger hunt into one screen. At T-Mobile's scale, every minute inside an incident is a minute another team spends escalating instead of fixing. Operations, finance, and security teams were each running their own tooling to answer the same question: is anything on fire right now, and whose problem is it. This wasn't a “make it prettier” brief. It was a request to remove a structural bottleneck sitting between a system going sideways and the person who could fix it.",
     slides: [
-      { src: TC_SLIDE_1, label: "Context & Problem",   caption: "Operations teams managed cloud infrastructure across fragmented tooling — T-Cloud unifies it into one operator-grade interface." },
-      { src: TC_SLIDE_2, label: "Research & Outcomes",  caption: "5 research sessions with operations leads shaped the mental models, severity taxonomy, and field-use requirements." },
-      { src: TC_SLIDE_3, label: "Design Decisions",     caption: "Three core decisions: composable widget architecture, severity-driven visual grammar, and layered information hierarchy." },
-      { src: TC_SLIDE_4, label: "Visual Language",      caption: "Style guide — typography, colour system (dark + light), component states, and the severity palette (Critical → Low)." },
-      { src: TC_SLIDE_5, label: "Components & System",  caption: "Component library: KPI cards, widget shells, alert badges, data tables — consistent across web and tablet breakpoints." },
+      { src: TC_SLIDE_1, label: "Context & Problem",   caption: "Operators were reconstructing system health by hand, across fragmented tooling — no single surface held the whole state." },
+      { src: TC_SLIDE_2, label: "Key Decisions",        caption: "Three choices that shaped how operators read the platform: composable widget architecture, severity-driven visual grammar, and layered information hierarchy." },
+      { src: TC_SLIDE_3, label: "Composable Widget System", caption: "Five modules, eight categories, one canvas — Main Dashboard, Asset Overview, Patching Compliance, Security Overview, and Cost Recommendation." },
+      { src: TC_SLIDE_4, label: "Information Hierarchy", caption: "Signal first, detail on demand — KPI cards, then charts, then the data table, one severity scale used consistently across every surface." },
+      { src: TC_SLIDE_5, label: "Design System",        caption: "Built for density, speed and operator clarity — core palette, semantic severity colours, and a type scale tuned for dark-first, light-at-parity use." },
     ],
     screens: [
       { src: TC_SCR_MAIN,   label: "Main Dashboard",    caption: "Composable widget layout — KPI cards, Resource Utilization, Network Traffic, and Storage Health surfaced by default." },
@@ -233,13 +234,17 @@ export const CASE_STUDIES: CaseStudy[] = [
     // badge is only 2.6:1 though (fails), so the badge uses near-black text.
     accentText: "#00B4AA",
     badgeOnAccent: "#0A0A0A",
-    heroImage: SB_SLIDE_1,
+    // Was heroImage: SB_SLIDE_1 — that pointed at the deck's Context slide,
+    // which is now a text-only frame (stats + paragraphs, no product UI) and
+    // looks wrong inside the hero's fake-browser-chrome frame built for a
+    // screenshot. A real screen reads correctly there instead.
+    heroImage: "/case-studies/standard-bank/06-payment-details.png",
     slides: [
-      { src: SB_SLIDE_1, label: "Overview & Problem",    caption: "Designing cross-border mobile payments for Africa's most complex markets — 7 countries, one coherent UX." },
-      { src: SB_SLIDE_2, label: "Design Style",          caption: "Colour system, typography (Inter), semantic states, and three core design principles: Trust Signals First, Progressive Disclosure, Operator Context." },
-      { src: SB_SLIDE_3, label: "Key Design Decisions",  caption: "Three decisions that shaped the flow: operator-aware selection, fee transparency before commit, and beneficiary save as an in-flow step." },
-      { src: SB_SLIDE_4, label: "Flow Architecture",     caption: "End-to-end payment flow — from Home through Transact Menu, Mobile Wallet, Service Selection, Payment Details, OTP, and Confirmation." },
-      { src: SB_SLIDE_5, label: "How It Came Together",  caption: "5-step process: Market Research → Flow Mapping → Friction Audit → Modular Design → Testing & Handoff across Uganda, Ghana, and Lesotho." },
+      { src: SB_SLIDE_1, label: "Context & Problem",     caption: "Standard Bank serves customers across Uganda, Ghana, Lesotho, Zimbabwe and other African markets, each with its own mobile money ecosystem, regulator, and operator network." },
+      { src: SB_SLIDE_2, label: "Key Decisions",         caption: "Three decisions that shaped the flow: operator-aware selection, fee transparency before commit, and beneficiary save as an in-flow step." },
+      { src: SB_SLIDE_3, label: "The Payment Flow",      caption: "Dashboard to completed transfer in eight screens — every screen resolves exactly one unknown: which service, which recipient, which account, how much." },
+      { src: SB_SLIDE_4, label: "Verification & Beneficiary", caption: "Fees land on review before OTP, verification has a real failure path, and saving a beneficiary closes the loop for every future transfer." },
+      { src: SB_SLIDE_5, label: "Design System",         caption: "Colour system, typography, and design principles built for a user base where opening the app is itself a decision point." },
     ],
     overview:
       "One payment flow, seven regulatory regimes, and a user base where opening the app is itself a decision point. Data costs money in every market this shipped to. Standard Bank needed a single mobile wallet experience across Uganda, Ghana, Lesotho, Rwanda, Botswana, Tanzania, and Mozambique, each running different mobile money operators, different regulators, and a different baseline comfort with digital financial services. The brief wasn't “make a nice app.” It was “don't lose the trust it took years to build.”",
@@ -306,13 +311,16 @@ export const CASE_STUDIES: CaseStudy[] = [
     // badge is only 4.0:1 though (fails), so the badge uses near-black text.
     accentText: "#7C6AF7",
     badgeOnAccent: "#0A0A0A",
-    heroImage: EH_SLIDE_1,
+    // Was heroImage: EH_SLIDE_1 — see the same note on Standard Bank above;
+    // the Context slide is text-only now, a real screen fits the hero's
+    // browser-chrome frame better.
+    heroImage: "/case-studies/elevance-health/02-get-care-now.png",
     slides: [
-      { src: EH_SLIDE_1, label: "Overview & Problem",    caption: "Reimagining how Anthem members find providers, schedule appointments, and access care — end-to-end UX across scheduling, rescheduling, cancellation, and Get Care Now." },
-      { src: EH_SLIDE_2, label: "Design Style",          caption: "Visual language built for clarity, trust, and accessibility — Elevance Sans + Inter, a structured colour palette, and semantic context states." },
-      { src: EH_SLIDE_3, label: "How It Came Together",  caption: "5-step process: Discovery & Audit → Information Architecture → Flow Optimization → Component System → Validation & Handoff. 15 usability test participants." },
-      { src: EH_SLIDE_4, label: "Flow Architecture",     caption: "Find Care Platform: four parallel pathways — Search Providers, Get Care Now, Manage Appointments, My Care Team — each broken into discrete sub-flows." },
-      { src: EH_SLIDE_5, label: "Key Design Decisions",  caption: "Three decisions: Progressive Disclosure (care type → location → preferences), Contextual Actions (reschedule/cancel inline on card), Unified Care Pathways (single 'Get Care Now' entry point)." },
+      { src: EH_SLIDE_1, label: "Context & Problem",     caption: "Members were asked to diagnose which system handled their care — 12 drop-off points in a funnel that took 8 steps just to book an appointment." },
+      { src: EH_SLIDE_2, label: "Key Decisions",         caption: "Three decisions: Progressive Disclosure (care type → location → preferences), Contextual Actions (reschedule/cancel inline on card), Unified Care Pathways (single 'Get Care Now' entry point)." },
+      { src: EH_SLIDE_3, label: "Manage Appointment Flow", caption: "The full appointment lifecycle in one place — five screens from Find Care landing through Select Date & Time, Confirm Booking, Cancel, and My Care Team." },
+      { src: EH_SLIDE_4, label: "Get Care Now Flow",     caption: "One entry, three kinds of care — smart routing sends virtual, in-person, and urgent care requests down the right path without the member choosing a system first." },
+      { src: EH_SLIDE_5, label: "Design System",         caption: "Visual language built for clarity, trust, and accessibility — a structured colour palette and semantic context states." },
     ],
     overview:
       "Every extra click between a member and an appointment is a click that ends in a call center instead. Call centers are the most expensive support channel a health insurer runs. Anthem members needing to find a provider, manage an appointment, or check a claim were routed through multiple disconnected portals, each reflecting the insurer's internal plan structure rather than what a member was actually trying to do. This was a cost-structure problem wearing a UX problem's clothes.",

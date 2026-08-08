@@ -33,27 +33,30 @@ function label(id, text, colX, color) {
   };
 }
 
-// ── CDN URLs ──────────────────────────────────────────────
+// ── Slide image paths ────────────────────────────────────
+// Full-page frame exports from the Figma case study deck (see
+// caseStudies.ts's TC_SLIDE_*/SB_SLIDE_*/EH_SLIDE_* — same source images,
+// duplicated here since this file has no import path back to that module).
 const TC = [
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/4c99d97a-f62e-44f1-98b1-48808c3827af/1.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/8cc2e4ee-373e-43c8-9c50-04603d0abdef/2.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/07ddbcd7-a854-4935-8ddb-b97c6309c7aa/3.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e3b790ff-5453-4a62-8070-683d51b8cd1f/4.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/6006386b-f801-447d-9c7b-53dba0cb6a0d/5.png",
+  "/case-studies/slides/tcloud-01-context.png",
+  "/case-studies/slides/tcloud-02-decisions.png",
+  "/case-studies/slides/tcloud-03-widget-system.png",
+  "/case-studies/slides/tcloud-04-hierarchy.png",
+  "/case-studies/slides/tcloud-05-design-system.png",
 ];
 const SB = [
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e91f85ac-621e-4272-acd4-23aea05d6209/2301.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/43a6e294-89e5-4e9d-829b-2771a697cded/2302.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/a4792eaa-1035-4619-ac7d-9414ccd71819/2303.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/1e4ced7a-f8a0-4676-9e89-1c30422cb3d2/2304.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/af608b01-7d67-40f4-afde-31b73a4250f6/2305.png",
+  "/case-studies/slides/sb-01-context.png",
+  "/case-studies/slides/sb-02-decisions.png",
+  "/case-studies/slides/sb-03-payment-flow.png",
+  "/case-studies/slides/sb-04-verification.png",
+  "/case-studies/slides/sb-05-design-system.png",
 ];
 const EH = [
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/61452706-3c67-43a7-9255-1df9f1a239e9/2306.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/40c65dac-78e6-4561-abd3-b01aead2378c/2307.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/f8e103d9-4c9f-4b05-b23d-4b049cc91bdf/2308.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/e5ff90fc-76ee-49ba-a7c2-af2d4ec3fb15/2309.png",
-  "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/5f64a66d-9c97-4531-8de0-91735c22f9cc/2310.png",
+  "/case-studies/slides/anthem-01-context.png",
+  "/case-studies/slides/anthem-02-decisions.png",
+  "/case-studies/slides/anthem-03-appointment-flow.png",
+  "/case-studies/slides/anthem-04-getcare-flow.png",
+  "/case-studies/slides/anthem-05-design-system.png",
 ];
 
 export const DEFAULT_PAGE_ELEMENTS = [

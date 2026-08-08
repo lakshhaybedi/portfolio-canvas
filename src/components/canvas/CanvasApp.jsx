@@ -37,10 +37,12 @@ export default function CanvasApp() {
   useEffect(() => {
     if (useCanvasStore.persist.hasHydrated()) {
       useCanvasStore.getState().syncSeedPages();
+      useCanvasStore.getState().refreshStaleDefaultImages();
       return;
     }
     return useCanvasStore.persist.onFinishHydration(() => {
       useCanvasStore.getState().syncSeedPages();
+      useCanvasStore.getState().refreshStaleDefaultImages();
     });
   }, []);
 

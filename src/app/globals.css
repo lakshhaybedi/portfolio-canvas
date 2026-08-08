@@ -43,14 +43,16 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* overflow-x here (not just on body) matters: `position: fixed` elements
-   anchor to the initial containing block, which tracks html's layout box —
-   if some descendant escapes containment and widens that box past the
-   visual viewport (the case-study screens carousel's horizontally-
-   scrolling buttons did, despite their own overflow-x: auto), fixed
-   elements like the sticky nav size themselves against the WIDER box
-   instead of the real viewport, clipping content at the right edge. */
-html { scroll-behavior: smooth; overflow-x: hidden; }
+/* overflow-x: hidden here (not just on body) was a prior fix for the
+   case-study nav sizing against a widened layout box — but ANY non-visible
+   overflow on html breaks position: sticky for every descendant sited on
+   it (the case-study screens sidebar included: it stopped tracking scroll
+   and just scrolled away with the page instead of pinning). body's own
+   overflow-x: hidden below already contains horizontal overflow without
+   that side effect, since sticky only breaks when an overflow is set on
+   an ancestor of the sticky element itself sitting between it and the
+   viewport — html qualifies, but this rule doesn't need to live there too. */
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
@@ -129,6 +131,15 @@ button:focus-visible,
    + !important — same pattern as .portfolio-folder-float above — to reflow
    the handful of fixed-column grids/rows that don't adapt on their own. */
 @media (max-width: 640px) {
+  /* Scoped to mobile only — unlike the base rule this replaced, this is
+     safe here: .case-sidebar switches from position: sticky (desktop) to
+     position: fixed at this same breakpoint (see the .case-sidebar rule
+     below), and it's only the fixed/mobile carousel whose horizontally-
+     scrolling buttons can widen html's layout box. Sticky isn't in play
+     at this width, so there's no descendant sticky element left for a
+     non-visible html overflow to break. */
+  html { overflow-x: hidden; }
+
   /* Work section project rows: 4-column grid (num/title/tags/meta) crammed
      title against wrapping tag pills. Restack as num+title on one line,
      tags below, meta below that. */
