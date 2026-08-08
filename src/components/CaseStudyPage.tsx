@@ -809,16 +809,20 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                 >
                   <div className="case-screen-thumb" style={{
                     position: "relative",
-                    // Capped height, not just width-scaled — this panel's
-                    // width is user-resizable (see the drag handle below),
-                    // and a plain `width: 100%` image grows tall right along
-                    // with it. Dragged wide, four screens at their natural
-                    // aspect ratio could exceed the panel's own
-                    // viewport-height cap on their own, leaving only one
-                    // visible before the reader has to scroll. Capping
-                    // height and cropping with objectFit keeps several
-                    // screens in view at any panel width.
+                    // Capped height so panel width (user-resizable, see the
+                    // drag handle below) doesn't drive how many screens fit
+                    // on screen at once. A first version stretched the image
+                    // to `width: 100%` with `objectFit: cover` to fill that
+                    // fixed height — which worked at first, but as the panel
+                    // gets wider the box becomes a wider rectangle at the
+                    // same height, so cover crops progressively more off the
+                    // top/bottom to fill it. `contain` + natural width fixes
+                    // that: the full screenshot always stays visible at a
+                    // consistent 170px height, however wide the panel gets —
+                    // it just centers instead of stretching to fill.
                     height: 170,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "var(--bg-elevated)",
                     borderRadius: 6, overflow: "hidden",
                     border: `2px solid ${highlighted ? accent : "var(--border)"}`,
                     boxShadow: highlighted ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
@@ -827,8 +831,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                     <img
                       src={screen.src} alt={screen.label}
                       style={{
-                        width: "100%", height: "100%", display: "block",
-                        objectFit: "cover", objectPosition: "top",
+                        maxWidth: "100%", height: "100%", width: "auto", display: "block",
+                        objectFit: "contain",
                         opacity: highlighted ? 1 : 0.7, transition: "opacity 0.25s",
                       }}
                     />

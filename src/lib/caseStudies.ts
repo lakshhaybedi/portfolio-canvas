@@ -174,16 +174,13 @@ export const CASE_STUDIES: CaseStudy[] = [
     overview:
       "The screen every MAIA customer sees first, before they've touched anything else on the platform. MAIA sits underneath products like T-Cloud, giving operations teams a shared, self-service way to request access to the applications they're accountable for instead of filing a ticket and waiting on IT. A platform used as the foundation for other products can't afford a confusing front door: if the first five minutes don't work, every team building on top of MAIA inherits that friction. The brief was a request-to-access flow honest about the fact that MAIA can't unilaterally grant access, an optional guided tour that respects a \"skip\" click, and a dashboard that admits when there's nothing to show yet instead of faking data.",
     screens: [
-      { src: "/canvas-flow/maia/welcome.png", label: "Welcome", caption: "Self-service application access framed around what changes once approval lands, not a bare form." },
-      { src: "/canvas-flow/maia/all-applications.png", label: "All Applications", caption: "Every requestable application in one searchable table, no separate ticket per app." },
-      { src: "/canvas-flow/maia/configuration-complete.png", label: "Configuration Complete", caption: "Per-app approve / deny / pending status, plus three explicit next steps instead of a blank dashboard." },
-      { src: "/canvas-flow/maia/dashboard-empty.png", label: "Dashboard — Before Access", caption: "An honest empty state while approvals are pending, not a dashboard pretending there's data." },
-      { src: "/canvas-flow/maia/dashboard-populated.png", label: "Dashboard — After Access", caption: "The same dashboard once access clears — violations, alerts, and Jira tickets surfaced at a glance." },
-      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Portfolio-wide inventory: violations, compliance score, and monthly cloud spend per application." },
+      { src: "/canvas-flow/maia/onboarding-tour.png", label: "First-Time Guidance", caption: "A 13-step guided tour that never leaves the live dashboard — plays on first login, re-accessible from Help, skippable at every step." },
+      { src: "/canvas-flow/maia/dashboard.png", label: "Dashboard", caption: "A high-level view of applications and services across multi-cloud, tailored by reporting scope." },
+      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Manage and monitor all your cloud applications in one place — violations, compliance status, and monthly cloud spend." },
       { src: "/canvas-flow/maia/resources.png", label: "Resources", caption: "Every cloud resource — health, idle status, and monthly cost — filterable by application, platform, and account." },
       { src: "/canvas-flow/maia/activities.png", label: "Activities", caption: "A single log for tickets, provisioning, onboarding, and decommissioning across the platform, not four separate places to check." },
-      { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Severity-ranked alerts across every application the user now has visibility into." },
-      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from onboarding instead of buried in a help menu." },
+      { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Critical, high, and medium alerts with SLA state and category, each row carrying its own resolution path." },
+      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from the nav — five discovery filters so a first search returns something worth reading." },
     ],
     scopeConstraints: [
       { label: "Platform, not one product", desc: "MAIA underlies multiple downstream products, T-Cloud among them. Onboarding had to read as generic infrastructure a new hire could land on regardless of which specific app brought them there, not framed around any one product's vocabulary." },
