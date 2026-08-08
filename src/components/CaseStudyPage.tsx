@@ -415,9 +415,15 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                     }}>
                       {c.index}
                     </span>
+                    {/* Same weight/color for every row, current or not — a
+                        lighter weight plus dimmer muted-strong color on the
+                        non-current rows read as low-contrast/hard to read
+                        rather than "secondary". The highlighted background
+                        and the colored index number above are already
+                        enough to mark which project is current. */}
                     <span style={{
-                      fontSize: 12, fontWeight: isCurrent ? 700 : 500, letterSpacing: "0.02em",
-                      color: isCurrent ? "var(--fg)" : "var(--muted-strong)",
+                      fontSize: 12, fontWeight: 700, letterSpacing: "0.02em",
+                      color: "var(--fg)",
                     }}>
                       {c.title}
                     </span>
@@ -803,6 +809,16 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                 >
                   <div className="case-screen-thumb" style={{
                     position: "relative",
+                    // Capped height, not just width-scaled — this panel's
+                    // width is user-resizable (see the drag handle below),
+                    // and a plain `width: 100%` image grows tall right along
+                    // with it. Dragged wide, four screens at their natural
+                    // aspect ratio could exceed the panel's own
+                    // viewport-height cap on their own, leaving only one
+                    // visible before the reader has to scroll. Capping
+                    // height and cropping with objectFit keeps several
+                    // screens in view at any panel width.
+                    height: 170,
                     borderRadius: 6, overflow: "hidden",
                     border: `2px solid ${highlighted ? accent : "var(--border)"}`,
                     boxShadow: highlighted ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
@@ -810,7 +826,11 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   }}>
                     <img
                       src={screen.src} alt={screen.label}
-                      style={{ width: "100%", display: "block", opacity: highlighted ? 1 : 0.7, transition: "opacity 0.25s" }}
+                      style={{
+                        width: "100%", height: "100%", display: "block",
+                        objectFit: "cover", objectPosition: "top",
+                        opacity: highlighted ? 1 : 0.7, transition: "opacity 0.25s",
+                      }}
                     />
                     <div className="case-screen-expand-icon" aria-hidden="true" style={{
                       position: "absolute", inset: 0,
