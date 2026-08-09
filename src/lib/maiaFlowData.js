@@ -45,8 +45,8 @@ const SPOKE_Y = 2520;
 const CHAIN_Y = 2940, CHAIN_CY = CHAIN_Y + H / 2;
 
 export const MAIA_FLOW_ELEMENTS = [
-  text("maia-title", "MAIA — First-Time User Onboarding", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
-  text("maia-subtitle", "Real screens from the Maia 2.0 prototype — requesting application access, an optional guided tour, and the resulting dashboard.", 60, 80, 1600, 28, 13, DIM, 100),
+  text("maia-title", "MAIA: First-Time User Onboarding", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
+  text("maia-subtitle", "Real screens from the Maia 2.0 prototype: requesting application access, an optional guided tour, and the resulting dashboard.", 60, 80, 1600, 28, 13, DIM, 100),
 
   // ── Row 1: onboarding wizard ────────────────────────────────
   text("maia-lbl-onboarding", "Onboarding wizard", 60, 130, 400, 20, 13, ACCENT),
@@ -136,7 +136,7 @@ export const MAIA_FLOW_ELEMENTS = [
   // frames across these groups, mostly hover-state variants of the same
   // tables (e.g. 5 near-identical "Applications" hover states) — condensed
   // to one representative screen per meaningfully distinct destination.
-  text("maia-dev-title", "Developer Experience — Application Management", 60, DEV_TITLE_Y, 1400, 32, 20, "#EDEAD4", 100),
+  text("maia-dev-title", "Developer Experience: Application Management", 60, DEV_TITLE_Y, 1400, 32, 20, "#EDEAD4", 100),
 
   img("maia-dev-dashboard", `${BASE}/dev-dashboard.png`, 60, HUB_Y, W, H, 10),
 
@@ -180,5 +180,5 @@ export const MAIA_FLOW_ELEMENTS = [
 ];
 
 export function maiaFlowPage() {
-  return { id: "maia-flow", name: "MAIA — Onboarding Flow", elements: MAIA_FLOW_ELEMENTS };
+  return { id: "maia-flow", name: "MAIA: Onboarding Flow", elements: MAIA_FLOW_ELEMENTS };
 }

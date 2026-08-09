@@ -99,29 +99,33 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2023–2024",
     tags: ["Enterprise B2B"],
     canvasPageId: "tcloud-flow",
-    homeDesc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet — dark and light mode.",
+    homeDesc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet, in dark and light mode.",
     heroColor: "#E10074",
     accent: "#E20074",
     // #E20074 is 4.23:1 on the page bg as text (fails AA 4.5:1) and 2.59:1
-    // for white-on-fill (badge) — E62689 (15% mixed toward white) clears
-    // 4.5:1 for text; white stays the right badge color here (4.68:1).
-    accentText: "#E62689",
+    // for white-on-fill (badge). The original 15%-toward-white mix (E62689)
+    // was verified against the page's base --bg (#0A0A0A), but several of
+    // its real usages (Scope/Constraints labels, decision index numbers)
+    // render on --bg-elevated (#151517), a lighter surface that eats into
+    // that margin, measuring 4.34:1 live, just under AA. 20%-toward-white
+    // (E83390) clears 4.5:1 against --bg-elevated too (verified live, 4.6:1).
+    accentText: "#E83390",
     badgeOnAccent: "#FFFFFF",
     heroImage: TC_HERO,
     overview:
       "A dashboard that turns incident response from a five-tab scavenger hunt into one screen. At T-Mobile's scale, every minute inside an incident is a minute another team spends escalating instead of fixing. Operations, finance, and security teams were each running their own tooling to answer the same question: is anything on fire right now, and whose problem is it. This wasn't a “make it prettier” brief. It was a request to remove a structural bottleneck sitting between a system going sideways and the person who could fix it.",
     slides: [
-      { src: TC_SLIDE_1, label: "Context & Problem",   caption: "Operators were reconstructing system health by hand, across fragmented tooling — no single surface held the whole state." },
+      { src: TC_SLIDE_1, label: "Context & Problem",   caption: "Operators were reconstructing system health by hand, across fragmented tooling. No single surface held the whole state." },
       { src: TC_SLIDE_2, label: "Key Decisions",        caption: "Three choices that shaped how operators read the platform: composable widget architecture, severity-driven visual grammar, and layered information hierarchy." },
-      { src: TC_SLIDE_3, label: "Composable Widget System", caption: "Five modules, eight categories, one canvas — Main Dashboard, Asset Overview, Patching Compliance, Security Overview, and Cost Recommendation." },
-      { src: TC_SLIDE_4, label: "Information Hierarchy", caption: "Signal first, detail on demand — KPI cards, then charts, then the data table, one severity scale used consistently across every surface." },
-      { src: TC_SLIDE_5, label: "Design System",        caption: "Built for density, speed and operator clarity — core palette, semantic severity colours, and a type scale tuned for dark-first, light-at-parity use." },
+      { src: TC_SLIDE_3, label: "Composable Widget System", caption: "Five modules, eight categories, one canvas: Main Dashboard, Asset Overview, Patching Compliance, Security Overview, and Cost Recommendation." },
+      { src: TC_SLIDE_4, label: "Information Hierarchy", caption: "Signal first, detail on demand: KPI cards, then charts, then the data table, with one severity scale used consistently across every surface." },
+      { src: TC_SLIDE_5, label: "Design System",        caption: "Built for density, speed and operator clarity: core palette, semantic severity colours, and a type scale tuned for dark-first, light-at-parity use." },
     ],
     screens: [
-      { src: TC_SCR_MAIN,   label: "Main Dashboard",    caption: "Composable widget layout — KPI cards, Resource Utilization, Network Traffic, and Storage Health surfaced by default." },
-      { src: TC_SCR_EMPTY,  label: "New Dashboard",     caption: "Empty state — the '+ Add Widget' CTA guides operators to build their own view from the widget catalog." },
+      { src: TC_SCR_MAIN,   label: "Main Dashboard",    caption: "Composable widget layout: KPI cards, Resource Utilization, Network Traffic, and Storage Health surfaced by default." },
+      { src: TC_SCR_EMPTY,  label: "New Dashboard",     caption: "Empty state. The '+ Add Widget' CTA guides operators to build their own view from the widget catalog." },
       { src: TC_SCR_ASSET,  label: "Asset Overview",    caption: "Distribution Heat Map across 888M+ assets with filterable KPI cards and application-level drill-down." },
-      { src: TC_SCR_WIDGET, label: "Widget Catalog",    caption: "Add Widget modal — browse by category with size selector (Small / Medium / Large) and live preview." },
+      { src: TC_SCR_WIDGET, label: "Widget Catalog",    caption: "Add Widget modal, browse by category with a size selector (Small / Medium / Large) and live preview." },
     ],
     scopeConstraints: [
       { label: "Platform", desc: "Built on an existing MAIA data platform. Telemetry, APIs, and the data model were fixed, so the job was the layer operators actually look at, not re-architecting what feeds it." },
@@ -164,10 +168,10 @@ export const CASE_STUDIES: CaseStudy[] = [
     homeDesc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
     heroColor: "#E62689",
     accent: "#E91E8C",
-    // Same magenta family as T-Cloud's #E20074 — reuses T-Cloud's already-
-    // verified lightened text colour (E62689, 4.5:1+) instead of re-deriving
-    // a new one for a hue this close.
-    accentText: "#E62689",
+    // Same magenta family as T-Cloud's #E20074, reuses T-Cloud's corrected
+    // lightened text colour (E83390, verified 4.5:1+ against --bg-elevated
+    // too) instead of re-deriving a new one for a hue this close.
+    accentText: "#E83390",
     badgeOnAccent: "#FFFFFF",
     // Hero uses a real screen (like Standard Bank/Elevance above) rather
     // than a narrative deck slide — the onboarding tour's first tooltip
@@ -175,22 +179,22 @@ export const CASE_STUDIES: CaseStudy[] = [
     // first") better than a static dashboard shot would.
     heroImage: "/canvas-flow/maia/onboarding-tour.png",
     slides: [
-      { src: MI_SLIDE_1, label: "Context & Problem",  caption: "New operators were dropped into a full enterprise dashboard with nothing in it — access is granted in ServiceNow, not MAIA, so nothing could tell a new user which applications were theirs." },
+      { src: MI_SLIDE_1, label: "Context & Problem",  caption: "New operators were dropped into a full enterprise dashboard with nothing in it. Access is granted in ServiceNow, not MAIA, so nothing could tell a new user which applications were theirs." },
       { src: MI_SLIDE_2, label: "Key Decisions",      caption: "Three choices that shaped the first session: stepped portfolio configuration, a contextual virtual tour that overlays the live dashboard, and smart resource discovery." },
-      { src: MI_SLIDE_3, label: "The Virtual Tour",   caption: "A 13-step guided walkthrough that never leaves the live dashboard — plays on first login, re-accessible from Help, skippable at every step." },
-      { src: MI_SLIDE_4, label: "Core Platform Pages", caption: "Four pages, one grammar — clear headers, meaningful counts, and one filter model (Application, Platform, Account, Manage) reused on every table." },
-      { src: MI_SLIDE_5, label: "Design System",      caption: "Built for density, speed and operator clarity — trust signals first, progressive disclosure, and every count carrying a route to the thing it counts." },
+      { src: MI_SLIDE_3, label: "The Virtual Tour",   caption: "A 13-step guided walkthrough that never leaves the live dashboard. It plays on first login, stays re-accessible from Help, and is skippable at every step." },
+      { src: MI_SLIDE_4, label: "Core Platform Pages", caption: "Four pages, one grammar: clear headers, meaningful counts, and one filter model (Application, Platform, Account, Manage) reused on every table." },
+      { src: MI_SLIDE_5, label: "Design System",      caption: "Built for density, speed and operator clarity: trust signals first, progressive disclosure, and every count carrying a route to the thing it counts." },
     ],
     overview:
       "The screen every MAIA customer sees first, before they've touched anything else on the platform. MAIA sits underneath products like T-Cloud, giving operations teams a shared, self-service way to request access to the applications they're accountable for instead of filing a ticket and waiting on IT. A platform used as the foundation for other products can't afford a confusing front door: if the first five minutes don't work, every team building on top of MAIA inherits that friction. The brief was a request-to-access flow honest about the fact that MAIA can't unilaterally grant access, an optional guided tour that respects a \"skip\" click, and a dashboard that admits when there's nothing to show yet instead of faking data.",
     screens: [
-      { src: "/canvas-flow/maia/onboarding-tour.png", label: "First-Time Guidance", caption: "A 13-step guided tour that never leaves the live dashboard — plays on first login, re-accessible from Help, skippable at every step." },
+      { src: "/canvas-flow/maia/onboarding-tour.png", label: "First-Time Guidance", caption: "A 13-step guided tour that never leaves the live dashboard. It plays on first login, stays re-accessible from Help, and is skippable at every step." },
       { src: "/canvas-flow/maia/dashboard.png", label: "Dashboard", caption: "A high-level view of applications and services across multi-cloud, tailored by reporting scope." },
-      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Manage and monitor all your cloud applications in one place — violations, compliance status, and monthly cloud spend." },
-      { src: "/canvas-flow/maia/resources.png", label: "Resources", caption: "Every cloud resource — health, idle status, and monthly cost — filterable by application, platform, and account." },
+      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "Manage and monitor all your cloud applications in one place: violations, compliance status, and monthly cloud spend." },
+      { src: "/canvas-flow/maia/resources.png", label: "Resources", caption: "Every cloud resource, with health, idle status, and monthly cost, filterable by application, platform, and account." },
       { src: "/canvas-flow/maia/activities.png", label: "Activities", caption: "A single log for tickets, provisioning, onboarding, and decommissioning across the platform, not four separate places to check." },
       { src: "/canvas-flow/maia/alerts.png", label: "Alerts", caption: "Critical, high, and medium alerts with SLA state and category, each row carrying its own resolution path." },
-      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from the nav — five discovery filters so a first search returns something worth reading." },
+      { src: "/canvas-flow/maia/resource-library.png", label: "MAIA 101", caption: "A self-serve resource library, reachable directly from the nav, with five discovery filters so a first search returns something worth reading." },
     ],
     scopeConstraints: [
       { label: "Platform, not one product", desc: "MAIA underlies multiple downstream products, T-Cloud among them. Onboarding had to read as generic infrastructure a new hire could land on regardless of which specific app brought them there, not framed around any one product's vocabulary." },
@@ -249,28 +253,28 @@ export const CASE_STUDIES: CaseStudy[] = [
     slides: [
       { src: SB_SLIDE_1, label: "Context & Problem",     caption: "Standard Bank serves customers across Uganda, Ghana, Lesotho, Zimbabwe and other African markets, each with its own mobile money ecosystem, regulator, and operator network." },
       { src: SB_SLIDE_2, label: "Key Decisions",         caption: "Three decisions that shaped the flow: operator-aware selection, fee transparency before commit, and beneficiary save as an in-flow step." },
-      { src: SB_SLIDE_3, label: "The Payment Flow",      caption: "Dashboard to completed transfer in eight screens — every screen resolves exactly one unknown: which service, which recipient, which account, how much." },
+      { src: SB_SLIDE_3, label: "The Payment Flow",      caption: "Dashboard to completed transfer in eight screens. Every screen resolves exactly one unknown: which service, which recipient, which account, how much." },
       { src: SB_SLIDE_4, label: "Verification & Beneficiary", caption: "Fees land on review before OTP, verification has a real failure path, and saving a beneficiary closes the loop for every future transfer." },
       { src: SB_SLIDE_5, label: "Design System",         caption: "Colour system, typography, and design principles built for a user base where opening the app is itself a decision point." },
     ],
     overview:
       "One payment flow, seven regulatory regimes, and a user base where opening the app is itself a decision point. Data costs money in every market this shipped to. Standard Bank needed a single mobile wallet experience across Uganda, Ghana, Lesotho, Rwanda, Botswana, Tanzania, and Mozambique, each running different mobile money operators, different regulators, and a different baseline comfort with digital financial services. The brief wasn't “make a nice app.” It was “don't lose the trust it took years to build.”",
     screens: [
-      { src: "/case-studies/standard-bank/01-dashboard.png",         label: "Dashboard",           caption: "Accounts home — Money Box balance and the entry point into every transfer.", portrait: true },
+      { src: "/case-studies/standard-bank/01-dashboard.png",         label: "Dashboard",           caption: "Accounts home: Money Box balance and the entry point into every transfer.", portrait: true },
       { src: "/case-studies/standard-bank/02-menu.png",               label: "Menu",                 caption: "Pay, Mobile Wallet, and Transfer surfaced from the same home screen, no deeper navigation required.", portrait: true },
-      { src: "/case-studies/standard-bank/03-mobile-wallet.png",      label: "Mobile Wallet",        caption: "Once-off payment, pay a saved beneficiary, or add a new one — three entry points for three different repeat-use patterns.", portrait: true },
+      { src: "/case-studies/standard-bank/03-mobile-wallet.png",      label: "Mobile Wallet",        caption: "Once-off payment, pay a saved beneficiary, or add a new one: three entry points for three different repeat-use patterns.", portrait: true },
       { src: "/case-studies/standard-bank/04-recipient.png",          label: "Recipient",            caption: "Recipient and amount confirmed before fees or OTP ever enter the flow.", portrait: true },
-      { src: "/case-studies/standard-bank/05-select-service.png",     label: "Select Service",       caption: "Operator-aware selection — only the wallets reachable from the user's market are shown.", portrait: true },
-      { src: "/case-studies/standard-bank/06-payment-details.png",    label: "Payment Details",      caption: "Fee transparency before commit — the breakdown is surfaced here, before OTP, not after.", portrait: true },
+      { src: "/case-studies/standard-bank/05-select-service.png",     label: "Select Service",       caption: "Operator-aware selection: only the wallets reachable from the user's market are shown.", portrait: true },
+      { src: "/case-studies/standard-bank/06-payment-details.png",    label: "Payment Details",      caption: "Fee transparency before commit. The breakdown is surfaced here, before OTP, not after.", portrait: true },
       { src: "/case-studies/standard-bank/07-payment-complete.png",   label: "Payment Complete",     caption: "Receipt with transaction ID and reference, plus an in-flow prompt to save the beneficiary.", portrait: true },
       { src: "/case-studies/standard-bank/08-choose-account.png",     label: "Choose Account",       caption: "Verifying the receiving wallet operator and number before the transfer is authorized.", portrait: true },
       { src: "/case-studies/standard-bank/09-review-details.png",     label: "Review Details",       caption: "Transaction fee and tax broken out as their own line items ahead of the OTP step.", portrait: true },
       { src: "/case-studies/standard-bank/10-otp-entry.png",          label: "OTP Entry",            caption: "One-time PIN sent to the registered number, with a plain-language resend path.", portrait: true },
-      { src: "/case-studies/standard-bank/11-otp-verified.png",       label: "OTP Verified",         caption: "A real failure path, not just a happy-path form — resend and email fallback stay visible.", portrait: true },
+      { src: "/case-studies/standard-bank/11-otp-verified.png",       label: "OTP Verified",         caption: "A real failure path, not just a happy-path form. Resend and email fallback stay visible.", portrait: true },
       { src: "/case-studies/standard-bank/12-confirmation.png",       label: "Confirmation",         caption: "Payment successful, with transaction ID, reference, and a direct path to save the beneficiary.", portrait: true },
       { src: "/case-studies/standard-bank/13-save-beneficiary.png",   label: "Save Beneficiary",     caption: "Saving a beneficiary sits inside the payment flow itself, not a separate contacts area.", portrait: true },
       { src: "/case-studies/standard-bank/14-beneficiary-saved.png",  label: "Beneficiary Saved",    caption: "Operator, reference, and notification preference captured in the same step as the nickname.", portrait: true },
-      { src: "/case-studies/standard-bank/15-save-confirmation.png",  label: "Beneficiary Confirmed", caption: "Save-for-next-time confirmation — the prompt that cut repeat sends by 40%.", portrait: true },
+      { src: "/case-studies/standard-bank/15-save-confirmation.png",  label: "Beneficiary Confirmed", caption: "Save-for-next-time confirmation, the prompt that cut repeat sends by 40%.", portrait: true },
     ],
     scopeConstraints: [
       { label: "Engineering scope", desc: "Seven markets, one UI, one shipping team. Per-market forks were explicitly ruled out. Anything that couldn't be solved with configuration instead of a rebuild wasn't viable, because the org couldn't support seven codebases long-term." },
@@ -311,7 +315,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2025–2026",
     tags: ["Healthcare"],
     canvasPageId: "find-care-flow",
-    homeDesc: "Redesigned the Find Care experience for Anthem members — provider search, scheduling, rescheduling, cancellation, and Get Care Now — using progressive disclosure, contextual actions, and a unified care pathway.",
+    homeDesc: "Redesigned the Find Care experience for Anthem members: provider search, scheduling, rescheduling, cancellation, and Get Care Now, using progressive disclosure, contextual actions, and a unified care pathway.",
     heroColor: "#3D82FF",
     accent: "#7C6AF7",
     // Already 5.0:1 as text — no lightening needed. White-on-fill for the
@@ -323,20 +327,20 @@ export const CASE_STUDIES: CaseStudy[] = [
     // browser-chrome frame better.
     heroImage: "/case-studies/elevance-health/02-get-care-now.png",
     slides: [
-      { src: EH_SLIDE_1, label: "Context & Problem",     caption: "Members were asked to diagnose which system handled their care — 12 drop-off points in a funnel that took 8 steps just to book an appointment." },
+      { src: EH_SLIDE_1, label: "Context & Problem",     caption: "Members were asked to diagnose which system handled their care: 12 drop-off points in a funnel that took 8 steps just to book an appointment." },
       { src: EH_SLIDE_2, label: "Key Decisions",         caption: "Three decisions: Progressive Disclosure (care type → location → preferences), Contextual Actions (reschedule/cancel inline on card), Unified Care Pathways (single 'Get Care Now' entry point)." },
-      { src: EH_SLIDE_3, label: "Manage Appointment Flow", caption: "The full appointment lifecycle in one place — five screens from Find Care landing through Select Date & Time, Confirm Booking, Cancel, and My Care Team." },
-      { src: EH_SLIDE_4, label: "Get Care Now Flow",     caption: "One entry, three kinds of care — smart routing sends virtual, in-person, and urgent care requests down the right path without the member choosing a system first." },
-      { src: EH_SLIDE_5, label: "Design System",         caption: "Visual language built for clarity, trust, and accessibility — a structured colour palette and semantic context states." },
+      { src: EH_SLIDE_3, label: "Manage Appointment Flow", caption: "The full appointment lifecycle in one place: five screens from Find Care landing through Select Date & Time, Confirm Booking, Cancel, and My Care Team." },
+      { src: EH_SLIDE_4, label: "Get Care Now Flow",     caption: "One entry, three kinds of care. Smart routing sends virtual, in-person, and urgent care requests down the right path without the member choosing a system first." },
+      { src: EH_SLIDE_5, label: "Design System",         caption: "Visual language built for clarity, trust, and accessibility: a structured colour palette and semantic context states." },
     ],
     overview:
       "Every extra click between a member and an appointment is a click that ends in a call center instead. Call centers are the most expensive support channel a health insurer runs. Anthem members needing to find a provider, manage an appointment, or check a claim were routed through multiple disconnected portals, each reflecting the insurer's internal plan structure rather than what a member was actually trying to do. This was a cost-structure problem wearing a UX problem's clothes.",
     screens: [
-      { src: "/case-studies/elevance-health/01-find-care-landing.png",   label: "Care Dashboard",         caption: "Task-based navigation replacing the legacy plan-centric architecture — find care, manage benefits, view appointments." },
-      { src: "/case-studies/elevance-health/02-get-care-now.png",        label: "Get Care Now",           caption: "Unified care pathway — virtual, retail, urgent, and emergency options compared by cost and wait time from a single entry point." },
+      { src: "/case-studies/elevance-health/01-find-care-landing.png",   label: "Care Dashboard",         caption: "Task-based navigation replacing the legacy plan-centric architecture: find care, manage benefits, view appointments." },
+      { src: "/case-studies/elevance-health/02-get-care-now.png",        label: "Get Care Now",           caption: "Unified care pathway: virtual, retail, urgent, and emergency options compared by cost and wait time from a single entry point." },
       { src: "/case-studies/elevance-health/03-locations-near-you.png",  label: "Locations Near You",     caption: "Geolocated provider list with office hours and available services surfaced inline, no separate page to open." },
-      { src: "/case-studies/elevance-health/04-select-date-time.png",    label: "Select Date & Time",     caption: "Calendar and open slots in one view — rescheduling doesn't require re-entering visit details already on file." },
-      { src: "/case-studies/elevance-health/05-confirm-booking.png",     label: "Appointment Rescheduled", caption: "Review and success state combined — provider, address, and confirmation email shown in the same card." },
+      { src: "/case-studies/elevance-health/04-select-date-time.png",    label: "Select Date & Time",     caption: "Calendar and open slots in one view. Rescheduling doesn't require re-entering visit details already on file." },
+      { src: "/case-studies/elevance-health/05-confirm-booking.png",     label: "Appointment Rescheduled", caption: "Review and success state combined: provider, address, and confirmation email shown in the same card." },
       { src: "/case-studies/elevance-health/06-cancel-appointment.png",  label: "Appointment Canceled",    caption: "Confirmation state with an automatic email receipt, no separate confirmation screen to navigate to." },
       { src: "/case-studies/elevance-health/07-manage-appointments.png", label: "Manage Appointments",     caption: "Reschedule and cancel actions sit inline on the appointment card, in the same place the member notices the problem." },
     ],

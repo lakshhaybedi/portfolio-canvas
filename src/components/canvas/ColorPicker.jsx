@@ -232,7 +232,7 @@ export default function ColorPicker({ color, onChange, onClose }) {
           border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 5, overflow: "hidden",
         }}>
-          <span style={{ fontSize: 10, color: "rgba(237,234,212,0.4)", padding: "0 0 0 8px" }}>#</span>
+          <span style={{ fontSize: 10, color: "rgba(237,234,212,0.6)", padding: "0 0 0 8px" }}>#</span>
           <input
             value={hexInput}
             onChange={e => handleHexChange(e.target.value)}
@@ -241,7 +241,7 @@ export default function ColorPicker({ color, onChange, onClose }) {
             style={{
               flex: 1, minWidth: 0, background: "transparent", border: "none",
               color: "#EDEAD4", fontSize: 11, padding: "4px 8px 4px 4px",
-              outline: "none", fontFamily: "monospace", letterSpacing: "0.05em",
+              fontFamily: "monospace", letterSpacing: "0.05em",
             }}
           />
         </div>
@@ -258,21 +258,21 @@ export default function ColorPicker({ color, onChange, onClose }) {
             style={{
               width: 0, flex: 1, background: "transparent", border: "none",
               color: "#EDEAD4", fontSize: 11, padding: "4px 2px 4px 6px",
-              outline: "none", fontFamily: "monospace", textAlign: "right",
+              fontFamily: "monospace", textAlign: "right",
             }}
           />
-          <span style={{ fontSize: 10, color: "rgba(237,234,212,0.4)", padding: "0 6px 0 1px" }}>%</span>
+          <span style={{ fontSize: 10, color: "rgba(237,234,212,0.6)", padding: "0 6px 0 1px" }}>%</span>
         </div>
         <button
           onClick={onClose}
           aria-label="Close colour picker"
           style={{
             background: "transparent", border: "none",
-            color: "rgba(237,234,212,0.35)", cursor: "pointer",
+            color: "rgba(237,234,212,0.6)", cursor: "pointer",
             fontSize: 14, padding: "2px 2px", lineHeight: 1, flexShrink: 0,
           }}
           onMouseEnter={e => e.currentTarget.style.color = "#EDEAD4"}
-          onMouseLeave={e => e.currentTarget.style.color = "rgba(237,234,212,0.35)"}
+          onMouseLeave={e => e.currentTarget.style.color = "rgba(237,234,212,0.6)"}
         >✕</button>
       </div>
     </div>

@@ -2,11 +2,20 @@
 
 import { useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { CASE_STUDIES, CaseStudy } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
+
+// Every case study's `overview` happens to open with a complete, standalone
+// sentence before any nested quotation marks appear later in the paragraph
+// (verified by hand across all 4), so splitting on the first ". " safely
+// extracts it without hand-copying a duplicate excerpt into each entry.
+function firstSentence(text: string): string {
+  const cut = text.indexOf(". ");
+  return cut === -1 ? text : text.slice(0, cut + 1);
+}
 
 export default function CaseStudyPage({ slug }: { slug: string }) {
   const idx   = CASE_STUDIES.findIndex((c) => c.slug === slug);
@@ -104,15 +113,46 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   }, [study, isFinePointer]);
 
   const closeLightbox = useCallback(() => setLightbox(null), []);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
+
+  // Focus management for the lightbox: move focus into the dialog on open
+  // (so a keyboard/screen-reader user isn't left on a thumbnail now hidden
+  // behind the overlay), trap Tab/Shift+Tab within it while open (an
+  // aria-modal="true" dialog is announced as blocking everything else, so
+  // letting Tab reach elements behind it would contradict that), and
+  // return focus to whichever screen button opened it on close.
   useEffect(() => {
     if (lightbox === null) return;
+    lightboxTriggerRef.current = document.activeElement as HTMLElement;
+    const focusables = () =>
+      Array.from(
+        lightboxRef.current?.querySelectorAll<HTMLElement>(
+          'button, a[href], [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter((el) => !el.hasAttribute("disabled"));
+    focusables()[0]?.focus();
+
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") setLightbox((i) => i !== null ? Math.min(i + 1, screens.length - 1) : null);
       if (e.key === "ArrowLeft")  setLightbox((i) => i !== null ? Math.max(i - 1, 0) : null);
       if (e.key === "Escape")     closeLightbox();
+      if (e.key === "Tab") {
+        const els = focusables();
+        if (els.length === 0) return;
+        const first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      lightboxTriggerRef.current?.focus();
+    };
   }, [lightbox, screens.length, closeLightbox]);
 
   if (!study) {
@@ -148,16 +188,31 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
       />
 
       {/* ── Lightbox ── */}
-      <AnimatePresence>
-        {lightbox !== null && (
+      {/* Plain conditional, not AnimatePresence — this dialog is
+          `position: fixed; inset: 0` with no pointer-events override, so
+          if an exit animation ever fails to reach onAnimationComplete (a
+          real, reproduced failure mode: closing it left an opacity:0 copy
+          permanently mounted and still capturing every click on the page
+          underneath, with no visible sign anything was wrong), the whole
+          site becomes unusable until reload. AnimatePresence's exit
+          tracking is a separate state machine from the `lightbox` state
+          that gates this render — losing sync between the two is a
+          silent, total lockout, not a missing animation, so it's not
+          worth keeping for a fade-out. `initial`/`animate` below still
+          animate the fade-*in* on mount; only the exit transition (the
+          part that depended on AnimatePresence deferring unmount) is
+          gone — closing is instant and unmounts in the same render as
+          the `lightbox` state it's gated on, with nothing else to fall
+          out of sync. */}
+      {lightbox !== null && (
           <motion.div
+            ref={lightboxRef}
             role="dialog"
             aria-modal="true"
-            aria-label={`${screens[lightbox].label} — expanded screen`}
+            aria-label={`${screens[lightbox].label}, expanded screen`}
             onClick={closeLightbox}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             style={{
               position: "fixed", inset: 0, zIndex: 1000,
@@ -267,8 +322,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               </div>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
+      )}
 
       {/* ── Sticky nav ── */}
       {/* Side columns are equal `minmax(0, 1fr)` tracks so the middle
@@ -570,6 +624,37 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
           </div>
         </section>
 
+        {/* ── At a glance ── */}
+        {/* Compact, scannable opening — problem/role/approach/outcome are
+            derived from fields the page already renders further down
+            (overview, decisions, outcomes), not duplicated by hand per
+            case study. "My Role" is the one exception: there's no
+            per-project role field, so it reuses the same process
+            statement already published in the homepage About section
+            rather than inventing project-specific ownership claims.
+            `borderTop` (not just the hero's own bottom edge) gives this a
+            clear seam against the hero image above — the hero's image
+            box can crop tall screenshots at `maxHeight: 60vh`, and
+            without a visible line there that crop reads as this section
+            cutting the image off rather than as its own separate block. */}
+        <section style={{
+          padding: "48px 48px 40px",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 32,
+        }}>
+          <AtAGlanceItem label="The Problem" accentText={accentText} text={firstSentence(study.overview)} />
+          <AtAGlanceItem label="My Role" accentText={accentText} text="End-to-end: research, flow architecture, high-fidelity UI, design system contribution." />
+          {study.decisions[0] && (
+            <AtAGlanceItem label="The Approach" accentText={accentText} text={study.decisions[0].title} />
+          )}
+          {study.outcomes[0] && (
+            <AtAGlanceItem label="The Outcome" accentText={accentText} text={`${study.outcomes[0].num}: ${study.outcomes[0].title}`} />
+          )}
+        </section>
+
         {/* ── Two-column body ── */}
         <div className="case-body-grid" style={{
           display: "grid",
@@ -660,7 +745,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                     }}>
                       <div style={{ textAlign: "center" }}>
                         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)" }}>
-                          Slide {String(n).padStart(2, "0")} — uploading soon
+                          Slide {String(n).padStart(2, "0")}, uploading soon
                         </div>
                       </div>
                     </div>
@@ -926,6 +1011,22 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
         </nav>
       </main>
     </>
+  );
+}
+
+function AtAGlanceItem({ label, text, accentText }: { label: string; text: string; accentText: string }) {
+  return (
+    <div>
+      <div style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: accentText, marginBottom: 8,
+      }}>
+        {label}
+      </div>
+      <p style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.6, color: "var(--muted-strong)", margin: 0 }}>
+        {text}
+      </p>
+    </div>
   );
 }
 

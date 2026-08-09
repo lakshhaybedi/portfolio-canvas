@@ -716,7 +716,7 @@ export default function Canvas({ pageId }) {
             }}
           >
             <span>
-              You can draw and edit anything here — nothing is saved unless you&apos;re logged in as admin. Refreshing clears it.
+              You can draw and edit anything here. Nothing is saved unless you&apos;re logged in as admin, and refreshing clears it.
             </span>
             <button
               onClick={() => setShowGuestToast(false)}
@@ -724,11 +724,11 @@ export default function Canvas({ pageId }) {
               style={{
                 flexShrink: 0, width: 20, height: 20, borderRadius: 5,
                 background: "transparent", border: "none",
-                color: "rgba(237,234,212,0.45)", cursor: "pointer",
+                color: "rgba(237,234,212,0.6)", cursor: "pointer",
                 fontSize: 13, lineHeight: 1,
               }}
               onMouseEnter={e => (e.currentTarget.style.color = "#EDEAD4")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(237,234,212,0.45)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(237,234,212,0.6)")}
             >✕</button>
           </div>
         )}
@@ -760,7 +760,7 @@ export default function Canvas({ pageId }) {
             <NavButton title="Pan up" onClick={() => panBy(0, PAN_STEP)}><ChevronUpIcon /></NavButton>
             <span />
             <NavButton title="Pan left" onClick={() => panBy(PAN_STEP, 0)}><ChevronLeftIcon /></NavButton>
-            <NavButton title="Center view — reset pan" onClick={() => panBy(-transformRef.current.x, -transformRef.current.y)}><HomeIcon /></NavButton>
+            <NavButton title="Center view, reset pan" onClick={() => panBy(-transformRef.current.x, -transformRef.current.y)}><HomeIcon /></NavButton>
             <NavButton title="Pan right" onClick={() => panBy(-PAN_STEP, 0)}><ChevronRightIcon /></NavButton>
             <span />
             <NavButton title="Pan down" onClick={() => panBy(0, -PAN_STEP)}><ChevronDownIcon /></NavButton>
@@ -900,7 +900,7 @@ export default function Canvas({ pageId }) {
           {elements.length === 0 && !drawPreview && (
             <div style={emptyStyle}>
               <p style={{ fontFamily: "'Space Grotesk',sans-serif", color: "rgba(237,234,212,0.15)", fontSize: 14 }}>
-                {isAdmin ? "Pick a tool below to draw, or drop images here" : "Pick a tool below to try it out — nothing is saved"}
+                {isAdmin ? "Pick a tool below to draw, or drop images here" : "Pick a tool below to try it out, nothing is saved"}
               </p>
             </div>
           )}
@@ -1043,7 +1043,7 @@ function MinusIcon() {
 
 // ── Static styles ─────────────────────────────────────────
 const zoomLabelStyle = {
-  fontSize: 11, color: "rgba(237,234,212,0.3)",
+  fontSize: 11, color: "rgba(237,234,212,0.6)",
   fontFamily: "'Space Grotesk',sans-serif",
   background: "rgba(18,18,18,0.8)",
   padding: "4px 8px", borderRadius: 6,

@@ -29,8 +29,8 @@ const Y = 160;
 const CY = Y + H / 2;
 
 export const STANDARD_BANK_FLOW_ELEMENTS = [
-  text("sb-title", "Standard Bank — Cross-Border Payment Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
-  text("sb-subtitle", "Real screens from the Standard Bank case study — sending a payment to a new beneficiary.", 60, 80, 1400, 28, 13, DIM, 100),
+  text("sb-title", "Standard Bank: Cross-Border Payment Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
+  text("sb-subtitle", "Real screens from the Standard Bank case study: sending a payment to a new beneficiary.", 60, 80, 1400, 28, 13, DIM, 100),
 
   text("sb-lbl-1", "1. Add beneficiary", 60, 130, W, 20, 12, DIM),
   img("sb-add-beneficiary", "/case-studies/standard-bank/13-save-beneficiary.png", 60, Y, W, H, 10),
@@ -55,5 +55,5 @@ export const STANDARD_BANK_FLOW_ELEMENTS = [
 ];
 
 export function standardBankFlowPage() {
-  return { id: "standard-bank-flow", name: "Standard Bank — Payment Flow", elements: STANDARD_BANK_FLOW_ELEMENTS };
+  return { id: "standard-bank-flow", name: "Standard Bank: Payment Flow", elements: STANDARD_BANK_FLOW_ELEMENTS };
 }

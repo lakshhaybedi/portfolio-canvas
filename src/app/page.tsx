@@ -135,6 +135,12 @@ export default function Portfolio() {
 
   return (
     <>
+      {/* Skip link: visually hidden until focused, so a keyboard user
+          landing on the page doesn't have to tab through the full nav
+          (and, before the section below existed, the whole hero) just to
+          reach the work list. */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
       {/* Fixed particle background — wave grid → rotating globe on scroll,
           behind all page content, not scoped to the hero section */}
       <ParticleBackground />
@@ -262,6 +268,7 @@ export default function Portfolio() {
         </ul>
       </motion.nav>
 
+      <main id="main-content">
       {/* ── Hero ── */}
       <section ref={heroRef} style={{
         position: "relative", height: "100vh", minHeight: 700,
@@ -633,7 +640,7 @@ export default function Portfolio() {
               fontSize: 15, fontWeight: 300, lineHeight: 1.7,
               color: "rgba(237,234,212,0.5)", maxWidth: 420,
             }}>
-              Pan, zoom, and arrange the project work spatially — a Figma‑style infinite board built into this portfolio.
+              Pan, zoom, and arrange the project work spatially, on a Figma-style infinite board built into this portfolio.
             </p>
           </div>
 
@@ -686,10 +693,10 @@ export default function Portfolio() {
             transition={{ delay: 0.1 }}
           >
             <p style={{ fontSize: 22, fontWeight: 300, lineHeight: 1.7, letterSpacing: "-0.01em" }}>
-              I'm a <strong style={{ fontWeight: 600 }}>Senior UX Designer</strong> focused on complex systems — dashboards, financial products, and regulated workflows where the stakes are high and the edge cases are endless.
+              I'm a <strong style={{ fontWeight: 600 }}>Senior UX Designer</strong> focused on complex products: enterprise platforms, FinTech and healthcare experiences where the stakes are high and the edge cases are endless.
             </p>
             <p style={{ fontSize: 22, fontWeight: 300, lineHeight: 1.7, letterSpacing: "-0.01em", marginTop: 24 }}>
-              My work spans enterprise B2B, financial services across Africa, and health insurance infrastructure. I design for users who are under pressure, not just users who are browsing.
+              I enjoy the problems most designers avoid: complex workflows, information architecture, and the systems and interaction design that hold them together. The philosophy underneath all of it is simple. Design clear experiences for people who need to accomplish something important.
             </p>
             <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginTop: 32, fontWeight: 400, letterSpacing: "0.01em" }}>
               Full process: research → flow architecture → high-fidelity UI → design system contribution.
@@ -700,28 +707,61 @@ export default function Portfolio() {
             initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
             transition={{ delay: 0.2 }}
           >
+            {/* What I Bring — leads the right column so capability reads
+                before tooling, per the "capabilities first, tools second"
+                hierarchy below. Kept to one short sentence per item rather
+                than a separate dedicated section, so it stays compact. */}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "var(--muted)",
+                marginBottom: 16, paddingBottom: 12,
+                borderBottom: "1px solid var(--border)",
+              }}>
+                What I Bring
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {[
+                  { label: "Product thinking", desc: "Turning ambiguous requirements into coherent product experiences." },
+                  { label: "Systems thinking", desc: "Creating scalable patterns across complex platforms." },
+                  { label: "Interaction design", desc: "Designing states, transitions and behaviors, not just screens." },
+                  { label: "Enterprise UX", desc: "Working within technical, organizational and regulatory constraints." },
+                  { label: "Design systems", desc: "Creating reusable foundations that scale beyond one feature." },
+                ].map((c) => (
+                  <div key={c.label}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)", marginBottom: 2 }}>
+                      {c.label}
+                    </div>
+                    <p style={{ fontSize: 13, fontWeight: 300, color: "var(--muted-strong)", lineHeight: 1.6, margin: 0 }}>
+                      {c.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {[
-              { label: "Tools", items: ["Figma", "FigJam", "Zeplin", "Maze", "Hotjar", "Miro", "JIRA", "Confluence"] },
               { label: "Domains", items: ["Enterprise B2B", "FinTech", "Healthcare", "Multi-market", "Design Systems"] },
-              { label: "Capabilities", items: ["User Research", "Information Architecture", "UX Design", "UI Design", "Prototyping", "Responsive Design"] },
+              { label: "Tools", items: ["Figma", "FigJam", "Zeplin", "Maze", "Hotjar", "Miro", "JIRA", "Confluence"], secondary: true },
             ].map((block) => (
-              <div key={block.label} style={{ marginBottom: 36 }}>
+              <div key={block.label} style={{ marginBottom: 36, opacity: block.secondary ? 0.75 : 1 }}>
                 <div style={{
-                  fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+                  fontSize: block.secondary ? 10 : 11, fontWeight: 600, letterSpacing: "0.14em",
                   textTransform: "uppercase", color: "var(--muted)",
                   marginBottom: 12, paddingBottom: 12,
                   borderBottom: "1px solid var(--border)",
                 }}>
                   {block.label}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 4 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: block.secondary ? 6 : 8, paddingTop: 4 }}>
                   {block.items.map((s) => (
                     <motion.span
                       key={s}
                       whileHover={{ background: "var(--fg)", color: "var(--fg-invert)" }}
                       transition={{ duration: 0.25 }}
                       style={{
-                        fontSize: 13, fontWeight: 400, padding: "6px 14px",
+                        fontSize: block.secondary ? 12 : 13, fontWeight: 400,
+                        padding: block.secondary ? "5px 12px" : "6px 14px",
                         border: "1px solid var(--border)",
                         cursor: "default", display: "inline-block",
                       }}
@@ -742,10 +782,16 @@ export default function Portfolio() {
           <div style={{
             fontSize: "clamp(48px, 7vw, 112px)",
             fontWeight: 700, letterSpacing: "-0.03em", textTransform: "uppercase",
-            lineHeight: 1, marginBottom: 52,
+            lineHeight: 1, marginBottom: 20,
           }}>
-            Let's Work<br />Together.
+            Let's design<br />something useful.
           </div>
+          <p style={{
+            fontSize: 16, fontWeight: 300, color: "var(--muted-strong)",
+            marginBottom: 52, maxWidth: 640,
+          }}>
+            Open to conversations about Senior UX / Product Design opportunities.
+          </p>
         </motion.div>
         <motion.div
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
@@ -774,7 +820,7 @@ export default function Portfolio() {
               onMouseLeave={() => setLarge(false)}
               whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
               style={{
-                fontSize: 14, fontWeight: 500, color: "var(--muted)",
+                fontSize: 14, fontWeight: 400, color: "var(--muted-strong)",
                 textDecoration: "none", letterSpacing: "0.04em",
                 borderBottom: "1px solid var(--border)", paddingBottom: 2,
               }}
@@ -789,7 +835,7 @@ export default function Portfolio() {
               onMouseLeave={() => setLarge(false)}
               whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
               style={{
-                fontSize: 14, fontWeight: 500, color: "var(--muted)",
+                fontSize: 14, fontWeight: 400, color: "var(--muted-strong)",
                 textDecoration: "none", letterSpacing: "0.04em",
                 borderBottom: "1px solid var(--border)", paddingBottom: 2,
               }}
@@ -802,6 +848,7 @@ export default function Portfolio() {
           </span>
         </motion.div>
       </section>
+      </main>
 
       <PortfolioFolder />
       <WindowManager />

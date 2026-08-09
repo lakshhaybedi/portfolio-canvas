@@ -49,20 +49,20 @@ export default function HeroContent({
           textTransform: "uppercase", color: "var(--muted)", marginBottom: 20,
         }}
       >
-        Lakshhay Bedi — Senior UX Designer
+        Lakshhay Bedi, Senior UX / Product Designer
       </motion.div>
 
       <motion.h1
         variants={reveal}
         transition={{ duration: 1, ease: easeOutExpo, delay: 0.22 }}
         style={{
-          fontSize: "clamp(40px, 6vw, 92px)",
-          fontWeight: 700, lineHeight: 1.02,
-          letterSpacing: "-0.02em", maxWidth: 900,
+          fontSize: "clamp(28px, 3.8vw, 56px)",
+          fontWeight: 700, lineHeight: 1.1,
+          letterSpacing: "-0.02em", maxWidth: 1000,
           margin: 0,
         }}
       >
-        Lakshhay Bedi
+        I design complex products<br />people actually have to use.
       </motion.h1>
 
       <motion.div
@@ -73,12 +73,12 @@ export default function HeroContent({
           marginTop: 32, gap: 32, flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 28, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 460 }}>
           <p style={{
             fontSize: 16, fontWeight: 300, lineHeight: 1.6,
-            color: "var(--muted-strong)", maxWidth: 440, margin: 0,
+            color: "var(--muted-strong)", margin: 0,
           }}>
-            UX Designer crafting premium digital experiences through interaction, motion and systems thinking.
+            Enterprise platforms, FinTech and healthcare experiences, turning complex workflows, data and edge cases into clear, scalable products.
           </p>
         </div>
 

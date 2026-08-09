@@ -276,10 +276,10 @@ export default function CanvasToolbar({
               style={{
                 width: 0, flex: 1, minWidth: 0, background: "transparent", border: "none",
                 color: "#EDEAD4", fontSize: 11, padding: "4px 2px 4px 8px",
-                outline: "none", fontFamily: "'Space Grotesk',sans-serif",
+                fontFamily: "'Space Grotesk',sans-serif",
               }}
             />
-            <span style={{ fontSize: 9, color: "rgba(237,234,212,0.4)", padding: "0 6px 0 1px" }}>px</span>
+            <span style={{ fontSize: 9, color: "rgba(237,234,212,0.6)", padding: "0 6px 0 1px" }}>px</span>
           </div>
 
           {/* Text colour */}
@@ -313,9 +313,9 @@ export default function CanvasToolbar({
         <>
           <Divider />
           <span
-            title="Draw and edit freely — nothing here is saved, it clears on refresh"
+            title="Draw and edit freely, nothing here is saved, it clears on refresh"
             style={{
-              fontSize: 9, color: "rgba(237,234,212,0.4)", letterSpacing: "0.06em",
+              fontSize: 9, color: "rgba(237,234,212,0.6)", letterSpacing: "0.06em",
               textTransform: "uppercase", fontFamily: "'Space Grotesk',sans-serif",
               paddingRight: 2, whiteSpace: "nowrap",
             }}

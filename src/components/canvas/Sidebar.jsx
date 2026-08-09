@@ -1,6 +1,10 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCanvasStore, SEED_PAGE_IDS } from "@/lib/useCanvasStore";
+
+const DEFAULT_WIDTH = 200;
+const MIN_WIDTH = 160;
+const MAX_WIDTH = 400;
 
 export default function Sidebar({ activePageId, onSelect }) {
   const isAdmin = useCanvasStore((s) => s.isAdmin);
@@ -19,6 +23,40 @@ export default function Sidebar({ activePageId, onSelect }) {
   const [showPw, setShowPw] = useState(false);
   const [flowsOpen, setFlowsOpen] = useState(true);
   const dragIndexRef = useRef(null);
+
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
+  const [resizing, setResizing] = useState(false);
+
+  // Restore a previously-dragged width so it doesn't reset every reload —
+  // same sessionStorage pattern the case-study screens panel already uses.
+  useEffect(() => {
+    const saved = sessionStorage.getItem("canvas-sidebar-width");
+    if (saved) setSidebarWidth(Number(saved));
+  }, []);
+
+  useEffect(() => {
+    if (!resizing) return;
+    const move = (e) => {
+      const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, e.clientX));
+      setSidebarWidth(next);
+    };
+    const up = () => {
+      setResizing(false);
+      setSidebarWidth((w) => { sessionStorage.setItem("canvas-sidebar-width", String(w)); return w; });
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+    };
+  }, [resizing]);
 
   const submitRename = (id) => {
     if (editVal.trim()) renamePage(id, editVal.trim());
@@ -51,16 +89,41 @@ export default function Sidebar({ activePageId, onSelect }) {
   return (
     <div
       style={{
-        width: 200,
+        width: sidebarWidth,
         flexShrink: 0,
         background: "#111",
         borderRight: "1px solid rgba(255,255,255,0.07)",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Space Grotesk', sans-serif",
-        overflow: "hidden",
+        overflow: "visible",
+        position: "relative",
       }}
     >
+      {/* Resize handle — drag to resize, double-click to reset. Tracked on
+          `window` (not the handle itself), same pattern as the case-study
+          screens panel's own resize handle: the cursor easily outruns a
+          few-px-wide target during a fast drag. */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        onMouseDown={(e) => { e.preventDefault(); setResizing(true); }}
+        onDoubleClick={() => { setSidebarWidth(DEFAULT_WIDTH); sessionStorage.setItem("canvas-sidebar-width", String(DEFAULT_WIDTH)); }}
+        style={{
+          position: "absolute", top: 0, bottom: 0, right: -4,
+          width: 8, cursor: "col-resize", zIndex: 10,
+          background: "transparent",
+        }}
+      >
+        <div style={{
+          position: "absolute", top: 0, bottom: 0, left: "50%",
+          width: 1, transform: "translateX(-50%)",
+          background: resizing ? "#7C6AF7" : "transparent",
+          transition: resizing ? "none" : "background 0.15s",
+        }} />
+      </div>
+
       {/* Logo / title */}
       <div
         style={{
@@ -84,11 +147,11 @@ export default function Sidebar({ activePageId, onSelect }) {
             display: "inline-flex", alignItems: "center", gap: 5,
             fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
             textTransform: "uppercase", textDecoration: "none",
-            color: "rgba(237,234,212,0.35)",
+            color: "rgba(237,234,212,0.6)",
             transition: "color 0.15s",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(237,234,212,0.8)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,234,212,0.35)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,234,212,0.6)")}
         >
           ← Portfolio
         </a>
@@ -110,7 +173,7 @@ export default function Sidebar({ activePageId, onSelect }) {
                 padding: "10px 14px 6px", marginTop: mainPages.length > 0 ? 4 : 0,
                 background: "transparent", border: "none", cursor: "pointer",
                 fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-                textTransform: "uppercase", color: "rgba(237,234,212,0.35)",
+                textTransform: "uppercase", color: "rgba(237,234,212,0.6)",
               }}
             >
               <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{
@@ -119,7 +182,7 @@ export default function Sidebar({ activePageId, onSelect }) {
                 <path d="M2.5 1l3 3-3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
               </svg>
               Case Study Flows
-              <span style={{ marginLeft: "auto", fontWeight: 500, opacity: 0.7 }}>{flowPages.length}</span>
+              <span style={{ marginLeft: "auto", fontWeight: 500 }}>{flowPages.length}</span>
             </button>
             {flowsOpen && flowPages.map((page, idx) => (
               <PageRow key={page.id} page={page} displayIndex={idx} {...rowProps} />
@@ -138,7 +201,7 @@ export default function Sidebar({ activePageId, onSelect }) {
             background: "rgba(255,255,255,0.05)",
             border: "1px dashed rgba(255,255,255,0.12)",
             borderRadius: 6,
-            color: "rgba(237,234,212,0.4)",
+            color: "rgba(237,234,212,0.6)",
             cursor: "pointer",
             fontSize: 12,
             fontFamily: "'Space Grotesk', sans-serif",
@@ -164,7 +227,7 @@ export default function Sidebar({ activePageId, onSelect }) {
               background: "transparent",
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 6,
-              color: "rgba(237,234,212,0.4)",
+              color: "rgba(237,234,212,0.6)",
               cursor: "pointer",
               fontSize: 11,
               fontFamily: "'Space Grotesk', sans-serif",
@@ -181,10 +244,16 @@ export default function Sidebar({ activePageId, onSelect }) {
               value={pwInput}
               onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
               onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+              // `outline: none` below drops the browser's default focus
+              // ring with nothing standing in for it, so focus/blur here
+              // swap the border colour instead, the same way the pwError
+              // state already does, just layered on top of it.
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#7C6AF7"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = pwError ? "#E83390" : "rgba(255,255,255,0.1)"; }}
               style={{
                 padding: "6px 8px",
                 background: "rgba(255,255,255,0.05)",
-                border: `1px solid ${pwError ? "#E20074" : "rgba(255,255,255,0.1)"}`,
+                border: `1px solid ${pwError ? "#E83390" : "rgba(255,255,255,0.1)"}`,
                 borderRadius: 6,
                 color: "#EDEAD4",
                 fontSize: 12,
@@ -193,7 +262,7 @@ export default function Sidebar({ activePageId, onSelect }) {
               }}
             />
             {pwError && (
-              <span style={{ fontSize: 10, color: "#E20074" }}>Wrong password</span>
+              <span role="alert" style={{ fontSize: 10, color: "#E83390" }}>Wrong password</span>
             )}
             <div style={{ display: "flex", gap: 4 }}>
               <button onClick={handleUnlock} style={{ ...smallBtn, flex: 1, background: "#7C6AF7" }}>
@@ -213,7 +282,7 @@ export default function Sidebar({ activePageId, onSelect }) {
               background: "transparent",
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 6,
-              color: "rgba(237,234,212,0.25)",
+              color: "rgba(237,234,212,0.6)",
               cursor: "pointer",
               fontSize: 11,
               fontFamily: "'Space Grotesk', sans-serif",
@@ -273,7 +342,7 @@ function PageRow({
         transition: "background 0.15s",
       }}
     >
-      <span style={{ fontSize: 10, color: "rgba(237,234,212,0.3)", minWidth: 18 }}>
+      <span style={{ fontSize: 10, color: "rgba(237,234,212,0.6)", minWidth: 18 }}>
         {String(displayIndex + 1).padStart(2, "0")}
       </span>
 
@@ -297,7 +366,6 @@ function PageRow({
             color: "#EDEAD4",
             fontSize: 12,
             padding: "2px 6px",
-            outline: "none",
             fontFamily: "'Space Grotesk', sans-serif",
           }}
         />
@@ -356,7 +424,7 @@ function IconBtn({ children, onClick, title }) {
       style={{
         background: "transparent",
         border: "none",
-        color: "rgba(237,234,212,0.3)",
+        color: "rgba(237,234,212,0.6)",
         cursor: "pointer",
         fontSize: 11,
         padding: "2px 3px",
@@ -364,7 +432,7 @@ function IconBtn({ children, onClick, title }) {
         borderRadius: 3,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.color = "#EDEAD4")}
-      onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,234,212,0.3)")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,234,212,0.6)")}
     >
       {children}
     </button>

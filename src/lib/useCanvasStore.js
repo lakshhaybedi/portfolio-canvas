@@ -164,6 +164,25 @@ export const useCanvasStore = create(
   persist(
     (set, get) => ({
       // ── Auth ──────────────────────────────────────────────
+      // Not a real access control boundary — this is a fully static,
+      // backend-less export (`output: "export"` in next.config), so
+      // there's no server to hold a secret away from the client. Whatever
+      // value this checks against — the env var if set, or the fallback
+      // below if not — ends up readable in the shipped JS bundle either
+      // way (`NEXT_PUBLIC_*` vars are inlined at build time). This gate
+      // exists to keep the "edit" affordances out of a casual visitor's
+      // way, not to keep anyone out who opens devtools. `isAdmin` itself
+      // is deliberately left out of the persisted state (see `partialize`
+      // below) so it can't be flipped on permanently by editing
+      // localStorage; it still resets to false on every fresh load.
+      //
+      // The hardcoded fallback means the real password currently lives in
+      // this source file (and git history) in plaintext, on top of the
+      // bundle exposure above. Setting `NEXT_PUBLIC_CANVAS_PASS` in the
+      // deploy environment and removing the `|| "1@Adm1n3-("` fallback
+      // would stop that specific leak — left as-is here since doing that
+      // without the env var already configured would lock out the
+      // current password with no way back in.
       isAdmin: false,
       unlock: (password) => {
         if (password === (process.env.NEXT_PUBLIC_CANVAS_PASS || "1@Adm1n3-(")) {

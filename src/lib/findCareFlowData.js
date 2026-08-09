@@ -28,7 +28,7 @@ const SCREEN_W = 300;
 const SCREEN_H = 225;
 
 export const FIND_CARE_FLOW_ELEMENTS = [
-  text("fc-title", "Find Care · Appointment Management — UX Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
+  text("fc-title", "Find Care · Appointment Management: UX Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
   text("fc-subtitle", "Real screens from the Find Care case study, arranged into the cancel and reschedule paths.", 60, 80, 1400, 28, 13, DIM, 100),
 
   // ── Shared starting point ──────────────────────────────────
@@ -80,5 +80,5 @@ export const FIND_CARE_FLOW_ELEMENTS = [
 ];
 
 export function findCareFlowPage() {
-  return { id: "find-care-flow", name: "Find Care — UX Flow", elements: FIND_CARE_FLOW_ELEMENTS };
+  return { id: "find-care-flow", name: "Find Care: UX Flow", elements: FIND_CARE_FLOW_ELEMENTS };
 }

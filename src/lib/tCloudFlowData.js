@@ -29,8 +29,8 @@ const Y = 160;
 const CY = Y + H / 2;
 
 export const TCLOUD_FLOW_ELEMENTS = [
-  text("tc-title", "T-Cloud Dashboard — Widget Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
-  text("tc-subtitle", "Real screens from the T-Cloud case study — an operator building their own view from an empty dashboard.", 60, 80, 1400, 28, 13, DIM, 100),
+  text("tc-title", "T-Cloud Dashboard: Widget Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
+  text("tc-subtitle", "Real screens from the T-Cloud case study: an operator building their own view from an empty dashboard.", 60, 80, 1400, 28, 13, DIM, 100),
 
   text("tc-lbl-1", "1. Empty state", 60, 130, W, 20, 12, DIM),
   img("tc-empty", `${BASE}/4e2a76af-2f40-4473-b4f5-b137a8f67743/Dashboard_Screen_10.png`, 60, Y, W, H, 10),
@@ -55,5 +55,5 @@ export const TCLOUD_FLOW_ELEMENTS = [
 ];
 
 export function tCloudFlowPage() {
-  return { id: "tcloud-flow", name: "T-Cloud — Widget Flow", elements: TCLOUD_FLOW_ELEMENTS };
+  return { id: "tcloud-flow", name: "T-Cloud: Widget Flow", elements: TCLOUD_FLOW_ELEMENTS };
 }

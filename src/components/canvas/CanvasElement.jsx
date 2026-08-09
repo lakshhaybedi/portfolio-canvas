@@ -361,8 +361,8 @@ function FloatingToolbar({ onBringForward, onSendBackward, onDelete }) {
       }}
     >
       {[
-        { icon: <LayerForwardIcon />, label: "Forward", title: "Bring forward — move above overlapping shapes", fn: onBringForward },
-        { icon: <LayerBackwardIcon />, label: "Backward", title: "Send backward — move below overlapping shapes", fn: onSendBackward },
+        { icon: <LayerForwardIcon />, label: "Forward", title: "Bring forward, move above overlapping shapes", fn: onBringForward },
+        { icon: <LayerBackwardIcon />, label: "Backward", title: "Send backward, move below overlapping shapes", fn: onSendBackward },
       ].map(({ icon, label, title, fn }) => (
         <button
           key={label}
