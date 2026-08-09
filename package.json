@@ -16,6 +16,7 @@
     "postprocessing": "^6.39.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-pageflip": "^2.0.3",
     "react-pdf": "^9.2.1",
     "react-zoom-pan-pinch": "^4.0.3",
     "three": "^0.169.0",

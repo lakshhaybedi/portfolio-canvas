@@ -100,9 +100,13 @@ export default function Portfolio() {
   const heroRef = useRef<HTMLElement>(null);
   const heroProgress = useHeroScrollProgress(heroRef);
 
-  // Gate the custom cursor to fine-pointer devices only
+  // Gate the custom cursor to fine-pointer devices only. Cleanup removes the
+  // class on unmount so navigating to a page without a custom cursor (e.g.
+  // /services, /other-work) doesn't inherit `cursor: none` with nothing to
+  // replace it, leaving the pointer invisible there.
   useEffect(() => {
     document.body.classList.toggle("has-fine-pointer", isFinePointer);
+    return () => document.body.classList.remove("has-fine-pointer");
   }, [isFinePointer]);
 
   // Cursor tracking (fine pointer only)
@@ -247,10 +251,15 @@ export default function Portfolio() {
           Lakshhay Bedi
         </motion.button>
         <ul style={{ display: "flex", gap: 36, listStyle: "none" }}>
-          {["Work", "About", "Contact"].map((link) => (
-            <li key={link}>
+          {[
+            { label: "Work", href: "#work" },
+            { label: "Services", href: "/services" },
+            { label: "About", href: "#about" },
+            { label: "Contact", href: "#contact" },
+          ].map((link) => (
+            <li key={link.label}>
               <motion.a
-                href={`#${link.toLowerCase()}`}
+                href={link.href}
                 onMouseEnter={() => setLarge(true)}
                 onMouseLeave={() => setLarge(false)}
                 whileHover={{ opacity: 0.55 }}
@@ -261,7 +270,7 @@ export default function Portfolio() {
                   display: "inline-block",
                 }}
               >
-                {link}
+                {link.label}
               </motion.a>
             </li>
           ))}
@@ -584,6 +593,24 @@ export default function Portfolio() {
               </motion.div>
             );
           })}
+        </div>
+
+        <div style={{ paddingTop: 32, textAlign: "center" }}>
+          <Link
+            href="/other-work"
+            onMouseEnter={() => setLarge(true)}
+            onMouseLeave={() => setLarge(false)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
+              textTransform: "uppercase", textDecoration: "none",
+              color: "var(--muted-strong)",
+              borderBottom: "1px solid var(--border-strong)",
+              paddingBottom: 3,
+            }}
+          >
+            See more work <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
 

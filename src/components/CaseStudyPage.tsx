@@ -81,8 +81,12 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
     };
   }, [resizing]);
 
+  // Cleanup removes the class on unmount so navigating to a page without a
+  // custom cursor (e.g. /services, /other-work) doesn't inherit
+  // `cursor: none` with nothing to replace it, leaving the pointer invisible.
   useEffect(() => {
     document.body.classList.toggle("has-fine-pointer", isFinePointer);
+    return () => document.body.classList.remove("has-fine-pointer");
   }, [isFinePointer]);
 
   // Nav's "jump to project" menu — closes on an outside click or Escape,
