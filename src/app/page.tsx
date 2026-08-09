@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, useAnimationControls, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 import { CASE_STUDIES } from "@/lib/caseStudies";
+import { SERVICES } from "@/lib/services";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
@@ -56,9 +57,17 @@ const PROJECTS = CASE_STUDIES.map((c) => ({
 // filter row automatically instead of needing a second edit.
 const ALL_TAGS = Array.from(new Set(PROJECTS.flatMap((p) => p.tags))).sort();
 
+// Services split into two reading-order columns (left: 1-4, right: 5-7)
+// rather than a CSS grid's row-major pairing, so opening one item never
+// changes the row height of its unrelated neighbour in the other column.
+const SERVICES_SPLIT = Math.ceil(SERVICES.length / 2);
+const SERVICES_LEFT = SERVICES.slice(0, SERVICES_SPLIT);
+const SERVICES_RIGHT = SERVICES.slice(SERVICES_SPLIT);
+
 export default function Portfolio() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeService, setActiveService] = useState<string | null>(null);
   const visibleProjects = activeTag ? PROJECTS.filter((p) => p.tags.includes(activeTag)) : PROJECTS;
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [cursorLarge, setCursorLarge] = useState(false);
@@ -253,7 +262,7 @@ export default function Portfolio() {
         <ul style={{ display: "flex", gap: 36, listStyle: "none" }}>
           {[
             { label: "Work", href: "#work" },
-            { label: "Services", href: "/services" },
+            { label: "Services", href: "#services" },
             { label: "About", href: "#about" },
             { label: "Contact", href: "#contact" },
           ].map((link) => (
@@ -614,6 +623,63 @@ export default function Portfolio() {
         </div>
       </section>
 
+      {/* ── Services ── */}
+      <section id="services" style={{ padding: "80px 48px 0" }}>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ marginBottom: 40 }}
+        >
+          <span style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "var(--muted)",
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            Services
+            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
+          </span>
+        </motion.div>
+
+        <div
+          style={{ display: "flex", gap: 64, flexWrap: "wrap" }}
+          onMouseLeave={() => setActiveService(null)}
+        >
+          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
+            {SERVICES_LEFT.map((service, i) => (
+              <ServiceRow
+                key={service.slug}
+                service={service}
+                num={i + 1}
+                isActive={activeService === service.slug}
+                dim={activeService !== null && activeService !== service.slug}
+                delay={i * 0.05}
+                reduceMotion={!!reduceMotion}
+                isFinePointer={isFinePointer}
+                onActivate={() => setActiveService(service.slug)}
+                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
+                onLinkHoverChange={setLarge}
+              />
+            ))}
+          </div>
+          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
+            {SERVICES_RIGHT.map((service, i) => (
+              <ServiceRow
+                key={service.slug}
+                service={service}
+                num={SERVICES_LEFT.length + i + 1}
+                isActive={activeService === service.slug}
+                dim={activeService !== null && activeService !== service.slug}
+                delay={i * 0.05}
+                reduceMotion={!!reduceMotion}
+                isFinePointer={isFinePointer}
+                onActivate={() => setActiveService(service.slug)}
+                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
+                onLinkHoverChange={setLarge}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── View in Canvas ── */}
       <motion.section
         className="canvas-cta-section"
@@ -880,6 +946,84 @@ export default function Portfolio() {
       <PortfolioFolder />
       <WindowManager />
     </>
+  );
+}
+
+function ServiceRow({
+  service, num, isActive, dim, delay, reduceMotion, isFinePointer, onActivate, onToggle, onLinkHoverChange,
+}: {
+  service: { slug: string; title: string; description: string; proofLabel: string; proofHref: string };
+  num: number;
+  isActive: boolean;
+  dim: boolean;
+  delay: number;
+  reduceMotion: boolean;
+  isFinePointer: boolean;
+  onActivate: () => void;
+  onToggle: () => void;
+  onLinkHoverChange: (large: boolean) => void;
+}) {
+  return (
+    <motion.div
+      initial="hidden" whileInView="visible" viewport={viewportOnce} variants={revealVariant(reduceMotion)}
+      transition={{ delay }}
+      style={{ borderBottom: "1px solid var(--border)" }}
+    >
+      <button
+        onMouseEnter={onActivate}
+        onFocus={onActivate}
+        onClick={onToggle}
+        aria-expanded={isActive}
+        style={{
+          width: "100%", display: "flex", alignItems: "baseline", gap: 16,
+          padding: "20px 0", background: "none", border: "none",
+          textAlign: "left", cursor: isFinePointer ? "none" : "pointer", fontFamily: "inherit",
+        }}
+      >
+        <span style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+          color: "var(--muted)", minWidth: 24, flexShrink: 0,
+        }}>
+          {String(num).padStart(2, "0")}
+        </span>
+        <span style={{
+          fontSize: isActive ? "clamp(18px, 2vw, 24px)" : "clamp(15px, 1.5vw, 18px)",
+          fontWeight: 700, letterSpacing: "-0.01em", textTransform: "uppercase",
+          lineHeight: 1.15,
+          color: dim ? "var(--muted)" : "var(--fg)",
+          transition: reduceMotion ? "none" : "color 0.3s ease, font-size 0.3s ease",
+        }}>
+          {service.title}
+        </span>
+      </button>
+
+      <motion.div
+        initial={false}
+        animate={{ height: isActive ? "auto" : 0, opacity: isActive ? 1 : 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.32, ease: "easeInOut" }}
+        style={{ overflow: "hidden" }}
+      >
+        <div style={{ paddingBottom: 24, paddingLeft: 40 }}>
+          <p style={{ fontSize: 13, fontWeight: 300, color: "var(--muted-strong)", lineHeight: 1.7, marginBottom: 14 }}>
+            {service.description}
+          </p>
+          <Link
+            href={service.proofHref}
+            onMouseEnter={() => onLinkHoverChange(true)}
+            onMouseLeave={() => onLinkHoverChange(false)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+              textTransform: "uppercase", color: "var(--fg)",
+              textDecoration: "none", borderBottom: "1px solid var(--border-strong)",
+              paddingBottom: 2,
+            }}
+          >
+            {service.proofLabel} <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

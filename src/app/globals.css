@@ -265,18 +265,3 @@ select:focus-visible,
     gap: 6px !important;
   }
 }
-
-/* Yurbban Trafalgar magazine page-turn overlay — a real @keyframes animation
-   rather than a JS-toggled `transition`, so it starts playing on mount
-   without needing a requestAnimationFrame handshake first (a transition needs
-   the browser to paint the "before" state before the "after" state becomes
-   animatable, which is exactly the RAF-dependent step that was proving
-   unreliable). Forward and backward are the same rotation, mirrored. */
-@keyframes yurbbanTurnForward {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(-180deg); }
-}
-@keyframes yurbbanTurnBackward {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(180deg); }
-}

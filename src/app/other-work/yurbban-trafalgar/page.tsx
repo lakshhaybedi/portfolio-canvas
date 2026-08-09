@@ -6,8 +6,7 @@ import HTMLFlipBook from "react-pageflip";
 // react-pageflip re-exports the StPageFlip engine but not its stylesheet —
 // without it, `.stf__block` has no `perspective` and `.stf__item` has no
 // `transform-style: preserve-3d`, so the page's rotateY has nothing to
-// render depth against and looks like a flat slide instead of a 3D curl,
-// in both directions. This is the actual fix for that, not a config toggle.
+// render depth against and looks like a flat slide instead of a 3D curl.
 import "page-flip/src/Style/stPageFlip.css";
 import { OTHER_PROJECTS } from "@/lib/otherProjects";
 
@@ -27,18 +26,6 @@ const BOOK_HEIGHT = Math.round(BOOK_WIDTH / PAGE_RATIO);
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.5;
-
-// StPageFlip's own forward/backward flip turned out unreliable in this
-// single-page-per-spread setup (see history above): forward looked right,
-// backward didn't animate the same way. Rather than keep fighting the
-// engine's internal state machine, Next/Previous now drive one small,
-// self-built page-turn overlay — the exact same rotateY mechanics for both
-// directions, just mirrored (hinge edge + rotation sign flipped), so the
-// two are guaranteed to look identical. The engine still renders the static
-// pages and still owns drag-to-flip on the corners; this only replaces the
-// two button-driven transitions.
-const TURN_DURATION_MS = 650;
-type Turn = { dir: "forward" | "backward"; fromIndex: number; toIndex: number };
 
 type PageProps = { src: string; index: number; isCover?: boolean };
 
@@ -83,7 +70,6 @@ export default function YurbbanTrafalgarMagazinePage() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragState = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [turn, setTurn] = useState<Turn | null>(null);
 
   // react-pageflip watches `children` by reference: a new array on every
   // render (from re-mapping PAGES inline in JSX) makes it tear down and
@@ -120,10 +106,10 @@ export default function YurbbanTrafalgarMagazinePage() {
   // leaves StPageFlip's temporary flipping-page copies stuck in the DOM
   // instead of cleaned up. Skipping the jump while mid-flip avoids that.
   const jumpToPage = useCallback((index: number) => {
-    if (turn || bookRef.current?.pageFlip()?.getState() === "flipping") return;
+    if (bookRef.current?.pageFlip()?.getState() === "flipping") return;
     bookRef.current?.pageFlip()?.flip(index);
     setCurrentPage(index);
-  }, [turn]);
+  }, []);
 
   const resetZoom = useCallback(() => {
     setZoom(1);
@@ -138,45 +124,8 @@ export default function YurbbanTrafalgarMagazinePage() {
     });
   }, []);
 
-  // Drives the custom turn overlay. The overlay itself plays a real
-  // @keyframes animation (see globals.css) rather than a JS-toggled
-  // `transition`, so it starts on mount with no requestAnimationFrame
-  // handshake needed first. Completion is driven by `onAnimationEnd` on the
-  // element, with this timer as a backup in case that event doesn't fire for
-  // any reason — either way, the engine gets synced via its own
-  // non-animated `turnToPage` and the overlay drops, exactly once (guarded
-  // by `committedRef`).
-  const committedRef = useRef(false);
-
-  const commitTurn = useCallback((toIndex: number) => {
-    if (committedRef.current) return;
-    committedRef.current = true;
-    bookRef.current?.pageFlip()?.turnToPage(toIndex);
-    setCurrentPage(toIndex);
-    setTurn(null);
-  }, []);
-
-  const goToPage = useCallback((toIndex: number, dir: "forward" | "backward") => {
-    if (toIndex < 0 || toIndex >= PAGES.length) return;
-    setTurn((prev) => {
-      if (prev) return prev;
-      committedRef.current = false;
-      return { dir, fromIndex: currentPage, toIndex };
-    });
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (!turn) return;
-    const timer = setTimeout(() => commitTurn(turn.toIndex), TURN_DURATION_MS + 150);
-    return () => clearTimeout(timer);
-  }, [turn, commitTurn]);
-
-  const flipNext = useCallback(() => {
-    if (currentPage < PAGES.length - 1) goToPage(currentPage + 1, "forward");
-  }, [currentPage, goToPage]);
-  const flipPrev = useCallback(() => {
-    if (currentPage > 0) goToPage(currentPage - 1, "backward");
-  }, [currentPage, goToPage]);
+  const flipNext = useCallback(() => bookRef.current?.pageFlip()?.flipNext(), []);
+  const flipPrev = useCallback(() => bookRef.current?.pageFlip()?.flipPrev(), []);
 
   // Keyboard: arrows flip pages, +/- zoom, 0 resets, Escape leaves the book.
   useEffect(() => {
@@ -328,7 +277,6 @@ export default function YurbbanTrafalgarMagazinePage() {
                 transition: dragging ? "none" : "transform 0.25s ease",
               }}
             >
-              <div style={{ position: "relative", width: BOOK_WIDTH, maxWidth: "100%", margin: "0 auto" }}>
               {mounted ? (
                 <HTMLFlipBook
                   ref={bookRef}
@@ -342,17 +290,15 @@ export default function YurbbanTrafalgarMagazinePage() {
                   // `showCover` gives the first/last page StPageFlip's "hard
                   // page" treatment: a single rigid page that hinges open
                   // around the spine, instead of pairing with the next page
-                  // as a soft interior spread. Tried re-enabling this once
-                  // the mid-animation rebuild bug above was fixed, but it
-                  // introduces its own bug in this forced-single-page setup:
-                  // the engine's internal page pointer desyncs from ours
-                  // after a jump-then-flip sequence near the cover (e.g.
-                  // thumbnail to page 4, then Next lands on page 2). Left
-                  // off — a working uniform flip beats a broken hard cover.
+                  // as a soft interior spread. It desyncs the engine's
+                  // internal page pointer from ours in this forced-single-
+                  // page setup (a jump-then-flip sequence near the cover
+                  // lands on the wrong page), so it's left off — every page,
+                  // including the cover, shares the same soft flip.
                   showCover={false}
                   usePortrait={true}
                   mobileScrollSupport={true}
-                  useMouseEvents={zoom <= 1 && !turn}
+                  useMouseEvents={zoom <= 1}
                   drawShadow={true}
                   flippingTime={700}
                   maxShadowOpacity={0.4}
@@ -379,57 +325,6 @@ export default function YurbbanTrafalgarMagazinePage() {
                   }}
                 />
               )}
-
-              {/* Custom page-turn overlay — see the `goToPage`/`turn` state
-                  above. Sits on top of the (already, silently, re-synced-
-                  at-the-end) real book and shows the actual transition:
-                  the outgoing page rotates around the spine edge while the
-                  incoming page waits underneath, unchanged for both
-                  directions except which edge it hinges from and which way
-                  it turns. */}
-              {turn && (
-                <div aria-hidden="true" style={{
-                  position: "absolute", inset: 0,
-                  perspective: 2000, pointerEvents: "none", zIndex: 20,
-                  borderRadius: 4, overflow: "hidden",
-                }}>
-                  <img
-                    src={PAGES[turn.toIndex]}
-                    alt=""
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#fff" }}
-                  />
-                  <div
-                    onAnimationEnd={() => commitTurn(turn.toIndex)}
-                    style={{
-                      position: "absolute", inset: 0,
-                      transformStyle: "preserve-3d",
-                      transformOrigin: turn.dir === "forward" ? "left center" : "right center",
-                      animation: `${turn.dir === "forward" ? "yurbbanTurnForward" : "yurbbanTurnBackward"} ${TURN_DURATION_MS}ms cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards`,
-                    }}
-                  >
-                    <img
-                      src={PAGES[turn.fromIndex]}
-                      alt=""
-                      style={{
-                        position: "absolute", inset: 0, width: "100%", height: "100%",
-                        objectFit: "contain", background: "#fff",
-                        backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
-                      }}
-                    />
-                    {/* Shading standing in for the page's own shadow as it
-                        turns — present for the whole motion rather than
-                        cross-faded, to avoid a second animated property. */}
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      background: turn.dir === "forward"
-                        ? "linear-gradient(to right, transparent 60%, rgba(0,0,0,0.35) 100%)"
-                        : "linear-gradient(to left, transparent 60%, rgba(0,0,0,0.35) 100%)",
-                      backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
-                    }} />
-                  </div>
-                </div>
-              )}
-            </div>
             </div>
           </div>
 
@@ -441,8 +336,8 @@ export default function YurbbanTrafalgarMagazinePage() {
             <button
               aria-label="Previous page"
               onClick={flipPrev}
-              disabled={currentPage === 0 || !!turn}
-              style={navBtnStyle(currentPage === 0 || !!turn)}
+              disabled={currentPage === 0}
+              style={navBtnStyle(currentPage === 0)}
             >←</button>
 
             <input
@@ -462,8 +357,8 @@ export default function YurbbanTrafalgarMagazinePage() {
             <button
               aria-label="Next page"
               onClick={flipNext}
-              disabled={currentPage === PAGES.length - 1 || !!turn}
-              style={navBtnStyle(currentPage === PAGES.length - 1 || !!turn)}
+              disabled={currentPage === PAGES.length - 1}
+              style={navBtnStyle(currentPage === PAGES.length - 1)}
             >→</button>
 
             <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
