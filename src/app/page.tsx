@@ -6,6 +6,8 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, useAnimationControls, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 import { CASE_STUDIES } from "@/lib/caseStudies";
 import { SERVICES } from "@/lib/services";
+import { TOOL_GROUPS } from "@/lib/tools";
+import ToolIcon from "@/components/ToolIcon";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
@@ -833,38 +835,95 @@ export default function Portfolio() {
               </div>
             </div>
 
-            {[
-              { label: "Domains", items: ["Enterprise B2B", "FinTech", "Healthcare", "Multi-market", "Design Systems"] },
-              { label: "Tools", items: ["Figma", "FigJam", "Zeplin", "Maze", "Hotjar", "Miro", "JIRA", "Confluence"], secondary: true },
-            ].map((block) => (
-              <div key={block.label} style={{ marginBottom: 36, opacity: block.secondary ? 0.75 : 1 }}>
+            <div style={{ marginBottom: 36 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "var(--muted)",
+                marginBottom: 12, paddingBottom: 12,
+                borderBottom: "1px solid var(--border)",
+              }}>
+                Domains
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 4 }}>
+                {["Enterprise B2B", "FinTech", "Healthcare", "Multi-market", "Design Systems"].map((s) => (
+                  <motion.span
+                    key={s}
+                    whileHover={{ background: "var(--fg)", color: "var(--fg-invert)" }}
+                    transition={{ duration: 0.25 }}
+                    style={{
+                      fontSize: 13, fontWeight: 400, padding: "6px 14px",
+                      border: "1px solid var(--border)",
+                      cursor: "default", display: "inline-block",
+                    }}
+                  >
+                    {s}
+                  </motion.span>
+                ))}
+              </div>
+            </div>
+
+            {/* Tools — resting state (border, muted label, no icon) is
+                unchanged from the plain pill above; hovering reveals each
+                tool's own mark in its real brand color instead of a generic
+                invert, so "Figma" reads as Figma-orange, not just bold. CSS
+                hover (not framer's whileHover) drives the reveal here since
+                the icon needs to animate in as a distinct child element
+                rather than the pill's own background/color interpolating. */}
+            {TOOL_GROUPS.map((group) => (
+              <div key={group.label} style={{ marginBottom: 36, opacity: 0.8 }}>
                 <div style={{
-                  fontSize: block.secondary ? 10 : 11, fontWeight: 600, letterSpacing: "0.14em",
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
                   textTransform: "uppercase", color: "var(--muted)",
                   marginBottom: 12, paddingBottom: 12,
                   borderBottom: "1px solid var(--border)",
                 }}>
-                  {block.label}
+                  {group.label}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: block.secondary ? 6 : 8, paddingTop: 4 }}>
-                  {block.items.map((s) => (
-                    <motion.span
-                      key={s}
-                      whileHover={{ background: "var(--fg)", color: "var(--fg-invert)" }}
-                      transition={{ duration: 0.25 }}
-                      style={{
-                        fontSize: block.secondary ? 12 : 13, fontWeight: 400,
-                        padding: block.secondary ? "5px 12px" : "6px 14px",
-                        border: "1px solid var(--border)",
-                        cursor: "default", display: "inline-block",
-                      }}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 4 }}>
+                  {group.tools.map((tool) => (
+                    <span
+                      key={tool.name}
+                      className="tool-pill"
+                      style={{ "--tool-color": tool.color } as React.CSSProperties}
                     >
-                      {s}
-                    </motion.span>
+                      <span className="tool-icon"><ToolIcon tool={tool} size={13} /></span>
+                      {tool.name}
+                    </span>
                   ))}
                 </div>
               </div>
             ))}
+            <style jsx>{`
+              .tool-pill {
+                display: inline-flex;
+                align-items: center;
+                font-size: 12px;
+                font-weight: 400;
+                padding: 5px 12px;
+                border: 1px solid var(--border);
+                cursor: default;
+                transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+              }
+              .tool-pill:hover {
+                border-color: var(--tool-color);
+                background: color-mix(in srgb, var(--tool-color) 16%, transparent);
+                color: var(--fg);
+              }
+              .tool-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 0;
+                opacity: 0;
+                overflow: hidden;
+                transition: width 0.25s ease, opacity 0.2s ease, margin-right 0.25s ease;
+              }
+              .tool-pill:hover .tool-icon {
+                width: 15px;
+                opacity: 1;
+                margin-right: 6px;
+              }
+            `}</style>
           </motion.div>
         </div>
       </section>
