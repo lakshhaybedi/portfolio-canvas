@@ -413,4 +413,68 @@ export const CASE_STUDIES: CaseStudy[] = [
       { num: "6", title: "Polaris patterns adopted", desc: "Appointment card, form validation states, coverage alert, document row, inline error, and confirmation banner, adopted across 6 product teams within 6 months." },
     ],
   },
+
+  // ── 05 · This site ────────────────────────────────────────────────────
+  // The one project with no client. Screens are exports from the Figma file
+  // where the system was documented, not screenshots of the running site —
+  // the point of the case study is the system, not the pixels.
+  {
+    slug: "portfolio-site",
+    index: "05",
+    title: "Portfolio Site",
+    company: "Personal",
+    year: "2026",
+    tags: ["Design Systems", "Interaction Design", "Front-End"],
+    canvasPageId: "default",
+    homeDesc:
+      "The portfolio you're reading. Built code-first with an AI pair from a paper wireframe system, then documented backwards into a design system: 36 variables, 13 type styles, and a 64% lighter image payload.",
+    heroColor: "#EDEAD4",
+    accent: "#C9A227",
+    accentText: "#E3BE45",
+    badgeOnAccent: "#14140F",
+    overview:
+      "A portfolio gets judged by the people it was built to impress, which makes it a uniquely unforgiving brief: every shortcut in it is a claim about how you work. It started from a wireframe system worked out on paper and a generated starter site that supplied a working shell and a light identity worth keeping none of. Everything after that was built by describing intent to an AI pair and reviewing what came back. That part is usually left out of a case study. It's in here because knowing what to ask for, and what to reject, turned out to be the entire job.",
+    heroImage: "/case-studies/portfolio-site/04-home.png",
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/case-studies/portfolio-site/06-canvas.png", label: "Interactive Canvas", caption: "" },
+      { src: "/case-studies/portfolio-site/03-design-system.png", label: "Design System", caption: "" },
+    ],
+    screens: [
+      { src: "/case-studies/portfolio-site/01-ideation.png",       label: "Ideation",       caption: "Framing the brief, four principles, and the light-to-dark inversion that generated the whole token set." },
+      { src: "/case-studies/portfolio-site/02-wireframe-home.png", label: "Wireframes",     caption: "Structure before surface: the homepage broken into blocks, each annotated with the behaviour it owns.", portrait: true },
+      { src: "/case-studies/portfolio-site/03-design-system.png",  label: "Design System",  caption: "36 variables and 13 text styles, documented from the shipped product. Swatch fills are bound to the live variables, so the sheet is the system rather than a picture of it.", portrait: true },
+      { src: "/case-studies/portfolio-site/04-home.png",           label: "Home",           caption: "Hero, tag-filtered work list, services accordion and about, rebuilt natively from the tokens.", portrait: true },
+      { src: "/case-studies/portfolio-site/05-case-study.png",     label: "Case Study",     caption: "Device-true hero stack. Browser chrome for web products, a phone bezel for the one that shipped on iOS, and the chrome tab shows the screen's real name instead of an invented hostname." },
+      { src: "/case-studies/portfolio-site/06-canvas.png",         label: "Canvas",         caption: "A Figma-style infinite board built into the site: pannable, zoomable, with the case-study decks laid out spatially and a guest mode anyone can draw on." },
+    ],
+    scopeConstraints: [
+      { label: "No coding background", desc: "Every line written by an AI pair. My job was specification, review and rejection, which shaped the process more than any technical constraint did." },
+      { label: "A starting point, not a blank page", desc: "The generated starter arrived with a light/cream identity and its own defaults. Inverting it was the first real decision, and it cascaded through every token in the system." },
+      { label: "Static hosting, no backend", desc: "No server means no server-side secrets and no runtime image processing. Performance had to be solved at build time or not at all." },
+      { label: "Real client work, handled carefully", desc: "T-Mobile, Standard Bank and Elevance screens are real product. Nothing could be invented, and nothing could be represented as something it wasn't." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "Frames That Tell The Truth About The Platform",
+        desc: "Every case-study hero originally sat in the same desktop browser chrome with a fabricated URL, which put Standard Bank's iOS app, status bar and home indicator included, inside a browser window with a made-up address bar. Frames are now device-true and no URL is invented. Elevance nearly got mis-assigned the other way: its screens are tall and look mobile by aspect ratio, but they're full-page desktop captures with the nav and footer visible.",
+      },
+      {
+        num: "2",
+        title: "One Accent, Three Roles",
+        desc: "Each case study carries its client's colour. The naive version broke immediately: T-Mobile magenta passes contrast as a fill but fails as text on the dark background, and white fails on top of the lighter accents. So each accent is three tokens rather than one, verified against 4.5:1 instead of eyeballed. A colour token is a role, not a value.",
+      },
+      {
+        num: "3",
+        title: "Animation Mapped To The Wrong Range",
+        desc: "The hero screens drift apart on scroll. The first build was technically working and effectively invisible, and the cause was the input range, not the distance: the drift was mapped from where the hero enters the viewport, but the hero is already on screen at load, so readers began halfway through and only saw the back half of the motion. An animation nobody notices is more often mapped to the wrong range than tuned to the wrong output.",
+      },
+    ],
+    outcomes: [
+      { num: "−64%", title: "Image payload", desc: "54.4MB to 19.8MB across 238 images via WebP served through <picture>, with the originals kept as fallback so older browsers get a working image rather than a broken one. Other Work's initial load dropped 4073KB to 240KB." },
+      { num: "670KB", title: "Removed for low-end devices", desc: "The WebGL hero already checked for weak hardware and reduced-motion, but the check ran after the library had downloaded. Moving it behind a dynamic boundary means the devices that fall back to a CSS gradient no longer fetch roughly half the homepage payload." },
+      { num: "1 → 16", title: "Headings on the homepage", desc: "Every section title and project name had been a styled div, leaving screen-reader users no outline to navigate and search engines a flat wall of divs. Rendering is pixel-identical: the fix was semantic, not visual." },
+    ],
+  },
 ];
