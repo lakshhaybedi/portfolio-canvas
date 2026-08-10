@@ -30,8 +30,13 @@ export default function Sidebar({ activePageId, onSelect }) {
   // Restore a previously-dragged width so it doesn't reset every reload —
   // same sessionStorage pattern the case-study screens panel already uses.
   useEffect(() => {
-    const saved = sessionStorage.getItem("canvas-sidebar-width");
-    if (saved) setSidebarWidth(Number(saved));
+    // Clamped to the same bounds the drag handler enforces — the stored value
+    // is user-editable in devtools, and an out-of-range one would render a
+    // sidebar that covers or vanishes from the canvas on every reload.
+    const saved = Number(sessionStorage.getItem("canvas-sidebar-width"));
+    if (Number.isFinite(saved) && saved > 0) {
+      setSidebarWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, saved)));
+    }
   }, []);
 
   useEffect(() => {
@@ -63,8 +68,10 @@ export default function Sidebar({ activePageId, onSelect }) {
     setEditingId(null);
   };
 
-  const handleUnlock = () => {
-    const ok = unlock(pwInput);
+  // Async because `unlock` hashes the attempt with Web Crypto before
+  // comparing (see the auth block in useCanvasStore.js).
+  const handleUnlock = async () => {
+    const ok = await unlock(pwInput);
     if (!ok) { setPwError(true); setPwInput(""); }
     else { setShowPw(false); setPwInput(""); setPwError(false); }
   };

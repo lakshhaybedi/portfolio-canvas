@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import type { PortfolioDocument } from "@/lib/documents";
+import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { PAPER_COLOR, SPRING_PAPER } from "./folderPalette";
 
 // Local to this list, not the page's shared `fadeUp` — that one's a
@@ -20,6 +21,7 @@ export default function DocumentCard({
   doc: PortfolioDocument;
   onOpen: (id: string) => void;
 }) {
+  const isFinePointer = useHasFinePointer();
   return (
     <motion.button
       variants={rowVariants}
@@ -35,7 +37,9 @@ export default function DocumentCard({
         borderRadius: 10,
         border: "none",
         background: "transparent",
-        cursor: "pointer",
+        // See PortfolioFolder — `pointer` would double up with the page's
+        // own custom dot cursor.
+        cursor: isFinePointer ? "none" : "pointer",
         textAlign: "left",
         font: "inherit",
         color: "inherit",
@@ -97,7 +101,7 @@ export default function DocumentCard({
           {doc.name}
         </div>
         <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-          {doc.sizeLabel} · {doc.updatedLabel}
+          {doc.variants ? `${doc.variants.length} versions` : doc.sizeLabel} · {doc.updatedLabel}
         </div>
       </div>
     </motion.button>

@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useDragControls, useMotionValue } from "framer-motion";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 
 const NORMAL_WIDTH = 560;
 const NORMAL_HEIGHT = 660;
+
+// Resize bounds. Min is roughly "a PDF page is still legible"; max is capped
+// to the viewport so a window can't be dragged bigger than the screen.
+const MIN_W = 380;
+const MIN_H = 320;
 
 /**
  * Generic draggable/closable/focusable floating window shell — the drag,
@@ -56,6 +61,66 @@ export default function DraggableWindow({
   const my = useMotionValue(y);
   const prevPos = useRef<{ x: number; y: number } | null>(null);
 
+  // User-set size, persisted for the lifetime of the window. Null until the
+  // corner is actually dragged, so an untouched window keeps its default.
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const [resizing, setResizing] = useState(false);
+  // The gesture's anchor: pointer position and window size at mousedown.
+  // A ref, not state, on purpose — see the dependency note on the effect.
+  const resizeStart = useRef<{ px: number; py: number; w: number; h: number; x: number; y: number } | null>(null);
+
+  const beginResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizeStart.current = {
+      px: e.clientX,
+      py: e.clientY,
+      w: size?.w ?? NORMAL_WIDTH,
+      h: size?.h ?? NORMAL_HEIGHT,
+      x: mx.get(),
+      y: my.get(),
+    };
+    setResizing(true);
+  }, [size, mx, my]);
+
+  // Tracked on `window` rather than the 18px handle: during a fast drag the
+  // cursor easily outruns a target that small, and a listener bound to the
+  // handle would drop the gesture the moment it did.
+  //
+  // Deps are deliberately only [resizing]. Including `size` here re-ran this
+  // effect on every mousemove, which tore the listeners down and re-anchored
+  // the gesture mid-drag — the window then resized by the delta between
+  // consecutive events instead of from the grab point, so it crawled and
+  // stuttered. The anchor lives in a ref so updating size can't invalidate it.
+  useEffect(() => {
+    if (!resizing) return;
+
+    const move = (e: MouseEvent) => {
+      const s = resizeStart.current;
+      if (!s) return;
+      // Clamped to the viewport so a window can't be dragged off-screen,
+      // and to MIN_* so it can't be collapsed into an unusable sliver.
+      setSize({
+        w: Math.max(MIN_W, Math.min(s.w + (e.clientX - s.px), window.innerWidth - s.x - 20)),
+        h: Math.max(MIN_H, Math.min(s.h + (e.clientY - s.py), window.innerHeight - s.y - 20)),
+      });
+    };
+    const up = () => setResizing(false);
+
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "nwse-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+    };
+  }, [resizing]);
+
   useEffect(() => {
     if (maximized) {
       prevPos.current = { x: mx.get(), y: my.get() };
@@ -69,8 +134,8 @@ export default function DraggableWindow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maximized]);
 
-  const width = maximized ? "calc(100vw - 40px)" : NORMAL_WIDTH;
-  const height = maximized ? "calc(100vh - 40px)" : NORMAL_HEIGHT;
+  const width = maximized ? "calc(100vw - 40px)" : (size?.w ?? NORMAL_WIDTH);
+  const height = maximized ? "calc(100vh - 40px)" : (size?.h ?? NORMAL_HEIGHT);
 
   const exitTarget = exitAnchor
     ? { x: exitAnchor.x - NORMAL_WIDTH / 2, y: exitAnchor.y - NORMAL_HEIGHT / 2 }
@@ -188,6 +253,31 @@ export default function DraggableWindow({
 
         {/* Body */}
         <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+
+        {/* Resize grip — bottom-right corner, hidden while maximized (there's
+            nothing to resize to). Two short diagonal strokes, the same
+            affordance macOS itself uses, rather than an invisible hit area
+            nobody would find. */}
+        {!maximized && (
+          <div
+            onMouseDown={beginResize}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize window"
+            style={{
+              position: "absolute", right: 0, bottom: 0,
+              width: 18, height: 18,
+              cursor: "nwse-resize",
+              display: "flex", alignItems: "flex-end", justifyContent: "flex-end",
+              padding: 3,
+              zIndex: 2,
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M9 1 1 9M9 5.5 5.5 9" stroke="var(--muted)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            </svg>
+          </div>
+        )}
       </div>
     </motion.div>
   );

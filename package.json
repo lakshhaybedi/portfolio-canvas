@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "node scripts/copy-pdf-worker.mjs"
+    "postinstall": "node scripts/copy-pdf-worker.mjs",
+    "webp": "node scripts/generate-webp.mjs",
+    "prebuild": "node scripts/generate-webp.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

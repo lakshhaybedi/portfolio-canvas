@@ -49,6 +49,14 @@ export type CaseStudy = {
   overview: string;
   heroImage?: string;
   heroUrl?: string;
+  // Which hardware the hero frame should draw. Standard Bank shipped as an
+  // iOS app (its captures include the status bar and home indicator), so
+  // presenting it in browser chrome misrepresented the platform; everything
+  // else here is desktop web. Defaults to "desktop" when unset.
+  heroDevice?: "desktop" | "mobile";
+  // Two extra screens layered behind the hero, giving the stack its depth.
+  // Optional: with none, the hero is just the single primary frame.
+  heroStack?: Screen[];
   slides?: Screen[];
   screens: Screen[];
   scopeConstraints: ScopeItem[];
@@ -65,7 +73,13 @@ const TC_SLIDE_3 = "/case-studies/slides/tcloud-03-widget-system.png";
 const TC_SLIDE_4 = "/case-studies/slides/tcloud-04-hierarchy.png";
 const TC_SLIDE_5 = "/case-studies/slides/tcloud-05-design-system.png";
 // T-Cloud — hero screen
-const TC_HERO        = "https://ap.chat-img.sintra.ai/8f6a602e-5b87-49d1-b168-c3a672b80b6b/be2b0c3f-73d2-40af-aff1-7a4e136594c9/Cost_Optimization.png";
+// Was a remote Sintra CDN URL pointing at a 3456x4824 portrait export — the
+// only portrait asset in a set of otherwise 1920x1200 landscape screens, so
+// it was being crammed sideways into the hero's browser frame even when the
+// host was up. The main dashboard is both the right shape and the screen
+// this case study is actually about. Local, so it also stops leaking
+// visitor IPs to a third-party host that could disappear at any time.
+const TC_HERO        = "/case-studies/t-cloud/main-dashboard.png";
 // T-Cloud — raw screens (full resolution)
 const TC_SCR_MAIN    = "/case-studies/t-cloud/main-dashboard.png";
 const TC_SCR_EMPTY   = "/case-studies/t-cloud/new-dashboard.png";
@@ -112,6 +126,11 @@ export const CASE_STUDIES: CaseStudy[] = [
     accentText: "#E83390",
     badgeOnAccent: "#FFFFFF",
     heroImage: TC_HERO,
+    heroDevice: "desktop",
+    heroStack: [
+      { src: TC_SCR_ASSET,  label: "Asset Overview",  caption: "" },
+      { src: TC_SCR_WIDGET, label: "Widget Catalog",  caption: "" },
+    ],
     overview:
       "A dashboard that turns incident response from a five-tab scavenger hunt into one screen. At T-Mobile's scale, every minute inside an incident is a minute another team spends escalating instead of fixing. Operations, finance, and security teams were each running their own tooling to answer the same question: is anything on fire right now, and whose problem is it. This wasn't a “make it prettier” brief. It was a request to remove a structural bottleneck sitting between a system going sideways and the person who could fix it.",
     slides: [
@@ -178,6 +197,11 @@ export const CASE_STUDIES: CaseStudy[] = [
     // fits the overview copy below ("the screen every MAIA customer sees
     // first") better than a static dashboard shot would.
     heroImage: "/canvas-flow/maia/onboarding-tour.png",
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/canvas-flow/maia/dashboard.png",    label: "Dashboard",    caption: "" },
+      { src: "/canvas-flow/maia/applications.png", label: "Applications", caption: "" },
+    ],
     slides: [
       { src: MI_SLIDE_1, label: "Context & Problem",  caption: "New operators were dropped into a full enterprise dashboard with nothing in it. Access is granted in ServiceNow, not MAIA, so nothing could tell a new user which applications were theirs." },
       { src: MI_SLIDE_2, label: "Key Decisions",      caption: "Three choices that shaped the first session: stepped portfolio configuration, a contextual virtual tour that overlays the live dashboard, and smart resource discovery." },
@@ -250,6 +274,14 @@ export const CASE_STUDIES: CaseStudy[] = [
     // looks wrong inside the hero's fake-browser-chrome frame built for a
     // screenshot. A real screen reads correctly there instead.
     heroImage: "/case-studies/standard-bank/06-payment-details.png",
+    // The only mobile product in the set — these captures carry a real iOS
+    // status bar and home indicator, so a browser frame around them was
+    // actively misleading about the platform.
+    heroDevice: "mobile",
+    heroStack: [
+      { src: "/case-studies/standard-bank/03-mobile-wallet.png", label: "Mobile Wallet", caption: "", portrait: true },
+      { src: "/case-studies/standard-bank/01-dashboard.png",     label: "Dashboard",     caption: "", portrait: true },
+    ],
     slides: [
       { src: SB_SLIDE_1, label: "Context & Problem",     caption: "Standard Bank serves customers across Uganda, Ghana, Lesotho, Zimbabwe and other African markets, each with its own mobile money ecosystem, regulator, and operator network." },
       { src: SB_SLIDE_2, label: "Key Decisions",         caption: "Three decisions that shaped the flow: operator-aware selection, fee transparency before commit, and beneficiary save as an in-flow step." },
@@ -326,6 +358,14 @@ export const CASE_STUDIES: CaseStudy[] = [
     // the Context slide is text-only now, a real screen fits the hero's
     // browser-chrome frame better.
     heroImage: "/case-studies/elevance-health/02-get-care-now.png",
+    // Desktop web despite the tall captures — these are full-page
+    // screenshots of the member portal (desktop nav and footer are visible
+    // in them), not phone screens.
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/case-studies/elevance-health/03-locations-near-you.png", label: "Locations Near You", caption: "" },
+      { src: "/case-studies/elevance-health/04-select-date-time.png",   label: "Select Date & Time", caption: "" },
+    ],
     slides: [
       { src: EH_SLIDE_1, label: "Context & Problem",     caption: "Members were asked to diagnose which system handled their care: 12 drop-off points in a funnel that took 8 steps just to book an appointment." },
       { src: EH_SLIDE_2, label: "Key Decisions",         caption: "Three decisions: Progressive Disclosure (care type → location → preferences), Contextual Actions (reschedule/cancel inline on card), Unified Care Pathways (single 'Get Care Now' entry point)." },

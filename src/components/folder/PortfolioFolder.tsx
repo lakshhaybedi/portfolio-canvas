@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useWindowStore } from "@/lib/useWindowStore";
+import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { DOCUMENTS } from "@/lib/documents";
 import FolderAnimation from "./FolderAnimation";
 import FolderContents from "./FolderContents";
@@ -36,6 +37,7 @@ export default function PortfolioFolder() {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const hoveringRef = useRef(false);
   const reduceMotion = !!useReducedMotion();
+  const isFinePointer = useHasFinePointer();
   const openWindow = useWindowStore((s) => s.openWindow);
   const setFolderAnchor = useWindowStore((s) => s.setFolderAnchor);
 
@@ -218,7 +220,11 @@ export default function PortfolioFolder() {
           flexDirection: "column",
           alignItems: "center",
           gap: 8,
-          cursor: "pointer",
+          // `cursor: pointer` here overrode the page's `cursor: none`, so the
+          // custom dot and the OS hand rendered on top of each other. Same
+          // fine-pointer guard the rest of the page's interactive elements
+          // already use.
+          cursor: isFinePointer ? "none" : "pointer",
           userSelect: "none",
         }}
       >

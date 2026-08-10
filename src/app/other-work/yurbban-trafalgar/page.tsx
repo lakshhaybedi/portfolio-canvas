@@ -9,6 +9,7 @@ import HTMLFlipBook from "react-pageflip";
 // render depth against and looks like a flat slide instead of a 3D curl.
 import "page-flip/src/Style/stPageFlip.css";
 import { OTHER_PROJECTS } from "@/lib/otherProjects";
+import Picture from "@/components/Picture";
 
 const PROJECT = OTHER_PROJECTS.find((p) => p.slug === "yurbban-trafalgar")!;
 // The physical cover goes first so the book opens from its actual closed
@@ -39,10 +40,14 @@ const MagazinePage = forwardRef<HTMLDivElement, PageProps>(({ src, index, isCove
       overflow: "hidden",
     }}
   >
-    <img
+    {/* Wrapped for the WebP variant (72 spreads, 14.4MB as JPEG vs 9.3MB as
+        WebP). Safe to wrap here: StPageFlip tracks the outer ref'd div as its
+        page element, and this sits a level inside it. */}
+    <Picture
       src={src}
       alt={isCover ? `${PROJECT.title}, cover` : `Page ${index + 1} of ${PAGES.length}`}
       draggable={false}
+      decoding="async"
       style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
     />
     {/* Every interior page is a flattened two-page spread — this soft shadow
@@ -241,12 +246,13 @@ export default function YurbbanTrafalgarMagazinePage() {
                 background: "#fff",
               }}
             >
-              <img
+              <Picture
                 src={src}
                 alt=""
                 aria-hidden="true"
                 style={{ width: "100%", aspectRatio: PAGE_RATIO, objectFit: "cover", display: "block" }}
                 loading="lazy"
+                decoding="async"
               />
             </button>
           ))}

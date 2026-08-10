@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { OTHER_PROJECTS, CATEGORY_LABELS, type OtherProjectCategory } from "@/lib/otherProjects";
 import { revealVariant, viewportOnce } from "@/lib/motion";
+import Picture from "@/components/Picture";
 
 const CATEGORY_ORDER: OtherProjectCategory[] = ["branding", "ux", "experimental"];
 
@@ -98,9 +99,9 @@ export default function OtherWorkPage() {
             initial="hidden" animate="visible" variants={reveal} transition={{ delay: 0.08 }}
             style={{ fontSize: 16, fontWeight: 300, color: "var(--muted-strong)", maxWidth: 560, lineHeight: 1.7 }}
           >
-            The broader body of work alongside the case studies above: branding, UX
-            projects outside the flagship four, and a few personal and experimental
-            pieces.
+            The broader body of work alongside the four main case studies:
+            branding, UX projects outside the flagship four, and a few personal
+            and experimental pieces.
           </motion.p>
         </section>
 
@@ -148,20 +149,41 @@ export default function OtherWorkPage() {
                       }}>
                         {cover ? (
                           isMagazine ? (
-                            <motion.img
+                            // Hand-rolled <picture> rather than the shared
+                            // component: this one is a motion.img (the slow 3D
+                            // tumble), which Picture can't wrap without losing
+                            // the animation props. A <source> works with any
+                            // <img> descendant, motion-driven or not.
+                            <picture style={{ display: "contents" }}>
+                              <source srcSet={cover.replace(/\.(png|jpe?g)$/i, ".webp")} type="image/webp" />
+                              <motion.img
+                                src={cover}
+                                alt={project.title}
+                                decoding="async"
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                animate={reduceMotion ? undefined : {
+                                  rotateY: [-14, 14, -14],
+                                  scale: [1.08, 1.14, 1.08],
+                                }}
+                                transition={reduceMotion ? undefined : {
+                                  duration: 8, repeat: Infinity, ease: "easeInOut",
+                                }}
+                              />
+                            </picture>
+                          ) : (
+                            // Card covers are full-resolution source images
+                            // rendered into a ~260px cell, and there are 15 of
+                            // them — all previously fetched eagerly on load.
+                            // Lazy + async decode defers everything below the
+                            // fold; see scripts/generate-thumbnails.mjs for the
+                            // matching size reduction.
+                            <Picture
                               src={cover}
                               alt={project.title}
+                              loading="lazy"
+                              decoding="async"
                               style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                              animate={reduceMotion ? undefined : {
-                                rotateY: [-14, 14, -14],
-                                scale: [1.08, 1.14, 1.08],
-                              }}
-                              transition={reduceMotion ? undefined : {
-                                duration: 8, repeat: Infinity, ease: "easeInOut",
-                              }}
                             />
-                          ) : (
-                            <img src={cover} alt={project.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           )
                         ) : (
                           <a
@@ -354,9 +376,10 @@ export default function OtherWorkPage() {
                   <source src={lightboxProject.video} type="video/mp4" />
                 </video>
               ) : lightboxProject.images.length > 0 ? (
-                <img
+                <Picture
                   src={lightboxProject.images[imageIndex]}
                   alt={`${lightboxProject.title}, image ${imageIndex + 1}`}
+                  decoding="async"
                   style={{ maxWidth: "100%", maxHeight: "68vh", objectFit: "contain", borderRadius: 8, boxShadow: "0 40px 120px rgba(0,0,0,0.6)" }}
                 />
               ) : (

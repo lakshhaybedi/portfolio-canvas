@@ -1,14 +1,20 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import dynamic from "next/dynamic";
 import { useReducedMotion } from "framer-motion";
-import ParticleSystem from "./ParticleSystem";
-import CameraRig from "./CameraRig";
 import { useWebGLSupport } from "./useWebGLSupport";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
 import { usePageMorphProgress } from "./ScrollController";
-import { HERO_CAMERA_BASE } from "./sceneConstants";
+
+// Three.js and the whole @react-three stack live behind this boundary, in
+// their own chunk, and are fetched only once the capability checks below
+// pass. Nothing in this module statically imports them — that's deliberate,
+// and the reason the scene is a separate file: a static import would pull
+// ~670KB into the homepage bundle for every visitor, including the ones who
+// then render the CSS fallback instead. `ssr: false` because WebGL has no
+// browser context during Next's static-export prerender.
+const ParticleScene = dynamic(() => import("./ParticleScene"), { ssr: false });
 
 /**
  * Fixed, full-viewport particle background: wave grid at the top of the
@@ -16,13 +22,9 @@ import { HERO_CAMERA_BASE } from "./sceneConstants";
  * again near the top. Self-contained — drives its own page scroll and
  * pointer-capability checks, so it drops into any page with no wiring.
  *
- * Dynamically imported with `ssr:false` wherever it's used — Three.js needs
- * a real browser/WebGL context, which doesn't exist during Next's static
- * export prerender.
- *
- * Falls back to a plain CSS glow (no Three.js mounted at all) when WebGL
- * isn't available or the user prefers reduced motion — cheapest and safest
- * way to fully honor that preference.
+ * Falls back to a plain CSS glow (no Three.js downloaded or mounted at all)
+ * when WebGL isn't available, the device is low-end, or the user prefers
+ * reduced motion — cheapest and safest way to honor all three.
  */
 export default function ParticleBackground() {
   const webglSupported = useWebGLSupport();
@@ -38,6 +40,10 @@ export default function ParticleBackground() {
     pointerEvents: "none" as const,
   };
 
+  // Note this is also the first-paint state on capable devices: the checks
+  // resolve on mount, so everyone gets the (free, instant) gradient first
+  // and the scene fades in behind the content once it's ready. Nothing in
+  // the page's layout depends on which branch wins, so there's no shift.
   if (!webglSupported || reducedMotion || lowEndDevice) {
     return (
       <div
@@ -51,16 +57,5 @@ export default function ParticleBackground() {
     );
   }
 
-  return (
-    <Canvas
-      aria-hidden="true"
-      camera={{ position: [HERO_CAMERA_BASE.x, HERO_CAMERA_BASE.y, HERO_CAMERA_BASE.z], fov: 55 }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      style={fixedLayerStyle}
-    >
-      <ParticleSystem scrollYProgress={morphProgress} />
-      <CameraRig scrollYProgress={morphProgress} interactive={interactive} />
-    </Canvas>
-  );
+  return <ParticleScene morphProgress={morphProgress} interactive={interactive} />;
 }

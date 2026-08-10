@@ -7,6 +7,8 @@ import { CASE_STUDIES, CaseStudy } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
+import Picture from "@/components/Picture";
+import HeroFrame from "@/components/HeroFrame";
 
 // Every case study's `overview` happens to open with a complete, standalone
 // sentence before any nested quotation marks appear later in the paragraph
@@ -41,11 +43,24 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
   const scrollProgressX = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1, 1] : [0, 1]);
   const screens = study?.screens ?? [];
 
+  // The hero frame's tab shows the screen's real name. Most heroes are also
+  // in `screens`, so look the label up there rather than duplicating it in
+  // the data; the fallback covers heroes sourced from outside that list.
+  const heroPrimaryLabel =
+    screens.find((s) => s.src === study?.heroImage)?.label ?? "Overview";
+
   // Restore a previously-dragged sidebar width so it doesn't reset to
   // default every time the reader moves between case studies.
   useEffect(() => {
-    const saved = sessionStorage.getItem("case-sidebar-width");
-    if (saved) setSidebarWidth(Number(saved));
+    // Clamped, not trusted: this value round-trips through sessionStorage,
+    // which anyone can hand-edit in devtools. An unclamped Number() lets
+    // "NaN" or "999999" through and the panel renders at a width that pushes
+    // the whole layout off-screen with no way back. Self-inflicted only, but
+    // a persisted broken layout is a bad enough failure mode to guard.
+    const saved = Number(sessionStorage.getItem("case-sidebar-width"));
+    if (Number.isFinite(saved) && saved > 0) {
+      setSidebarWidth(Math.min(720, Math.max(220, saved)));
+    }
   }, []);
 
   // Panel resize — drag the divider between the narrative column and the
@@ -246,9 +261,10 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               transition={{ duration: 0.25, ease: easeOutExpo }}
               style={{ maxWidth: "80vw", maxHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}
             >
-              <img
+              <Picture
                 src={screens[lightbox].src}
                 alt={screens[lightbox].label}
+                decoding="async"
                 style={{ maxWidth: "100%", maxHeight: "72vh", objectFit: "contain", borderRadius: 8, boxShadow: "0 40px 120px rgba(0,0,0,0.6)" }}
               />
               <div style={{ textAlign: "center" }}>
@@ -572,41 +588,28 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               </motion.div>
             </div>
 
-            {/* Hero image or placeholder */}
+            {/* Hero stack or placeholder. HeroFrame owns the device chrome
+                and the scroll parallax; this just supplies the screens. */}
             <motion.div
               initial="hidden" animate="visible" variants={reveal} transition={{ delay: 0.2 }}
-              style={{ alignSelf: "flex-end" }}
+              style={{ alignSelf: "flex-end", width: "100%" }}
             >
-              {/* Browser chrome */}
-              <div style={{
-                background: "#1a1a1a",
-                borderRadius: "10px 10px 0 0",
-                padding: "10px 14px",
-                display: "flex", alignItems: "center", gap: 6,
-              }}>
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
+              {study.heroImage ? (
+                <HeroFrame
+                  device={study.heroDevice ?? "desktop"}
+                  accent={accent}
+                  screens={[
+                    { src: study.heroImage, label: heroPrimaryLabel },
+                    ...(study.heroStack ?? []).map((s) => ({ src: s.src, label: s.label })),
+                  ]}
+                />
+              ) : (
                 <div style={{
-                  flex: 1, marginLeft: 8, background: "#2a2a2a",
-                  borderRadius: 4, padding: "3px 10px",
-                  fontSize: 10, color: "rgba(255,255,255,0.55)", fontFamily: "monospace",
+                  overflow: "hidden", borderRadius: 10,
+                  boxShadow: "0 32px 80px rgba(0,0,0,0.22), 0 8px 24px var(--border)",
+                  background: "#1c1c1e", minHeight: 320,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  {study.heroUrl ?? `${study.slug}.internal`}
-                </div>
-              </div>
-              {/* Screen or placeholder */}
-              <div style={{
-                overflow: "hidden",
-                boxShadow: "0 32px 80px rgba(0,0,0,0.22), 0 8px 24px var(--border)",
-                maxHeight: "60vh",
-                background: study.heroImage ? "transparent" : "#1c1c1e",
-                minHeight: study.heroImage ? "auto" : 320,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {study.heroImage ? (
-                  <img src={study.heroImage} alt="Hero screen" style={{ width: "100%", display: "block" }} />
-                ) : (
                   <div style={{ textAlign: "center", padding: 40 }}>
                     <div style={{
                       fontSize: 64, fontWeight: 800, lineHeight: 1,
@@ -622,8 +625,8 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                       Hero screen uploading
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </motion.div>
           </div>
         </section>
@@ -671,7 +674,10 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
 
             {/* Scope, Constraints & Reality */}
             <section style={{ padding: "72px 48px", background: "var(--bg-elevated)" }}>
-              <motion.div
+              {/* motion.h2, not motion.div: these are the page's real section
+                  titles, and as divs they left the outline jumping straight
+                  from the h1 to the h3 decision headings with nothing between. */}
+              <motion.h2
                 initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
                 style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
@@ -681,7 +687,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >
                 Scope, Constraints &amp; Reality
                 <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              </motion.div>
+              </motion.h2>
               <div style={{ borderTop: "1px solid var(--border)" }}>
                 {study.scopeConstraints.map((item, i) => (
                   <ScopeRow key={i} item={item} accentText={accentText} index={i} />
@@ -719,7 +725,16 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                         </span>
                       </div>
                       <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 24px 72px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.25)", border: "1px solid var(--border)" }}>
-                        <img src={slide.src} alt={slide.label} style={{ width: "100%", display: "block" }} />
+                        {/* Full-page slide exports, the heaviest assets on the
+                            site (several are 400-800KB) and there can be a
+                            dozen per case study — all of them below the fold. */}
+                        <Picture
+                          src={slide.src}
+                          alt={slide.label}
+                          loading="lazy"
+                          decoding="async"
+                          style={{ width: "100%", display: "block" }}
+                        />
                       </div>
                       <p style={{ marginTop: 16, fontSize: 14, color: "var(--muted-strong)", lineHeight: 1.75, maxWidth: 640 }}>
                         {slide.caption}
@@ -760,7 +775,10 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
 
             {/* Design Decisions */}
             <section style={{ padding: "72px 48px", background: "var(--bg-elevated)" }}>
-              <motion.div
+              {/* motion.h2, not motion.div: these are the page's real section
+                  titles, and as divs they left the outline jumping straight
+                  from the h1 to the h3 decision headings with nothing between. */}
+              <motion.h2
                 initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
                 style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
@@ -770,7 +788,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >
                 Design Decisions
                 <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              </motion.div>
+              </motion.h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {study.decisions.map((d, i) => (
                   <DecisionCard key={i} decision={d} accent={accent} badgeOnAccent={badgeOnAccent} index={i} />
@@ -780,7 +798,10 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
 
             {/* Outcomes */}
             <section style={{ padding: "72px 48px" }}>
-              <motion.div
+              {/* motion.h2, not motion.div: these are the page's real section
+                  titles, and as divs they left the outline jumping straight
+                  from the h1 to the h3 decision headings with nothing between. */}
+              <motion.h2
                 initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
                 style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
@@ -790,7 +811,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               >
                 Impact
                 <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              </motion.div>
+              </motion.h2>
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -905,8 +926,13 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                     boxShadow: highlighted ? `0 0 0 1px ${accent}22, 0 8px 24px rgba(0,0,0,0.10)` : "0 2px 8px rgba(0,0,0,0.06)",
                     transition: "border-color 0.25s, box-shadow 0.25s",
                   }}>
-                    <img
+                    <Picture
                       src={screen.src} alt={screen.label}
+                      // Sidebar thumbnails point at the same full-resolution
+                      // files the lightbox opens, and the list runs long —
+                      // deferred so only the ones scrolled into view load.
+                      loading="lazy"
+                      decoding="async"
                       // No fixed container height: width tracks the panel
                       // (user-resizable, see the drag handle below) up to
                       // maxHeight, so dragging the handle wider actually

@@ -165,29 +165,43 @@ export const useCanvasStore = create(
     (set, get) => ({
       // ── Auth ──────────────────────────────────────────────
       // Not a real access control boundary — this is a fully static,
-      // backend-less export (`output: "export"` in next.config), so
-      // there's no server to hold a secret away from the client. Whatever
-      // value this checks against — the env var if set, or the fallback
-      // below if not — ends up readable in the shipped JS bundle either
-      // way (`NEXT_PUBLIC_*` vars are inlined at build time). This gate
-      // exists to keep the "edit" affordances out of a casual visitor's
-      // way, not to keep anyone out who opens devtools. `isAdmin` itself
-      // is deliberately left out of the persisted state (see `partialize`
-      // below) so it can't be flipped on permanently by editing
-      // localStorage; it still resets to false on every fresh load.
+      // backend-less export (`output: "export"` in next.config), so there's
+      // no server to hold a secret away from the client. This gate exists
+      // to keep the "edit" affordances out of a casual visitor's way, not
+      // to keep out anyone who opens devtools. `isAdmin` is deliberately
+      // left out of the persisted state (see `partialize` below) so it
+      // can't be flipped on permanently by editing localStorage; it resets
+      // to false on every fresh load.
       //
-      // The hardcoded fallback means the real password currently lives in
-      // this source file (and git history) in plaintext, on top of the
-      // bundle exposure above. Setting `NEXT_PUBLIC_CANVAS_PASS` in the
-      // deploy environment and removing the `|| "1@Adm1n3-("` fallback
-      // would stop that specific leak — left as-is here since doing that
-      // without the env var already configured would lock out the
-      // current password with no way back in.
+      // What IS worth protecting is the password string itself. This repo
+      // is public, so a plaintext literal here would be readable in source,
+      // in git history, and in the shipped bundle — the exact thing
+      // credential-scraping bots harvest to try against unrelated accounts.
+      // Only the SHA-256 digest is stored, so no reusable secret ever
+      // appears in the repo. `NEXT_PUBLIC_CANVAS_PASS_SHA256` can override
+      // it at build time to rotate without a code change.
+      //
+      // Digest, not plaintext, is also why `unlock` is async: it hashes the
+      // attempt with Web Crypto (needs a secure context — https or
+      // localhost, both of which apply here) before comparing.
       isAdmin: false,
-      unlock: (password) => {
-        if (password === (process.env.NEXT_PUBLIC_CANVAS_PASS || "1@Adm1n3-(")) {
-          set({ isAdmin: true });
-          return true;
+      unlock: async (password) => {
+        const expected =
+          process.env.NEXT_PUBLIC_CANVAS_PASS_SHA256 ||
+          "8a385a29fb47c94501b46bdf994372236d1efa5f7ced1f1f6ec1c506cebba356";
+        try {
+          const bytes = new TextEncoder().encode(password);
+          const digest = await crypto.subtle.digest("SHA-256", bytes);
+          const hex = Array.from(new Uint8Array(digest))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+          if (hex === expected) {
+            set({ isAdmin: true });
+            return true;
+          }
+        } catch {
+          // crypto.subtle is unavailable outside a secure context — fail
+          // closed rather than falling back to a weaker comparison.
         }
         return false;
       },

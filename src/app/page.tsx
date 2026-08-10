@@ -150,12 +150,6 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* Skip link: visually hidden until focused, so a keyboard user
-          landing on the page doesn't have to tab through the full nav
-          (and, before the section below existed, the whole hero) just to
-          reach the work list. */}
-      <a href="#main-content" className="skip-link">Skip to main content</a>
-
       {/* Fixed particle background — wave grid → rotating globe on scroll,
           behind all page content, not scoped to the hero section */}
       <ParticleBackground />
@@ -432,14 +426,20 @@ export default function Portfolio() {
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
           style={{ marginBottom: 48 }}
         >
-          <span style={{
+          {/* Real <h2>, not a styled span: the page previously shipped a
+              single heading in total (the hero h1), so screen-reader users
+              had no heading outline to navigate by and search engines saw a
+              flat wall of divs. The visual result is unchanged — the global
+              reset already zeroes heading margins, and every type property
+              here is explicit. */}
+          <h2 style={{
             fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
             textTransform: "uppercase", color: "var(--muted)",
             display: "flex", alignItems: "center", gap: 16,
           }}>
             Selected Work
             <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
-          </span>
+          </h2>
         </motion.div>
 
         {/* Tag filter — a flat list of every project reads fine at 4 rows;
@@ -522,7 +522,7 @@ export default function Portfolio() {
                     </span>
 
                     <div className="work-row-title">
-                      <div style={{
+                      <h3 style={{
                         fontSize: "clamp(26px, 3.5vw, 54px)",
                         fontWeight: 700, letterSpacing: "-0.02em", textTransform: "uppercase",
                         lineHeight: 1, marginBottom: 5,
@@ -530,7 +530,7 @@ export default function Portfolio() {
                         transition: "color 0.4s ease",
                       }}>
                         {p.title}
-                      </div>
+                      </h3>
                       <div style={{
                         fontSize: 13,
                         color: isOpen ? "rgba(237,234,212,0.5)" : "var(--muted)",
@@ -625,63 +625,6 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── Services ── */}
-      <section id="services" style={{ padding: "80px 48px 0" }}>
-        <motion.div
-          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
-          style={{ marginBottom: 40 }}
-        >
-          <span style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "var(--muted)",
-            display: "flex", alignItems: "center", gap: 16,
-          }}>
-            Services
-            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
-          </span>
-        </motion.div>
-
-        <div
-          style={{ display: "flex", gap: 64, flexWrap: "wrap" }}
-          onMouseLeave={() => setActiveService(null)}
-        >
-          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
-            {SERVICES_LEFT.map((service, i) => (
-              <ServiceRow
-                key={service.slug}
-                service={service}
-                num={i + 1}
-                isActive={activeService === service.slug}
-                dim={activeService !== null && activeService !== service.slug}
-                delay={i * 0.05}
-                reduceMotion={!!reduceMotion}
-                isFinePointer={isFinePointer}
-                onActivate={() => setActiveService(service.slug)}
-                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
-                onLinkHoverChange={setLarge}
-              />
-            ))}
-          </div>
-          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
-            {SERVICES_RIGHT.map((service, i) => (
-              <ServiceRow
-                key={service.slug}
-                service={service}
-                num={SERVICES_LEFT.length + i + 1}
-                isActive={activeService === service.slug}
-                dim={activeService !== null && activeService !== service.slug}
-                delay={i * 0.05}
-                reduceMotion={!!reduceMotion}
-                isFinePointer={isFinePointer}
-                onActivate={() => setActiveService(service.slug)}
-                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
-                onLinkHoverChange={setLarge}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── View in Canvas ── */}
       <motion.section
         className="canvas-cta-section"
@@ -760,6 +703,63 @@ export default function Portfolio() {
         </div>
       </motion.section>
 
+      {/* ── Services ── */}
+      <section id="services" style={{ padding: "80px 48px 0" }}>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ marginBottom: 40 }}
+        >
+          <h2 style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "var(--muted)",
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            Services
+            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
+          </h2>
+        </motion.div>
+
+        <div
+          style={{ display: "flex", gap: 64, flexWrap: "wrap" }}
+          onMouseLeave={() => setActiveService(null)}
+        >
+          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
+            {SERVICES_LEFT.map((service, i) => (
+              <ServiceRow
+                key={service.slug}
+                service={service}
+                num={i + 1}
+                isActive={activeService === service.slug}
+                dim={activeService !== null && activeService !== service.slug}
+                delay={i * 0.05}
+                reduceMotion={!!reduceMotion}
+                isFinePointer={isFinePointer}
+                onActivate={() => setActiveService(service.slug)}
+                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
+                onLinkHoverChange={setLarge}
+              />
+            ))}
+          </div>
+          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
+            {SERVICES_RIGHT.map((service, i) => (
+              <ServiceRow
+                key={service.slug}
+                service={service}
+                num={SERVICES_LEFT.length + i + 1}
+                isActive={activeService === service.slug}
+                dim={activeService !== null && activeService !== service.slug}
+                delay={i * 0.05}
+                reduceMotion={!!reduceMotion}
+                isFinePointer={isFinePointer}
+                onActivate={() => setActiveService(service.slug)}
+                onToggle={() => setActiveService((s) => (s === service.slug ? null : service.slug))}
+                onLinkHoverChange={setLarge}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── About ── */}
       {/* Top padding is deliberately well under the site's usual 100px
           section rhythm: the canvas card above already contributes 56px of
@@ -772,14 +772,14 @@ export default function Portfolio() {
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
           style={{ marginBottom: 64 }}
         >
-          <span style={{
+          <h2 style={{
             fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
             textTransform: "uppercase", color: "var(--muted)",
             display: "flex", alignItems: "center", gap: 16,
           }}>
             About Me
             <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
-          </span>
+          </h2>
         </motion.div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 80 }}>
@@ -931,13 +931,13 @@ export default function Portfolio() {
       {/* ── Contact ── */}
       <section id="contact" style={{ padding: "100px 48px 80px", borderTop: "1px solid var(--border)" }}>
         <motion.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}>
-          <div style={{
+          <h2 style={{
             fontSize: "clamp(48px, 7vw, 112px)",
             fontWeight: 700, letterSpacing: "-0.03em", textTransform: "uppercase",
             lineHeight: 1, marginBottom: 20,
           }}>
-            Let's design<br />something useful.
-          </div>
+            Let&apos;s design<br />something useful.
+          </h2>
           <p style={{
             fontSize: 16, fontWeight: 300, color: "var(--muted-strong)",
             marginBottom: 52, maxWidth: 640,
@@ -950,52 +950,56 @@ export default function Portfolio() {
           transition={{ delay: 0.1 }}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px 24px" }}
         >
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 28px" }}>
+          {/* Three links that were each styled differently: the email (the
+              primary action) was the *dimmest* of the three at --muted while
+              the secondary profile links sat brighter at --muted-strong, and
+              tracking ran 0 / 0.04em / 0.08em across the row with no system
+              behind it. Now there are two deliberate tiers — the email reads
+              as the CTA, the profiles share the site's standard small-label
+              idiom (uppercase, 700, 0.1em) used in the nav and every section
+              header. Bumping the email to --fg also lifts it clear of the
+              4.5:1 contrast floor, which --muted at 0.6 alpha was under. */}
+          <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "10px 28px" }}>
             <motion.a
               href="mailto:lakshhaybedi@gmail.com"
               onMouseEnter={() => setLarge(true)}
               onMouseLeave={() => setLarge(false)}
-              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
+              whileHover={{ borderColor: "var(--fg)" }}
               style={{
-                fontSize: 20, fontWeight: 400, color: "var(--muted)",
-                textDecoration: "none",
-                borderBottom: "1px solid var(--border)", paddingBottom: 2,
+                fontSize: 20, fontWeight: 500, color: "var(--fg)",
+                letterSpacing: "-0.01em", textDecoration: "none",
+                borderBottom: "1px solid var(--border-strong)", paddingBottom: 3,
               }}
             >
               lakshhaybedi@gmail.com
             </motion.a>
-            <motion.a
-              href="https://www.linkedin.com/in/lakshhaybedi/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseEnter={() => setLarge(true)}
-              onMouseLeave={() => setLarge(false)}
-              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
-              style={{
-                fontSize: 14, fontWeight: 400, color: "var(--muted-strong)",
-                textDecoration: "none", letterSpacing: "0.04em",
-                borderBottom: "1px solid var(--border)", paddingBottom: 2,
-              }}
-            >
-              LinkedIn
-            </motion.a>
-            <motion.a
-              href="https://www.behance.net/lakshhaybedi/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseEnter={() => setLarge(true)}
-              onMouseLeave={() => setLarge(false)}
-              whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
-              style={{
-                fontSize: 14, fontWeight: 400, color: "var(--muted-strong)",
-                textDecoration: "none", letterSpacing: "0.04em",
-                borderBottom: "1px solid var(--border)", paddingBottom: 2,
-              }}
-            >
-              Behance
-            </motion.a>
+            {[
+              { label: "LinkedIn", href: "https://www.linkedin.com/in/lakshhaybedi/" },
+              { label: "Behance", href: "https://www.behance.net/lakshhaybedi/" },
+            ].map((link) => (
+              <motion.a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => setLarge(true)}
+                onMouseLeave={() => setLarge(false)}
+                whileHover={{ color: "var(--fg)", borderColor: "var(--fg)" }}
+                style={{
+                  fontSize: 11, fontWeight: 700, color: "var(--muted-strong)",
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  textDecoration: "none",
+                  borderBottom: "1px solid var(--border)", paddingBottom: 3,
+                }}
+              >
+                {link.label} ↗
+              </motion.a>
+            ))}
           </div>
-          <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <span style={{
+            fontSize: 11, fontWeight: 600, color: "var(--muted)",
+            letterSpacing: "0.1em", textTransform: "uppercase",
+          }}>
             © 2026 Lakshhay Bedi
           </span>
         </motion.div>
@@ -1045,7 +1049,7 @@ function ServiceRow({
         }}>
           {String(num).padStart(2, "0")}
         </span>
-        <span style={{
+        <h3 style={{
           fontSize: isActive ? "clamp(18px, 2vw, 24px)" : "clamp(15px, 1.5vw, 18px)",
           fontWeight: 700, letterSpacing: "-0.01em", textTransform: "uppercase",
           lineHeight: 1.15,
@@ -1053,7 +1057,7 @@ function ServiceRow({
           transition: reduceMotion ? "none" : "color 0.3s ease, font-size 0.3s ease",
         }}>
           {service.title}
-        </span>
+        </h3>
       </button>
 
       <motion.div

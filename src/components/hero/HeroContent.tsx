@@ -19,6 +19,7 @@ export default function HeroContent({
 }) {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
   const reveal = revealVariant(!!reduceMotion);
 
   const contentY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -140]);
@@ -90,16 +91,81 @@ export default function HeroContent({
             <span style={{ display: "block" }}>{date}</span>
             <span style={{ display: "block", fontSize: 22, fontWeight: 600, color: "var(--fg)", marginTop: 2 }}>{time}</span>
           </div>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            border: "1px solid var(--border)", padding: "6px 16px",
-            fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-          }}>
+          {/* "Available for work" is a claim with no way to act on it — the
+              contact details live a full page away at the bottom. On hover
+              the label swaps for the two links that make it actionable,
+              in place, without adding permanent clutter to the hero.
+              Focus-within (not just hover) so keyboard users get the same
+              reveal when they tab into it, and the whole strip stays
+              rendered rather than mounting on hover, so the links are
+              always reachable by tab order. */}
+          <div
+            onMouseEnter={() => setContactOpen(true)}
+            onMouseLeave={() => setContactOpen(false)}
+            onFocus={() => setContactOpen(true)}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setContactOpen(false);
+            }}
+            style={{
+              position: "relative",
+              display: "inline-flex", alignItems: "center", gap: 8,
+              border: "1px solid var(--border)", padding: "6px 16px",
+              fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+              overflow: "hidden",
+              transition: reduceMotion ? "none" : "border-color 0.3s ease, background 0.3s ease",
+              borderColor: contactOpen ? "var(--border-strong)" : "var(--border)",
+              background: contactOpen ? "var(--bg-elevated)" : "transparent",
+            }}
+          >
             <span style={{
-              width: 7, height: 7, background: "#22c55e", borderRadius: "50%",
+              width: 7, height: 7, background: "#22c55e", borderRadius: "50%", flexShrink: 0,
               animation: reduceMotion ? "none" : "pulse-dot 2s ease-in-out infinite",
             }} />
-            Available for work
+
+            {/* Both states occupy the same grid cell, so the badge keeps one
+                width and the swap doesn't shove the clock around. */}
+            <span style={{ display: "grid" }}>
+              <span
+                aria-hidden={contactOpen}
+                style={{
+                  gridArea: "1 / 1", whiteSpace: "nowrap",
+                  opacity: contactOpen ? 0 : 1,
+                  transform: contactOpen && !reduceMotion ? "translateY(-6px)" : "translateY(0)",
+                  transition: reduceMotion ? "none" : "opacity 0.22s ease, transform 0.22s ease",
+                  pointerEvents: contactOpen ? "none" : "auto",
+                }}
+              >
+                Available for work
+              </span>
+
+              <span
+                style={{
+                  gridArea: "1 / 1", display: "inline-flex", alignItems: "center", gap: 14,
+                  whiteSpace: "nowrap",
+                  opacity: contactOpen ? 1 : 0,
+                  transform: !contactOpen && !reduceMotion ? "translateY(6px)" : "translateY(0)",
+                  transition: reduceMotion ? "none" : "opacity 0.22s ease 0.04s, transform 0.22s ease 0.04s",
+                  pointerEvents: contactOpen ? "auto" : "none",
+                }}
+              >
+                <a
+                  href="mailto:lakshhaybedi@gmail.com"
+                  tabIndex={contactOpen ? 0 : -1}
+                  style={{ color: "var(--fg)", textDecoration: "none", borderBottom: "1px solid var(--border-strong)" }}
+                >
+                  Email
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/lakshhaybedi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  tabIndex={contactOpen ? 0 : -1}
+                  style={{ color: "var(--fg)", textDecoration: "none", borderBottom: "1px solid var(--border-strong)" }}
+                >
+                  LinkedIn ↗
+                </a>
+              </span>
+            </span>
           </div>
         </div>
       </motion.div>
