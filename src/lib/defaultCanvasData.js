@@ -104,6 +104,17 @@ const MI = [
   "/case-studies/slides/maia-14-insights.png",
   "/case-studies/slides/maia-15-design-system.png",
 ];
+// Portfolio Site — the distinct personal deck (Figma page "23 · Case Study
+// Decks", Personal Deck slides), not the enterprise-deck template the other
+// four columns use. Five slides, not fifteen: no client, so no market
+// research, flow architecture or outcomes-metrics sections to include.
+const PS = [
+  "/case-studies/slides/portfolio-00-cover.png",
+  "/case-studies/slides/portfolio-01-ideation.png",
+  "/case-studies/slides/portfolio-02-design-system.png",
+  "/case-studies/slides/portfolio-03-final-screens.png",
+  "/case-studies/slides/portfolio-04-reflection.png",
+];
 
 export const DEFAULT_PAGE_ELEMENTS = [
   // Column labels
@@ -111,6 +122,7 @@ export const DEFAULT_PAGE_ELEMENTS = [
   label("lbl-sb", "02  ·  STANDARD BANK",      col(1), "rgba(0,180,170,0.7)"),
   label("lbl-eh", "03  ·  FIND CARE EXPERIENCE", col(2), "rgba(124,106,247,0.7)"),
   label("lbl-mi", "04  ·  MAIA",               col(3), "rgba(255,140,66,0.7)"),
+  label("lbl-ps", "05  ·  PORTFOLIO SITE",     col(4), "rgba(227,190,69,0.7)"),
 
   // T-Cloud deck
   ...TC.map((src, i) => img(`tc-${i}`, src, col(0), row(i), i)),
@@ -120,4 +132,6 @@ export const DEFAULT_PAGE_ELEMENTS = [
   ...EH.map((src, i) => img(`eh-${i}`, src, col(2), row(i), i)),
   // MAIA deck
   ...MI.map((src, i) => img(`mi-${i}`, src, col(3), row(i), i)),
+  // Portfolio Site deck
+  ...PS.map((src, i) => img(`ps-${i}`, src, col(4), row(i), i)),
 ];

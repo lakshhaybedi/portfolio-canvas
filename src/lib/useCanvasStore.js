@@ -6,6 +6,7 @@ import { findCareFlowPage } from "./findCareFlowData";
 import { tCloudFlowPage } from "./tCloudFlowData";
 import { standardBankFlowPage } from "./standardBankFlowData";
 import { maiaFlowPage } from "./maiaFlowData";
+import { portfolioSiteFlowPage } from "./portfolioSiteFlowData";
 
 // Seed pages added after initial launch — each keyed by a fixed page id so
 // syncSeedPages (below) can add whichever ones a given visitor's persisted
@@ -15,7 +16,7 @@ import { maiaFlowPage } from "./maiaFlowData";
 // the latest data on every load — rather than only adding them once — is
 // the right call: a later addition to e.g. maiaFlowData.js should reach
 // visitors who already have that page, not just brand-new ones.
-const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage, maiaFlowPage];
+const SEED_PAGES = [findCareFlowPage, tCloudFlowPage, standardBankFlowPage, maiaFlowPage, portfolioSiteFlowPage];
 
 // Exported so the sidebar can group these apart from admin-editable pages
 // (e.g. the main "Portfolio" page) without guessing by id-naming convention.

@@ -42,7 +42,12 @@ const SCROLL_CUE_RING_OPACITY = 0.85;
 // now only means editing one file; this used to be two arrays that had to
 // be kept in sync by hand (and drifted the moment one was, e.g. a new
 // project or a reorder landed in one but not the other).
-const PROJECTS = CASE_STUDIES.map((c) => ({
+//
+// Filtered to `featured` so this list stays a curated handful rather than
+// growing with every new case study — a project with `featured: false`
+// still gets its own /work/[slug] page, it just surfaces on /other-work's
+// "More Case Studies" list instead of here.
+const PROJECTS = CASE_STUDIES.filter((c) => c.featured).map((c) => ({
   slug: c.slug,
   num: c.index,
   title: c.title,

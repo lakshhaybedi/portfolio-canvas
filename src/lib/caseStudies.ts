@@ -35,6 +35,12 @@ export type CaseStudy = {
   // different blue). Single source of truth: the homepage derives its
   // project list from this array instead of keeping its own copy.
   homeDesc: string;
+  // Gates the homepage "Selected Work" list, which is curated, not
+  // comprehensive — it stays at a handful of entries on purpose rather than
+  // growing with every new case study. A case study with `featured: false`
+  // still gets its own full /work/[slug] page and prev/next nav; it just
+  // surfaces instead in the "More Case Studies" list on /other-work.
+  featured: boolean;
   heroColor: string;
   accent: string;
   // `accent` as a solid fill (backgrounds, borders, dots) always has enough
@@ -113,6 +119,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2023–2024",
     tags: ["Enterprise B2B"],
     canvasPageId: "tcloud-flow",
+    featured: true,
     homeDesc: "Enterprise cloud infrastructure dashboard for T-Mobile's internal operations teams. Translates high-density monitoring data into a composable, role-specific interface across web and tablet, in dark and light mode.",
     heroColor: "#E10074",
     accent: "#E20074",
@@ -184,6 +191,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2023–2024",
     tags: ["Enterprise B2B"],
     canvasPageId: "maia-flow",
+    featured: true,
     homeDesc: "Self-service application-access onboarding for the MAIA platform T-Cloud itself is built on. An honest request-to-access flow, a skippable guided tour, and a dashboard that admits when there's nothing to show yet.",
     heroColor: "#E62689",
     accent: "#E91E8C",
@@ -258,6 +266,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2022–2023",
     tags: ["FinTech"],
     canvasPageId: "standard-bank-flow",
+    featured: true,
     homeDesc: "Cross-border mobile wallet flows for Standard Bank across Uganda, Ghana, Lesotho, and 4 other African markets. Operator-aware selection (MTN, Vodafone Cash, AirtelTigo) with fee transparency before commit.",
     // Requested #0033A9 measures 1.78:1 against the homepage row's hover
     // background (var(--bg-elevated)) — fails even the 3:1 large-text
@@ -347,6 +356,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     year: "2025–2026",
     tags: ["Healthcare"],
     canvasPageId: "find-care-flow",
+    featured: true,
     homeDesc: "Redesigned the Find Care experience for Anthem members: provider search, scheduling, rescheduling, cancellation, and Get Care Now, using progressive disclosure, contextual actions, and a unified care pathway.",
     heroColor: "#3D82FF",
     accent: "#7C6AF7",
@@ -425,7 +435,8 @@ export const CASE_STUDIES: CaseStudy[] = [
     company: "Personal",
     year: "2026",
     tags: ["Design Systems", "Interaction Design", "Front-End"],
-    canvasPageId: "default",
+    canvasPageId: "portfolio-site-flow",
+    featured: true,
     homeDesc:
       "The portfolio you're reading. Built code-first with an AI pair from a paper wireframe system, then documented backwards into a design system: 36 variables, 13 type styles, and a 64% lighter image payload.",
     heroColor: "#EDEAD4",
@@ -439,6 +450,18 @@ export const CASE_STUDIES: CaseStudy[] = [
     heroStack: [
       { src: "/case-studies/portfolio-site/06-canvas.png", label: "Interactive Canvas", caption: "" },
       { src: "/case-studies/portfolio-site/03-design-system.png", label: "Design System", caption: "" },
+    ],
+    // Full-page exports from the Figma deck built specifically for this
+    // project (page "23 · Case Study Decks"), kept deliberately distinct
+    // from the other four decks: Space Grotesk instead of Inter, the site's
+    // own near-black instead of the enterprise decks' #1e1e1e, gold instead
+    // of a client accent, and no metrics-grid closing slide — a reflection
+    // instead, since there's no client outcome to report.
+    slides: [
+      { src: "/case-studies/slides/portfolio-01-ideation.png",      label: "Ideation",        caption: "The brief, the constraint of no coding background, and the inversion from the generated starter's light identity to the shipped dark one." },
+      { src: "/case-studies/slides/portfolio-02-design-system.png", label: "Design System",   caption: "Colour swatches bound to live variables and real type-style specimens, not a picture of the system but the system itself." },
+      { src: "/case-studies/slides/portfolio-03-final-screens.png", label: "Final Screens",   caption: "Home, case study and canvas, rebuilt in Figma from the same tokens the shipped site reads." },
+      { src: "/case-studies/slides/portfolio-04-reflection.png",    label: "What I'd Tell Someone Else", caption: "Three decisions that needed a second look, and the reason none of the mistakes behind them threw an error." },
     ],
     screens: [
       { src: "/case-studies/portfolio-site/01-ideation.png",       label: "Ideation",       caption: "Framing the brief, four principles, and the light-to-dark inversion that generated the whole token set." },

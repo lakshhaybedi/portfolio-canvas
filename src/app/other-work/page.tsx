@@ -4,10 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { OTHER_PROJECTS, CATEGORY_LABELS, type OtherProjectCategory } from "@/lib/otherProjects";
+import { CASE_STUDIES } from "@/lib/caseStudies";
 import { revealVariant, viewportOnce } from "@/lib/motion";
 import Picture from "@/components/Picture";
 
 const CATEGORY_ORDER: OtherProjectCategory[] = ["branding", "ux", "experimental"];
+
+// Full case studies that exist but aren't in the homepage's curated
+// "Selected Work" handful. Same depth as the flagship four (a real
+// /work/[slug] page, decisions, outcomes) — just not surfaced on the
+// homepage. Empty today; this list only appears once one exists.
+const MORE_CASE_STUDIES = CASE_STUDIES.filter((c) => !c.featured);
 
 export default function OtherWorkPage() {
   const [lightboxSlug, setLightboxSlug] = useState<string | null>(null);
@@ -104,6 +111,62 @@ export default function OtherWorkPage() {
             and experimental pieces.
           </motion.p>
         </section>
+
+        {MORE_CASE_STUDIES.length > 0 && (
+          <section style={{ padding: "56px 48px", borderBottom: "1px solid var(--border)" }}>
+            <motion.div
+              initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+              style={{
+                fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "var(--muted)",
+                display: "flex", alignItems: "center", gap: 16, marginBottom: 32,
+              }}
+            >
+              More Case Studies
+              <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            </motion.div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 24,
+            }}>
+              {MORE_CASE_STUDIES.map((study, i) => (
+                <motion.div
+                  key={study.slug}
+                  initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link
+                    href={`/work/${study.slug}`}
+                    style={{ display: "block", textDecoration: "none", color: "inherit" }}
+                  >
+                    <div style={{
+                      position: "relative", aspectRatio: "4 / 3", borderRadius: 8,
+                      overflow: "hidden", background: "var(--bg-elevated)",
+                      border: "1px solid var(--border)", marginBottom: 12,
+                    }}>
+                      {study.heroImage && (
+                        <Picture
+                          src={study.heroImage}
+                          alt={study.title}
+                          loading="lazy"
+                          decoding="async"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700 }}>{study.title}</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)" }}>{study.year}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: "var(--muted-strong)" }}>{study.company}</span>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {CATEGORY_ORDER.map((cat) => {
           const projects = OTHER_PROJECTS.filter((p) => p.category === cat);
