@@ -314,6 +314,12 @@ function ArrowElement({ el }) {
   const ax = el.x1 - el.x, ay = el.y1 - el.y;
   const bx = el.x2 - el.x, by = el.y2 - el.y;
   const markId = `arr-${el.id}`;
+  // Multi-segment elbow connectors (a shared trunk fanning into several
+  // branches) chain several arrow elements end to end — only the final
+  // segment should carry an arrowhead, or every bend reads as its own
+  // "done" endpoint. Defaults to true so existing/user-drawn arrows are
+  // unaffected.
+  const showHead = el.showHead !== false;
 
   return (
     <svg
@@ -321,22 +327,24 @@ function ArrowElement({ el }) {
       height={el.h || 1}
       style={{ position: "absolute", top: 0, left: 0, overflow: "visible", pointerEvents: "none" }}
     >
-      <defs>
-        <marker
-          id={markId}
-          markerWidth="8" markerHeight="8"
-          refX="6" refY="3"
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <path d="M0,0 L0,6 L8,3 z" fill={strokeColor} />
-        </marker>
-      </defs>
+      {showHead && (
+        <defs>
+          <marker
+            id={markId}
+            markerWidth="8" markerHeight="8"
+            refX="6" refY="3"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L0,6 L8,3 z" fill={strokeColor} />
+          </marker>
+        </defs>
+      )}
       <line
         x1={ax} y1={ay} x2={bx} y2={by}
         stroke={strokeColor}
         strokeWidth={sw}
-        markerEnd={`url(#${markId})`}
+        markerEnd={showHead ? `url(#${markId})` : undefined}
         strokeLinecap="round"
       />
     </svg>

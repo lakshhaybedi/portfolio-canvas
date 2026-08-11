@@ -28,44 +28,47 @@ function arrow(id, x1, y1, x2, y2, stroke, z = 20) {
 
 const W = 380;
 const H = 270; // matches the deck slides' 1440:1024 aspect ratio
-const GAP = 60;
-const PITCH = W + GAP;
-const START_X = 60;
 const Y = 160;
 const CY = Y + H / 2;
-
-const x = (n) => START_X + n * PITCH;
+// Wide enough to hold a full-width caption (210px) with margin either side —
+// a narrower gap here was the same bug the other flow pages had: captions
+// like "Document the tokens" were wider than the space between slides, so
+// their text spilled into the next slide.
+const GAP = 220;
+const CAP_W = 210;
+const PITCH = W + GAP;
+const X = (n) => 60 + n * PITCH;
 
 export const PORTFOLIO_SITE_FLOW_ELEMENTS = [
   text("ps-title", "Portfolio Site: From Ideation to Ship", 60, 30, 1600, 44, 26, "#EDEAD4", 100),
   text("ps-subtitle", "The five slides from the personal deck, in the order the process actually ran: brief and inversion, tokens documented from the shipped product, the rebuilt final screens, and what I'd tell someone else doing this for the first time.", 60, 80, 1600, 28, 13, DIM, 100),
 
-  text("ps-lbl-0", "1. Cover", x(0), 130, W, 20, 12, DIM),
-  img("ps-cover", `${BASE}/portfolio-00-cover.png`, x(0), Y, W, H, 10),
+  text("ps-lbl-0", "1. Cover", X(0), 130, W, 20, 12, DIM),
+  img("ps-cover", `${BASE}/portfolio-00-cover.png`, X(0), Y, W, H, 10),
 
-  arrow("ps-arr-0", x(0) + W, CY, x(1), CY, ACCENT),
-  text("ps-lbl-arr-0", "Frame the brief", x(0) + W + 5, CY - 32, 200, 20, 11, DIM),
+  arrow("ps-arr-0", X(0) + W, CY, X(1), CY, ACCENT),
+  text("ps-lbl-arr-0", "Frame the brief", X(0) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("ps-lbl-1", "2. Ideation", x(1), 130, W, 20, 12, DIM),
-  img("ps-ideation", `${BASE}/portfolio-01-ideation.png`, x(1), Y, W, H, 10),
+  text("ps-lbl-1", "2. Ideation", X(1), 130, W, 20, 12, DIM),
+  img("ps-ideation", `${BASE}/portfolio-01-ideation.png`, X(1), Y, W, H, 10),
 
-  arrow("ps-arr-1", x(1) + W, CY, x(2), CY, ACCENT),
-  text("ps-lbl-arr-1", "Document the tokens", x(1) + W + 5, CY - 32, 200, 20, 11, DIM),
+  arrow("ps-arr-1", X(1) + W, CY, X(2), CY, ACCENT),
+  text("ps-lbl-arr-1", "Document the tokens", X(1) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("ps-lbl-2", "3. Design System", x(2), 130, W, 20, 12, DIM),
-  img("ps-design-system", `${BASE}/portfolio-02-design-system.png`, x(2), Y, W, H, 10),
+  text("ps-lbl-2", "3. Design System", X(2), 130, W, 20, 12, DIM),
+  img("ps-design-system", `${BASE}/portfolio-02-design-system.png`, X(2), Y, W, H, 10),
 
-  arrow("ps-arr-2", x(2) + W, CY, x(3), CY, ACCENT),
-  text("ps-lbl-arr-2", "Rebuild from tokens", x(2) + W + 5, CY - 32, 200, 20, 11, DIM),
+  arrow("ps-arr-2", X(2) + W, CY, X(3), CY, ACCENT),
+  text("ps-lbl-arr-2", "Rebuild from tokens", X(2) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("ps-lbl-3", "4. Final Screens", x(3), 130, W, 20, 12, DIM),
-  img("ps-final-screens", `${BASE}/portfolio-03-final-screens.png`, x(3), Y, W, H, 10),
+  text("ps-lbl-3", "4. Final Screens", X(3), 130, W, 20, 12, DIM),
+  img("ps-final-screens", `${BASE}/portfolio-03-final-screens.png`, X(3), Y, W, H, 10),
 
-  arrow("ps-arr-3", x(3) + W, CY, x(4), CY, ACCENT),
-  text("ps-lbl-arr-3", "Look back", x(3) + W + 5, CY - 32, 200, 20, 11, DIM),
+  arrow("ps-arr-3", X(3) + W, CY, X(4), CY, ACCENT),
+  text("ps-lbl-arr-3", "Look back", X(3) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("ps-lbl-4", "5. Reflection", x(4), 130, W, 20, 12, DIM),
-  img("ps-reflection", `${BASE}/portfolio-04-reflection.png`, x(4), Y, W, H, 10),
+  text("ps-lbl-4", "5. Reflection", X(4), 130, W, 20, 12, DIM),
+  img("ps-reflection", `${BASE}/portfolio-04-reflection.png`, X(4), Y, W, H, 10),
 ];
 
 export function portfolioSiteFlowPage() {

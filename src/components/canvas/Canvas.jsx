@@ -683,13 +683,14 @@ export default function Canvas({ pageId }) {
   }, [isAdmin, pageId, addElementStore]);
 
   const onFileChange = useCallback((e) => {
+    if (!isAdmin) { e.target.value = ""; return; }
     Array.from(e.target.files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => addElementStore(pageId, { type: "image", src: ev.target.result, x: 100 + Math.random() * 200, y: 100 + Math.random() * 100, w: 320, h: 220 });
       reader.readAsDataURL(file);
     });
     e.target.value = "";
-  }, [pageId, addElementStore]);
+  }, [isAdmin, pageId, addElementStore]);
 
   // Font controls only make sense for text — shown while the text tool is
   // active (styling whatever gets drawn next) or while a text element is
@@ -936,6 +937,7 @@ export default function Canvas({ pageId }) {
             onRedo={isAdmin ? redo : guestRedo}
             canUndo={isAdmin ? canUndo : guestHistory.length > 0}
             canRedo={isAdmin ? canRedo : guestFuture.length > 0}
+            onUploadClick={() => fileInputRef.current?.click()}
           />
         </div>
         {isAdmin && (

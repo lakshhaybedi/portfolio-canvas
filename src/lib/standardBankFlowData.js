@@ -27,31 +27,38 @@ const W = 200;
 const H = 480;
 const Y = 160;
 const CY = Y + H / 2;
+// Wide enough to hold a full-width caption (190px) with margin either side —
+// the original 80px gap was narrower than the caption text it held, so
+// captions like "Beneficiary selected" spilled into the next phone screen.
+const GAP = 220;
+const CAP_W = 190;
+const PITCH = W + GAP;
+const X = (n) => 60 + n * PITCH;
 
 export const STANDARD_BANK_FLOW_ELEMENTS = [
   text("sb-title", "Standard Bank: Cross-Border Payment Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
   text("sb-subtitle", "Real screens from the Standard Bank case study: sending a payment to a new beneficiary.", 60, 80, 1400, 28, 13, DIM, 100),
 
-  text("sb-lbl-1", "1. Add beneficiary", 60, 130, W, 20, 12, DIM),
-  img("sb-add-beneficiary", "/case-studies/standard-bank/13-save-beneficiary.png", 60, Y, W, H, 10),
+  text("sb-lbl-1", "1. Add beneficiary", X(0), 130, W, 20, 12, DIM),
+  img("sb-add-beneficiary", "/case-studies/standard-bank/13-save-beneficiary.png", X(0), Y, W, H, 10),
 
-  arrow("sb-arr-1", 260, CY, 340, CY, ACCENT),
-  text("sb-lbl-arr-1", "Beneficiary selected", 265, CY - 32, 190, 20, 11, DIM),
+  arrow("sb-arr-1", X(0) + W, CY, X(1), CY, ACCENT),
+  text("sb-lbl-arr-1", "Beneficiary selected", X(0) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("sb-lbl-2", "2. Payment details", 340, 130, W, 20, 12, DIM),
-  img("sb-payment-details", "/case-studies/standard-bank/06-payment-details.png", 340, Y, W, H, 10),
+  text("sb-lbl-2", "2. Payment details", X(1), 130, W, 20, 12, DIM),
+  img("sb-payment-details", "/case-studies/standard-bank/06-payment-details.png", X(1), Y, W, H, 10),
 
-  arrow("sb-arr-2", 540, CY, 620, CY, ACCENT),
-  text("sb-lbl-arr-2", "Confirm & pay", 545, CY - 32, 190, 20, 11, DIM),
+  arrow("sb-arr-2", X(1) + W, CY, X(2), CY, ACCENT),
+  text("sb-lbl-arr-2", "Confirm & pay", X(1) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("sb-lbl-3", "3. One-time PIN", 620, 130, W, 20, 12, DIM),
-  img("sb-otp", "/case-studies/standard-bank/10-otp-entry.png", 620, Y, W, H, 10),
+  text("sb-lbl-3", "3. One-time PIN", X(2), 130, W, 20, 12, DIM),
+  img("sb-otp", "/case-studies/standard-bank/10-otp-entry.png", X(2), Y, W, H, 10),
 
-  arrow("sb-arr-3", 820, CY, 900, CY, ACCENT),
-  text("sb-lbl-arr-3", "Payment confirmed", 825, CY - 32, 190, 20, 11, DIM),
+  arrow("sb-arr-3", X(2) + W, CY, X(3), CY, ACCENT),
+  text("sb-lbl-arr-3", "Payment confirmed", X(2) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("sb-lbl-4", "4. Beneficiary saved", 900, 130, W, 20, 12, DIM),
-  img("sb-saved", "/case-studies/standard-bank/14-beneficiary-saved.png", 900, Y, W, H, 10),
+  text("sb-lbl-4", "4. Beneficiary saved", X(3), 130, W, 20, 12, DIM),
+  img("sb-saved", "/case-studies/standard-bank/14-beneficiary-saved.png", X(3), Y, W, H, 10),
 ];
 
 export function standardBankFlowPage() {

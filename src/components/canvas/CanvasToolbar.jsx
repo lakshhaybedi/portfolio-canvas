@@ -39,6 +39,7 @@ export default function CanvasToolbar({
   hasSelection,
   isAdmin,
   onUndo, onRedo, canUndo, canRedo,
+  onUploadClick,
 }) {
   const [picker, setPicker]   = useState(null); // "fill" | "stroke" | "font" | null
   const [shapeMenuOpen, setShapeMenuOpen] = useState(false);
@@ -131,6 +132,33 @@ export default function CanvasToolbar({
       {STANDALONE_TOOLS.map((t) => (
         <ToolButton key={t.id} tool={t} active={activeTool === t.id} onClick={() => selectTool(t.id)} />
       ))}
+
+      {/* Image upload — admin only, same reasoning as the drop-to-upload
+          handler in Canvas.jsx (guest uploads would sit as unmanaged
+          multi-MB base64 strings). Not a draw-mode tool like the others —
+          clicking it opens the OS file picker immediately rather than
+          arming a click-to-place cursor, so it's excluded from ALL_TOOLS
+          and the keyboard-shortcut lookup above. */}
+      {isAdmin && (
+        <button
+          title="Upload image from desktop"
+          aria-label="Upload image from desktop"
+          onClick={onUploadClick}
+          style={{
+            width: SLOT, height: SLOT,
+            background: "transparent",
+            border: "none", borderRadius: 7,
+            color: "rgba(237,234,212,0.55)",
+            cursor: "pointer", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.12s, color 0.12s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+        >
+          <ImageIcon />
+        </button>
+      )}
 
       <ShapeToolGroup
         activeTool={activeTool}
@@ -547,6 +575,18 @@ function TextIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M2.5 3h9M7 3v8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+  );
+}
+// A picture frame with a small sun and a mountain peak — the standard
+// "image" glyph, in the same 14x14/currentColor/1.4-stroke language as the
+// rest of this toolbar's icons.
+function ImageIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="1.5" y="2.5" width="11" height="9" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      <circle cx="5" cy="5.5" r="1" fill="currentColor"/>
+      <path d="M2 10l3.2-3 2.3 2 2-2.3L12 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }

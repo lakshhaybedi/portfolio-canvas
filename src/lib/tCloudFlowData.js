@@ -27,31 +27,39 @@ const W = 400;
 const H = 252; // matches the case study's own 460:290 screen aspect ratio
 const Y = 160;
 const CY = Y + H / 2;
+// Gap between screens is wide enough to hold a caption at its full declared
+// width (210px) with a small margin on both sides — a narrower gap here was
+// the original bug: captions like "[+ Add Widget]" were wider than the
+// space between screens, so their text spilled into the next screen.
+const GAP = 220;
+const CAP_W = 210;
+const PITCH = W + GAP;
+const X = (n) => 60 + n * PITCH;
 
 export const TCLOUD_FLOW_ELEMENTS = [
   text("tc-title", "T-Cloud Dashboard: Widget Flow", 60, 30, 1400, 44, 26, "#EDEAD4", 100),
   text("tc-subtitle", "Real screens from the T-Cloud case study: an operator building their own view from an empty dashboard.", 60, 80, 1400, 28, 13, DIM, 100),
 
-  text("tc-lbl-1", "1. Empty state", 60, 130, W, 20, 12, DIM),
-  img("tc-empty", `${BASE}/4e2a76af-2f40-4473-b4f5-b137a8f67743/Dashboard_Screen_10.png`, 60, Y, W, H, 10),
+  text("tc-lbl-1", "1. Empty state", X(0), 130, W, 20, 12, DIM),
+  img("tc-empty", `${BASE}/4e2a76af-2f40-4473-b4f5-b137a8f67743/Dashboard_Screen_10.png`, X(0), Y, W, H, 10),
 
-  arrow("tc-arr-1", 460, CY, 520, CY, ACCENT),
-  text("tc-lbl-arr-1", "[+ Add Widget]", 465, CY - 32, 200, 20, 11, DIM),
+  arrow("tc-arr-1", X(0) + W, CY, X(1), CY, ACCENT),
+  text("tc-lbl-arr-1", "[+ Add Widget]", X(0) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("tc-lbl-2", "2. Widget catalog", 520, 130, W, 20, 12, DIM),
-  img("tc-widget", `${BASE}/6e422788-d364-4f5b-94ef-f5bf55d78f7c/Dashboard_Screen_16.png`, 520, Y, W, H, 10),
+  text("tc-lbl-2", "2. Widget catalog", X(1), 130, W, 20, 12, DIM),
+  img("tc-widget", `${BASE}/6e422788-d364-4f5b-94ef-f5bf55d78f7c/Dashboard_Screen_16.png`, X(1), Y, W, H, 10),
 
-  arrow("tc-arr-2", 920, CY, 980, CY, ACCENT),
-  text("tc-lbl-arr-2", "Widgets added", 925, CY - 32, 200, 20, 11, DIM),
+  arrow("tc-arr-2", X(1) + W, CY, X(2), CY, ACCENT),
+  text("tc-lbl-arr-2", "Widgets added", X(1) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("tc-lbl-3", "3. Populated dashboard", 980, 130, W, 20, 12, DIM),
-  img("tc-main", `${BASE}/59614753-9ba1-4fb1-9ada-f220b20e09ce/Dashboard_Screen_1.png`, 980, Y, W, H, 10),
+  text("tc-lbl-3", "3. Populated dashboard", X(2), 130, W, 20, 12, DIM),
+  img("tc-main", `${BASE}/59614753-9ba1-4fb1-9ada-f220b20e09ce/Dashboard_Screen_1.png`, X(2), Y, W, H, 10),
 
-  arrow("tc-arr-3", 1380, CY, 1440, CY, ACCENT),
-  text("tc-lbl-arr-3", "View asset details", 1385, CY - 32, 200, 20, 11, DIM),
+  arrow("tc-arr-3", X(2) + W, CY, X(3), CY, ACCENT),
+  text("tc-lbl-arr-3", "View asset details", X(2) + W + 5, CY - 32, CAP_W, 20, 11, DIM),
 
-  text("tc-lbl-4", "4. Asset drill-down", 1440, 130, W, 20, 12, DIM),
-  img("tc-asset", `${BASE}/657743f8-1d8d-4a23-b0a3-64e3533e511d/Security_360-Overview.png`, 1440, Y, W, H, 10),
+  text("tc-lbl-4", "4. Asset drill-down", X(3), 130, W, 20, 12, DIM),
+  img("tc-asset", `${BASE}/657743f8-1d8d-4a23-b0a3-64e3533e511d/Security_360-Overview.png`, X(3), Y, W, H, 10),
 ];
 
 export function tCloudFlowPage() {
