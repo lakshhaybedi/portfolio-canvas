@@ -7,6 +7,7 @@ import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { DOCUMENTS } from "@/lib/documents";
 import FolderAnimation from "./FolderAnimation";
 import FolderContents from "./FolderContents";
+import WormholeCard from "./WormholeCard";
 import { FOLDER_LABEL, SPRING_HOVER, type FolderPhase } from "./folderPalette";
 
 const WIDGET_WIDTH = 140;
@@ -261,6 +262,12 @@ export default function PortfolioFolder() {
           {isOpenish && <FolderContents onOpenDoc={handleOpenDoc} />}
         </AnimatePresence>
       </motion.div>
+
+      {/* Outside the folder's motion.div so it doesn't inherit the folder's
+          hover/tilt pose or its open-state turn. */}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
+        <WormholeCard />
+      </div>
     </div>
   );
 }
