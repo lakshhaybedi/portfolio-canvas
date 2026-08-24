@@ -2,251 +2,204 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import WinampPlayer from "@/components/me/WinampPlayer";
-import Guestbook from "@/components/me/Guestbook";
-import MemeWall from "@/components/me/MemeWall";
-import ZumaGame from "@/components/me/ZumaGame";
+import ExplorerWindow from "@/components/me/ExplorerWindow";
 
-// Deliberately outside the site's design system: this page is a Y2K/Aero
-// period piece, so it runs its own palette, its own fonts, and its own
-// chrome rather than the cream-on-near-black tokens everything else uses.
-const AERO_GLASS: React.CSSProperties = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.14) 48%, rgba(255,255,255,0.06) 52%, rgba(255,255,255,0.16) 100%)",
-  backdropFilter: "blur(18px) saturate(150%)",
-  WebkitBackdropFilter: "blur(18px) saturate(150%)",
-  border: "1px solid rgba(255,255,255,0.55)",
-  borderRadius: 10,
-  boxShadow: "0 18px 60px rgba(0,0,20,0.55), inset 0 1px 0 rgba(255,255,255,0.85)",
-};
+// A Windows 7 desktop, not the site's design system: this page is a period
+// piece, so it runs its own palette, fonts and chrome. Everything visible
+// here is CSS — the wallpaper is layered gradients rather than a bitmap, so
+// the page ships no extra image weight for a decorative background.
 
 export default function MePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      // Vista-era desktop: deep blue with aurora glows behind the glass.
+      position: "relative",
+      overflow: "hidden",
+      fontFamily: "'Segoe UI','Tahoma','Verdana',sans-serif",
+      // Bliss-style wallpaper, built from gradients rather than a bitmap so
+      // the page ships no image weight for decoration. Order matters: cloud
+      // puffs sit above the hill crest, which sits above the sky/grass ramp.
       background: `
-        radial-gradient(1100px 620px at 18% -10%, #4FB9F5 0%, transparent 60%),
-        radial-gradient(900px 540px at 88% 8%, #7B4FF5 0%, transparent 58%),
-        radial-gradient(760px 520px at 55% 108%, #00D6C2 0%, transparent 62%),
-        linear-gradient(175deg, #0B2B6B 0%, #071A45 55%, #04102B 100%)
+        radial-gradient(38% 13% at 16% 20%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0) 72%),
+        radial-gradient(26% 10% at 30% 15%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(30% 11% at 64% 12%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0) 72%),
+        radial-gradient(20% 8% at 78% 22%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 72%),
+        radial-gradient(24% 9% at 46% 30%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 74%),
+        radial-gradient(16% 7% at 88% 34%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 74%),
+        radial-gradient(120% 26% at 50% 63%, #A8D96B 0%, #7FC348 34%, rgba(127,195,72,0) 68%),
+        linear-gradient(180deg,
+          #2F7FC8 0%, #4E9EDC 14%, #7BC0EC 28%, #A9D8F2 40%, #D3EAF8 52%,
+          #8FC85C 58%, #6DB33C 70%, #52992C 84%, #3C7A20 100%)
       `,
-      fontFamily: "'Tahoma','Geneva','Verdana',sans-serif",
-      color: "#0A1A3A",
-      padding: "0 0 60px",
+      paddingBottom: 46,
     }}>
-      <TopMarquee />
+      <DesktopClock />
+      <Gadgets />
 
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "24px 20px 0" }}>
-        <AeroWindow title="Off The Clock — C:\\LAKSHHAY\\FUN.EXE">
-          <div style={{ padding: 20 }}>
-            <h1 style={{
-              margin: "0 0 6px",
-              fontSize: "clamp(30px,5vw,52px)",
-              fontFamily: "'Impact','Haettenschweiler','Arial Black',sans-serif",
-              letterSpacing: "0.02em",
-              textTransform: "uppercase",
-              // The chrome/gradient wordmark, the single most Y2K thing there is.
-              background: "linear-gradient(180deg,#FFFFFF 0%,#BFE6FF 38%,#1E6FD9 52%,#0B3C8C 70%,#7FD2FF 100%)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              WebkitTextStroke: "1px rgba(255,255,255,0.55)",
-              filter: "drop-shadow(0 3px 0 rgba(0,0,40,0.35))",
-            }}>
-              Off The Clock
-            </h1>
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#10336E", fontWeight: 700 }}>
-              welcome 2 my corner of the web!!{" "}
-              <Blink><span style={{ color: "#D40000" }}>★ NEW ★</span></Blink>
-            </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#2A4A80" }}>
-              no case studies here. just the stuff that plays while the rest of it gets built.
-            </p>
-          </div>
-        </AeroWindow>
-
-        <div className="me-grid">
-          <div style={{ display: "grid", gap: 20 }}>
-            <AeroWindow title="Winamp — it really whips the llama's ass">
-              <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
-                <WinampPlayer />
-              </div>
-            </AeroWindow>
-
-            <AeroWindow title="Guestbook.htm — sign it!">
-              <Guestbook />
-            </AeroWindow>
-
-            <AeroWindow title="Zuma.exe — match 3 or perish">
-              <ZumaGame />
-            </AeroWindow>
-
-            <AeroWindow title="Memes.dir">
-              <MemeWall />
-            </AeroWindow>
-          </div>
-
-          <div style={{ display: "grid", gap: 20 }}>
-            <AeroWindow title="Counter.cgi">
-              <div style={{ padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#10336E", marginBottom: 8 }}>
-                  YOU ARE VISITOR NUMBER
-                </div>
-                <VisitorCounter />
-                <div style={{ fontSize: 10, color: "#2A4A80", marginTop: 8 }}>
-                  thanks 4 stopping by :-)
-                </div>
-              </div>
-            </AeroWindow>
-
-            <AeroWindow title="Under Construction">
-              <div style={{ padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 30, marginBottom: 6 }}>🚧</div>
-                <Blink>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#B36B00" }}>
-                    ARCADE COMING SOON
-                  </div>
-                </Blink>
-                <div style={{ fontSize: 10, color: "#2A4A80", marginTop: 6 }}>
-                  check back l8r!!1!
-                </div>
-              </div>
-            </AeroWindow>
-
-            <AeroWindow title="Web Ring">
-              <div style={{ padding: 14, display: "grid", gap: 6 }}>
-                <Badge bg="#000080" fg="#00FF00">BEST VIEWED IN 1024×768</Badge>
-                <Badge bg="#FF00FF" fg="#FFFF00">MADE ON A MAC</Badge>
-                <Badge bg="#008080" fg="#00FFFF">NO AI WAS HARMED</Badge>
-                <Link href="/" style={{
-                  display: "block", textAlign: "center", marginTop: 4,
-                  fontSize: 11, color: "#0000EE", textDecoration: "underline", fontWeight: 700,
-                }}>
-                  ‹‹ back 2 the portfolio
-                </Link>
-              </div>
-            </AeroWindow>
-          </div>
-        </div>
-
-        <div style={{
-          textAlign: "center", marginTop: 28, fontSize: 10,
-          color: "rgba(255,255,255,0.55)", letterSpacing: "0.05em",
-        }}>
-          © 2026 LAKSHHAY BEDI · THIS PAGE IS BEST EXPERIENCED WITH THE SOUND ON
-        </div>
+      <div style={{ paddingTop: 96, paddingBottom: 40 }}>
+        <ExplorerWindow />
       </div>
+
+      <Taskbar />
     </div>
   );
 }
 
-function AeroWindow({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section style={AERO_GLASS}>
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        height: 32, padding: "0 8px 0 12px",
-        borderBottom: "1px solid rgba(255,255,255,0.35)",
-        background: "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.30) 100%)",
-        borderRadius: "9px 9px 0 0",
-      }}>
-        <span style={{
-          fontSize: 11, fontWeight: 700, color: "#0A2A5E",
-          textShadow: "0 1px 0 rgba(255,255,255,0.9)", whiteSpace: "nowrap",
-          overflow: "hidden", textOverflow: "ellipsis",
-        }}>
-          {title}
-        </span>
-        <div style={{ display: "flex", gap: 4 }} aria-hidden="true">
-          {[["–", "#7FB2E8"], ["□", "#7FB2E8"], ["✕", "#E86A6A"]].map(([g, c]) => (
-            <span key={g} style={{
-              width: 22, height: 18, borderRadius: 3,
-              background: `linear-gradient(180deg,#FFFFFF 0%,${c} 55%,${c} 100%)`,
-              border: "1px solid rgba(255,255,255,0.8)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9)",
-              fontSize: 9, lineHeight: "17px", textAlign: "center", color: "#0A2A5E",
-            }}>{g}</span>
-          ))}
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function TopMarquee() {
-  return (
-    <div style={{
-      overflow: "hidden", whiteSpace: "nowrap",
-      background: "linear-gradient(180deg,#000080 0%,#0000C8 100%)",
-      borderBottom: "2px solid #00FFFF", padding: "5px 0",
-    }}>
-      <div className="me-marquee-track" style={{
-        display: "inline-block", fontSize: 12, fontWeight: 700,
-        color: "#00FF00", letterSpacing: "0.08em",
-        animation: "me-marquee 22s linear infinite",
-      }}>
-        ★彡 WELCOME 2 OFF THE CLOCK 彡★ ✦ NOW PLAYING: KING GIZZARD &amp; THE LIZARD WIZARD ✦
-        ♫ TURN UR SPEAKERS UP ♫ ✦ SIGN MY GUESTBOOK ✦ 100% HAND-CODED HTML (kinda) ✦
-      </div>
-      <style>{`
-        @keyframes me-marquee { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
-        @keyframes me-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0.15; } }
-        .me-grid {
-          display: grid;
-          grid-template-columns: minmax(0,1fr) 280px;
-          gap: 20px;
-          margin-top: 20px;
-          align-items: start;
-        }
-        /* The player needs ~500px of column before the sidebar is worth
-           keeping alongside it — below that the two-column split is what
-           squeezes the Winamp window out of its frame. */
-        @media (max-width: 880px) {
-          .me-grid { grid-template-columns: minmax(0,1fr); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          [data-me-anim], .me-marquee-track { animation: none !important; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-function Blink({ children }: { children: React.ReactNode }) {
-  return <span data-me-anim style={{ animation: "me-blink 1.1s steps(1) infinite" }}>{children}</span>;
-}
-
-function Badge({ bg, fg, children }: { bg: string; fg: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: bg, color: fg, fontSize: 9, fontWeight: 700,
-      letterSpacing: "0.04em", textAlign: "center", padding: "5px 4px",
-      border: "1px solid #FFFFFF", boxShadow: "1px 1px 0 rgba(0,0,0,0.5)",
-    }}>
-      {children}
-    </div>
-  );
-}
-
-// Odometer that ticks up while you're on the page — the counter was always
-// theatre, so this one is honest about being theatre rather than pretending
-// to be a real hit count.
-function VisitorCounter() {
-  const [n, setN] = useState(1337);
+// The big translucent clock sitting over the wallpaper in the reference.
+function DesktopClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  // Rendered only after mount: the server has no idea what time it is in the
+  // visitor's zone, and prerendering one would hydrate into a mismatch.
   useEffect(() => {
-    const id = setInterval(() => setN((v) => v + 1), 4000);
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
   return (
-    <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
-      {String(n).padStart(6, "0").split("").map((d, i) => (
-        <span key={i} style={{
-          background: "#000", color: "#00FF00", fontFamily: "'Courier New',monospace",
-          fontSize: 18, fontWeight: 700, width: 16, textAlign: "center",
-          border: "1px solid #444", padding: "2px 0",
-        }}>{d}</span>
+    <div style={{
+      position: "absolute", top: 8, left: 0, right: 0, textAlign: "center",
+      color: "#FFFFFF", textShadow: "0 2px 6px rgba(0,40,80,0.45)", pointerEvents: "none",
+    }}>
+      <div style={{ fontSize: 34, fontWeight: 300, letterSpacing: "0.02em", lineHeight: 1.1 }}>
+        {now ? now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 400, opacity: 0.95 }}>
+        {now ? now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""}
+      </div>
+    </div>
+  );
+}
+
+// Sidebar gadgets, top-right, exactly as the reference stacks them.
+function Gadgets() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => { setNow(new Date()); }, []);
+
+  return (
+    <div style={{
+      position: "absolute", top: 62, right: 18, width: 92,
+      display: "grid", gap: 10, zIndex: 2,
+    }}>
+      <Gadget>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 16 }} aria-hidden="true">💽</span>
+          <div style={{ fontSize: 8.5, lineHeight: 1.35, color: "#F0F4FA" }}>
+            <div style={{ fontWeight: 700 }}>C:</div>
+            <div style={{ opacity: 0.85 }}>465 GB</div>
+            <div style={{ opacity: 0.85 }}>Free: 368 GB</div>
+          </div>
+        </div>
+      </Gadget>
+
+      <Gadget pad={0}>
+        <div style={{
+          height: 58,
+          background: "linear-gradient(180deg,#1E6FA8 0%,#0C3F66 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+        }} aria-hidden="true">
+          🐠
+        </div>
+      </Gadget>
+
+      <Gadget>
+        <div style={{ textAlign: "center", color: "#F0F4FA" }}>
+          <div style={{ fontSize: 8, opacity: 0.85 }}>
+            {now ? now.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase() : ""}
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 300, lineHeight: 1.1 }}>
+            {now ? now.getDate() : "--"}
+          </div>
+          <div style={{ fontSize: 8, opacity: 0.85 }}>
+            {now ? now.toLocaleDateString("en-GB", { month: "long", year: "numeric" }).toLowerCase() : ""}
+          </div>
+        </div>
+      </Gadget>
+
+      <Gadget>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#F0F4FA" }}>
+          <span style={{ fontSize: 18 }} aria-hidden="true">⛅</span>
+          <div style={{ fontSize: 8.5, lineHeight: 1.35 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>8°C</div>
+            <div style={{ opacity: 0.85 }}>Partly cloudy</div>
+          </div>
+        </div>
+      </Gadget>
+    </div>
+  );
+}
+
+function Gadget({ children, pad = 8 }: { children: React.ReactNode; pad?: number }) {
+  return (
+    <div style={{
+      background: "rgba(12,32,56,0.55)",
+      border: "1px solid rgba(255,255,255,0.35)",
+      borderRadius: 4,
+      boxShadow: "0 4px 14px rgba(0,20,40,0.35), inset 0 1px 0 rgba(255,255,255,0.28)",
+      backdropFilter: "blur(6px)",
+      padding: pad,
+      overflow: "hidden",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function Taskbar() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, height: 40, zIndex: 50,
+      display: "flex", alignItems: "center", gap: 4, padding: "0 6px",
+      background: "linear-gradient(180deg, rgba(40,58,80,0.92) 0%, rgba(14,26,44,0.95) 48%, rgba(8,16,30,0.96) 100%)",
+      borderTop: "1px solid rgba(150,190,240,0.5)",
+      boxShadow: "0 -2px 12px rgba(0,10,30,0.5)",
+      backdropFilter: "blur(8px)",
+    }}>
+      {/* Start orb — the one control that has to be right or the whole
+          taskbar stops reading as Windows. */}
+      <Link href="/" aria-label="Back to portfolio" style={{
+        width: 46, height: 32, borderRadius: 20,
+        background: "radial-gradient(circle at 38% 32%, #BFE6FF 0%, #4FA8E0 38%, #1E6FD9 62%, #0B3C8C 100%)",
+        border: "1px solid rgba(255,255,255,0.55)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8), 0 0 10px rgba(80,170,240,0.6)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#FFFFFF", fontSize: 11, fontWeight: 700, textDecoration: "none",
+      }}>
+        ⊞
+      </Link>
+
+      {[["🌐", "Browser"], ["📁", "Explorer"], ["🎵", "Winamp"]].map(([g, label]) => (
+        <span key={label} aria-label={label} style={{
+          width: 34, height: 30, borderRadius: 3,
+          background: "rgba(255,255,255,0.10)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14,
+        }}>
+          {g}
+        </span>
       ))}
+
+      <div style={{ flex: 1 }} />
+
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "0 10px",
+        color: "#E8F0FA", fontSize: 11, lineHeight: 1.25, textAlign: "right",
+      }}>
+        <span style={{ opacity: 0.8 }} aria-hidden="true">▲ 🔊 🛜</span>
+        <div>
+          <div>{now ? now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "--:--"}</div>
+          <div style={{ opacity: 0.85 }}>
+            {now ? now.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : ""}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
