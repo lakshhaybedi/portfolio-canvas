@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import WinampPlayer from "@/components/me/WinampPlayer";
 import Guestbook from "@/components/me/Guestbook";
 import MemeWall from "@/components/me/MemeWall";
+import ZumaGame from "@/components/me/ZumaGame";
 
 // Deliberately outside the site's design system: this page is a Y2K/Aero
 // period piece, so it runs its own palette, its own fonts, and its own
@@ -74,6 +75,10 @@ export default function MePage() {
 
             <AeroWindow title="Guestbook.htm — sign it!">
               <Guestbook />
+            </AeroWindow>
+
+            <AeroWindow title="Zuma.exe — match 3 or perish">
+              <ZumaGame />
             </AeroWindow>
 
             <AeroWindow title="Memes.dir">
