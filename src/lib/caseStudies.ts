@@ -438,13 +438,13 @@ export const CASE_STUDIES: CaseStudy[] = [
     canvasPageId: "portfolio-site-flow",
     featured: true,
     homeDesc:
-      "The portfolio you're reading. Built code-first with an AI pair from a paper wireframe system, then documented backwards into a design system: 36 variables, 13 type styles, and a 64% lighter image payload.",
+      "The portfolio you're reading. Built from a paper wireframe system, then documented backwards into a design system: 36 variables, 13 type styles, and a 64% lighter image payload.",
     heroColor: "#EDEAD4",
     accent: "#C9A227",
     accentText: "#E3BE45",
     badgeOnAccent: "#14140F",
     overview:
-      "A portfolio gets judged by the people it was built to impress, which makes it a uniquely unforgiving brief: every shortcut in it is a claim about how you work. It started from a wireframe system worked out on paper and a generated starter site that supplied a working shell and a light identity worth keeping none of. Everything after that was built by describing intent to an AI pair and reviewing what came back. That part is usually left out of a case study. It's in here because knowing what to ask for, and what to reject, turned out to be the entire job.",
+      "A portfolio gets judged by the people it was built to impress, which makes it a uniquely unforgiving brief: every shortcut in it is a claim about how you work. It started from a wireframe system worked out on paper and a generated starter site that supplied a working shell and a light identity worth keeping none of. Everything after that was built by describing intent and reviewing what came back. That part is usually left out of a case study. It's in here because knowing what to ask for, and what to reject, turned out to be the entire job.",
     heroImage: "/case-studies/portfolio-site/04-home.png",
     heroDevice: "desktop",
     heroStack: [
@@ -472,7 +472,7 @@ export const CASE_STUDIES: CaseStudy[] = [
       { src: "/case-studies/portfolio-site/06-canvas.png",         label: "Canvas",         caption: "A Figma-style infinite board built into the site: pannable, zoomable, with the case-study decks laid out spatially and a guest mode anyone can draw on." },
     ],
     scopeConstraints: [
-      { label: "No coding background", desc: "Every line written by an AI pair. My job was specification, review and rejection, which shaped the process more than any technical constraint did." },
+      { label: "No coding background", desc: "Every line came from specification, review and rejection, not hands-on code, which shaped the process more than any technical constraint did." },
       { label: "A starting point, not a blank page", desc: "The generated starter arrived with a light/cream identity and its own defaults. Inverting it was the first real decision, and it cascaded through every token in the system." },
       { label: "Static hosting, no backend", desc: "No server means no server-side secrets and no runtime image processing. Performance had to be solved at build time or not at all." },
       { label: "Real client work, handled carefully", desc: "T-Mobile, Standard Bank and Elevance screens are real product. Nothing could be invented, and nothing could be represented as something it wasn't." },
