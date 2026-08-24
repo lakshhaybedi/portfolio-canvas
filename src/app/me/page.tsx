@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import WinampPlayer from "@/components/me/WinampPlayer";
+import Guestbook from "@/components/me/Guestbook";
+import MemeWall from "@/components/me/MemeWall";
 
 // Deliberately outside the site's design system: this page is a Y2K/Aero
 // period piece, so it runs its own palette, its own fonts, and its own
@@ -63,14 +65,24 @@ export default function MePage() {
         </AeroWindow>
 
         <div className="me-grid">
-          <AeroWindow title="Winamp — it really whips the llama's ass">
-            <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
-              <WinampPlayer />
-            </div>
-          </AeroWindow>
+          <div style={{ display: "grid", gap: 20 }}>
+            <AeroWindow title="Winamp — it really whips the llama's ass">
+              <div style={{ padding: 20, display: "flex", justifyContent: "center" }}>
+                <WinampPlayer />
+              </div>
+            </AeroWindow>
+
+            <AeroWindow title="Guestbook.htm — sign it!">
+              <Guestbook />
+            </AeroWindow>
+
+            <AeroWindow title="Memes.dir">
+              <MemeWall />
+            </AeroWindow>
+          </div>
 
           <div style={{ display: "grid", gap: 20 }}>
-            <AeroWindow title="Guestbook.htm">
+            <AeroWindow title="Counter.cgi">
               <div style={{ padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#10336E", marginBottom: 8 }}>
                   YOU ARE VISITOR NUMBER
@@ -87,11 +99,11 @@ export default function MePage() {
                 <div style={{ fontSize: 30, marginBottom: 6 }}>🚧</div>
                 <Blink>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#B36B00" }}>
-                    GAMES + MEME BROWSER
+                    ARCADE COMING SOON
                   </div>
                 </Blink>
                 <div style={{ fontSize: 10, color: "#2A4A80", marginTop: 6 }}>
-                  coming soon!!1!
+                  check back l8r!!1!
                 </div>
               </div>
             </AeroWindow>
