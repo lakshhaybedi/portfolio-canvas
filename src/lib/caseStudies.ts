@@ -500,4 +500,78 @@ export const CASE_STUDIES: CaseStudy[] = [
       { num: "1 → 16", title: "Headings on the homepage", desc: "Every section title and project name had been a styled div, leaving screen-reader users no outline to navigate and search engines a flat wall of divs. Rendering is pixel-identical: the fix was semantic, not visual." },
     ],
   },
+
+  // ── 06 · Guest Relations Rounds ─────────────────────────────────────────
+  // No client deck for this one — screens are real captures of the app
+  // running seeded demo data (not production KV), taken the same day the
+  // sync backend shipped. Not featured: it gets a full /work/[slug] page
+  // and prev/next nav, surfaced instead in Other Work's "More Case Studies".
+  {
+    slug: "guest-relations-rounds",
+    index: "06",
+    title: "Guest Relations Rounds",
+    company: "Personal",
+    year: "2026",
+    tags: ["Full-Stack", "Systems Design", "PWA"],
+    canvasPageId: "guest-relations-rounds-flow",
+    featured: false,
+    homeDesc:
+      "A hotel guest-relations checklist that used to live on one phone at a time — ticks and comments vanished when the tab closed, and a second phone on the same shift saw none of it. Rebuilt with a small Cloudflare Workers KV backend so every device on the same link agrees, while staying fully usable the moment the network doesn't.",
+    heroColor: "#E2793D",
+    accent: "#E2793D",
+    // 6.63:1 on --bg and 6.11:1 on --bg-elevated as text — clears AA with
+    // real margin, so accentText is the accent itself, no lightening needed
+    // (same rule as Standard Bank's teal). White-on-fill fails badly though
+    // (2.98:1), so the badge uses near-black text, same as Portfolio Site's
+    // gold.
+    accentText: "#E2793D",
+    badgeOnAccent: "#14140F",
+    overview:
+      "A hotel guest-relations team ran their daily rounds off a 131-task, 11-section checklist that had already survived one rebuild, from a paper PDF into a single-file web app. That app worked, but only on one phone at a time: close the tab and the day's ticks and remarks were gone, and a second phone on the same shift saw an empty list, not the one a colleague had already worked through an hour earlier. The brief wasn't a redesign, it was to make the same app agree with itself across every phone reading the same link, on hotel wifi, without turning a staff tool into something that breaks the moment the network does. It was also built almost entirely through an AI coding agent: the merge strategy, the Cloudflare Functions, and a second automated test suite proving two browser contexts actually converge were all specified and reviewed rather than hand-written. That part usually stays out of a case study. It's in here because the live deploy is where an AI-built backend stops being a demo — an invalid API token, a macOS permission wall blocking git, a native binary built for the wrong CPU architecture. None of those are design problems, and all of them had to be diagnosed and fixed before any of this was actually live.",
+    heroImage: "/case-studies/guest-relations-rounds/01-checklist.png",
+    // The only PWA in the set besides this being genuinely phone-only —
+    // captures carry the real mobile viewport a shift worker actually uses,
+    // so a desktop browser frame would misrepresent the platform the same
+    // way it once did for Standard Bank.
+    heroDevice: "mobile",
+    heroStack: [
+      { src: "/case-studies/guest-relations-rounds/02-remarks.png", label: "Progress & Remarks", caption: "", portrait: true },
+      { src: "/case-studies/guest-relations-rounds/03-summary.png", label: "Daily Summary",        caption: "", portrait: true },
+    ],
+    screens: [
+      { src: "/case-studies/guest-relations-rounds/01-checklist.png",  label: "Today's Round",      caption: "Morning Opening section open, mid-shift: 14 of 19 tasks done, reset countdown and completion ring in the header.", portrait: true },
+      { src: "/case-studies/guest-relations-rounds/02-remarks.png",    label: "Remark Filed",        caption: "A remark logged against Morning Opening, with the other sections' progress badges visible collapsed below it.", portrait: true },
+      { src: "/case-studies/guest-relations-rounds/03-summary.png",   label: "Daily Summary",        caption: "Shift and staff name, plus the seven handover fields — visitors, requests, housekeeping and maintenance issues, supplies, pending items, notes for management.", portrait: true },
+      { src: "/case-studies/guest-relations-rounds/04-archive.png",   label: "30-Day Archive",       caption: "Past shift days with completion percentage and note counts, each on a countdown to its own 30-day purge.", portrait: true },
+      { src: "/case-studies/guest-relations-rounds/05-inprogress.png", label: "Later In The Shift",  caption: "A second section opened later on, Morning Opening's remark still attached and visible above it.", portrait: true },
+    ],
+    scopeConstraints: [
+      { label: "One shared link, no accounts", desc: "Everyone on a shift opens the same URL and sees the same checklist. Real per-user accounts would have added a login flow to a tool used with wet hands and a phone propped on a cart — the access gate deters casual entry, and the sync layer doesn't try to be more than that." },
+      { label: "Offline is the default state, not a fallback", desc: "The original single-device app worked with zero backend. Sync had to be strictly additive: every fetch degrades silently on failure, so a bad wifi patch means the checklist keeps working exactly as it did before sync existed, just without other phones' edits until the network comes back." },
+      { label: "No infrastructure to maintain", desc: "Cloudflare Pages Functions plus one KV namespace, chosen specifically because there's no server to patch, scale, or forget about, for a solo-maintained staff tool where 'someone keeps this running' was never going to be a real answer." },
+      { label: "Built and shipped through an AI coding agent", desc: "Every line of the sync engine, the two Cloudflare Functions, and the cross-device Playwright test came from specifying intent and reviewing the result. The same agent then created the KV namespace, set the secrets, and worked through a live deploy failure by failure until it actually shipped." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "Patch-Level Merge, Not Full-State Overwrite",
+        desc: "Two phones editing the same day at once ruled out “last full save wins” — one device's photo count would silently erase another's just-typed remark. The server merges per field instead: a tick, a remark, a summary line each write independently, so two people editing different parts of the same round within the same second never step on each other. One KV namespace and two small Functions handle this; Durable Objects would have added real-time guarantees this app, at hotel-shift scale, never needed.",
+      },
+      {
+        num: "2",
+        title: "A Pending Edit Always Beats A Stale Poll",
+        desc: "Every device polls the server every 20 seconds. Without a rule, a poll landing mid-typing would overwrite a keystroke with whatever the server last had. The fix: any field with an edit still queued to send wins over incoming server data for that same field, unconditionally, until the send confirms. It's the one rule the whole sync engine depends on, and the one thing every mutation site in the app had to be threaded through consistently.",
+      },
+      {
+        num: "3",
+        title: "Photos Stay On The Phone That Took Them",
+        desc: "Only a photo's id, timestamp and size sync, never the bytes. Uploading real images would mean object storage, a signed-upload endpoint, and a real answer for “whose photo is this” across devices, none of which the brief actually needed. What syncs is enough for every device to know a photo exists and when it was taken; opening it means being on the phone that took it — a deliberate boundary, not a missing feature.",
+      },
+    ],
+    outcomes: [
+      { num: "4/4", title: "Cross-device sync checks, proven not assumed", desc: "A second Playwright suite opens two separate browser contexts as a stand-in for two phones and checks that a tick and a remark made on one appear on the other, in both directions, plus that a day's data is visible server-side the way the archive depends on. All four checks pass against the real Functions + KV stack, not a mock." },
+      { num: "0 bytes", title: "Photo data ever leaves the device", desc: "Only id, timestamp and size sync for a photo. The image itself never crosses the network — verified by design rather than by omission, since there's no upload endpoint for it to reach." },
+      { num: "800ms → ~1s", title: "Edit to visible on another phone", desc: "An 800ms debounce on the writing device, then a network round trip to Cloudflare KV. The other phone sees it on its next 20-second poll, or immediately if it's mid-unlock, which triggers an out-of-cycle fetch." },
+    ],
+  },
 ];
