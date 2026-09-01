@@ -7,7 +7,8 @@ import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { DOCUMENTS } from "@/lib/documents";
 import FolderAnimation from "./FolderAnimation";
 import FolderContents from "./FolderContents";
-import WormholeCard from "./WormholeCard";
+// WormholeCard import removed with its render below — see the comment
+// at the bottom of this file for how to restore both.
 import { FOLDER_LABEL, SPRING_HOVER, type FolderPhase } from "./folderPalette";
 
 const WIDGET_WIDTH = 140;
@@ -263,11 +264,14 @@ export default function PortfolioFolder() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Outside the folder's motion.div so it doesn't inherit the folder's
-          hover/tilt pose or its open-state turn. */}
+      {/* WormholeCard (→ /me, "Off The Clock") is unplugged for now — that
+          page is offline while it's reworked. Component and route are both
+          still in the repo; re-add the block below to bring the entry point
+          back once it's ready.
       <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
         <WormholeCard />
       </div>
+      */}
     </div>
   );
 }
