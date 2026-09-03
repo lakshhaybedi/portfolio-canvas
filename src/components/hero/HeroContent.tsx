@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, useTransform, type MotionValue } from "framer-motion";
 import { revealVariant, easeOutExpo } from "@/lib/motion";
+import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
+import { ClipboardIcon, CopiedToast } from "@/components/CopyEmailBits";
 
 /**
  * The DOM overlay above the WebGL canvas: identity block (name/clock/
@@ -20,6 +22,7 @@ export default function HeroContent({
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
+  const { copy: copyEmail, copied: emailCopied } = useCopyToClipboard();
   const reveal = revealVariant(!!reduceMotion);
 
   const contentY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -140]);
@@ -148,13 +151,24 @@ export default function HeroContent({
                   pointerEvents: contactOpen ? "auto" : "none",
                 }}
               >
-                <a
-                  href="mailto:lakshhaybedi@gmail.com"
-                  tabIndex={contactOpen ? 0 : -1}
-                  style={{ color: "var(--fg)", textDecoration: "none", borderBottom: "1px solid var(--border-strong)" }}
-                >
-                  Email
-                </a>
+                <span style={{ position: "relative", display: "inline-flex" }}>
+                  <button
+                    type="button"
+                    tabIndex={contactOpen ? 0 : -1}
+                    onClick={() => copyEmail("lakshhaybedi@gmail.com")}
+                    aria-label="Copy email address lakshhaybedi@gmail.com"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      background: "none", border: "none", padding: 0, margin: 0,
+                      font: "inherit", color: "var(--fg)", textDecoration: "none",
+                      borderBottom: "1px solid var(--border-strong)", cursor: "pointer",
+                    }}
+                  >
+                    Email
+                    <ClipboardIcon size={11} copied={emailCopied} />
+                  </button>
+                  <CopiedToast show={emailCopied} />
+                </span>
                 <a
                   href="https://www.linkedin.com/in/lakshhaybedi/"
                   target="_blank"

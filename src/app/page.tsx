@@ -15,6 +15,8 @@ import { useHeroScrollProgress } from "@/components/hero/ScrollController";
 import HeroContent from "@/components/hero/HeroContent";
 import PortfolioFolder from "@/components/folder/PortfolioFolder";
 import WindowManager from "@/components/windows/WindowManager";
+import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
+import { ClipboardIcon, CopiedToast } from "@/components/CopyEmailBits";
 
 // Three.js/WebGL needs a real browser context — never render during
 // Next's static-export prerender.
@@ -79,6 +81,7 @@ export default function Portfolio() {
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [cursorLarge, setCursorLarge] = useState(false);
   const [scrollCueHovered, setScrollCueHovered] = useState(false);
+  const { copy: copyEmail, copied: emailCopied } = useCopyToClipboard();
 
   const reduceMotion = useReducedMotion();
   const isFinePointer = useHasFinePointer();
@@ -965,19 +968,27 @@ export default function Portfolio() {
               header. Bumping the email to --fg also lifts it clear of the
               4.5:1 contrast floor, which --muted at 0.6 alpha was under. */}
           <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "10px 28px" }}>
-            <motion.a
-              href="mailto:lakshhaybedi@gmail.com"
-              onMouseEnter={() => setLarge(true)}
-              onMouseLeave={() => setLarge(false)}
-              whileHover={{ borderColor: "var(--fg)" }}
-              style={{
-                fontSize: 20, fontWeight: 500, color: "var(--fg)",
-                letterSpacing: "-0.01em", textDecoration: "none",
-                borderBottom: "1px solid var(--border-strong)", paddingBottom: 3,
-              }}
-            >
-              lakshhaybedi@gmail.com
-            </motion.a>
+            <span style={{ position: "relative", display: "inline-flex" }}>
+              <motion.button
+                type="button"
+                onClick={() => copyEmail("lakshhaybedi@gmail.com")}
+                onMouseEnter={() => setLarge(true)}
+                onMouseLeave={() => setLarge(false)}
+                whileHover={{ borderColor: "var(--fg)" }}
+                aria-label="Copy email address lakshhaybedi@gmail.com"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 10,
+                  background: "none", border: "none", padding: 0, margin: 0,
+                  fontSize: 20, fontWeight: 500, color: "var(--fg)", font: "inherit",
+                  letterSpacing: "-0.01em", textDecoration: "none", cursor: "pointer",
+                  borderBottom: "1px solid var(--border-strong)", paddingBottom: 3,
+                }}
+              >
+                lakshhaybedi@gmail.com
+                <ClipboardIcon size={15} copied={emailCopied} />
+              </motion.button>
+              <CopiedToast show={emailCopied} />
+            </span>
             {[
               { label: "LinkedIn", href: "https://www.linkedin.com/in/lakshhaybedi/" },
               { label: "Behance", href: "https://www.behance.net/lakshhaybedi/" },
