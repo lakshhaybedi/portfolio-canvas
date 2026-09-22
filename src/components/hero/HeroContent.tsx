@@ -180,7 +180,7 @@ export default function HeroContent({
                 nested inside it, because that stack needs `overflow: hidden`
                 for the crossfade clip — a toast nested inside it would get
                 clipped the instant it tries to render above the pill. */}
-            <CopiedToast show={emailCopied} />
+            <CopiedToast show={emailCopied} align="right" />
           </div>
         </div>
       </motion.div>

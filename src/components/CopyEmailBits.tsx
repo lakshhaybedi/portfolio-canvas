@@ -19,8 +19,10 @@ export function ClipboardIcon({ size = 13, copied }: { size?: number; copied?: b
 }
 
 /** Small bubble anchored above the trigger — same pattern as this site's
- * other hover popovers, just click-triggered instead. */
-export function CopiedToast({ show }: { show: boolean }) {
+ * other hover popovers, just click-triggered instead. `align="right"` for
+ * triggers that sit near the right edge of the viewport (e.g. the hero
+ * pill) — centering there pushes the wider toast text off-screen. */
+export function CopiedToast({ show, align = "center" }: { show: boolean; align?: "center" | "right" }) {
   return (
     <AnimatePresence>
       {show && (
@@ -31,7 +33,8 @@ export function CopiedToast({ show }: { show: boolean }) {
           transition={{ duration: 0.16 }}
           role="status"
           style={{
-            position: "absolute", bottom: "calc(100% + 10px)", left: "50%", transform: "translateX(-50%)",
+            position: "absolute", bottom: "calc(100% + 10px)",
+            ...(align === "right" ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" }),
             whiteSpace: "nowrap", background: "var(--fg)", color: "var(--fg-invert)",
             fontSize: 11, fontWeight: 600, letterSpacing: "0.02em",
             padding: "6px 11px", borderRadius: 6, zIndex: 20, pointerEvents: "none",
