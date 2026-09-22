@@ -114,7 +114,6 @@ export default function HeroContent({
               display: "inline-flex", alignItems: "center", gap: 8,
               border: "1px solid var(--border)", padding: "6px 16px",
               fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-              overflow: "hidden",
               transition: reduceMotion ? "none" : "border-color 0.3s ease, background 0.3s ease",
               borderColor: contactOpen ? "var(--border-strong)" : "var(--border)",
               background: contactOpen ? "var(--bg-elevated)" : "transparent",
@@ -127,7 +126,7 @@ export default function HeroContent({
 
             {/* Both states occupy the same grid cell, so the badge keeps one
                 width and the swap doesn't shove the clock around. */}
-            <span style={{ display: "grid" }}>
+            <span style={{ display: "grid", overflow: "hidden" }}>
               <span
                 aria-hidden={contactOpen}
                 style={{
@@ -151,24 +150,21 @@ export default function HeroContent({
                   pointerEvents: contactOpen ? "auto" : "none",
                 }}
               >
-                <span style={{ position: "relative", display: "inline-flex" }}>
-                  <button
-                    type="button"
-                    tabIndex={contactOpen ? 0 : -1}
-                    onClick={() => copyEmail("lakshhaybedi@gmail.com")}
-                    aria-label="Copy email address lakshhaybedi@gmail.com"
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 6,
-                      background: "none", border: "none", padding: 0, margin: 0,
-                      font: "inherit", color: "var(--fg)", textDecoration: "none",
-                      borderBottom: "1px solid var(--border-strong)", cursor: "pointer",
-                    }}
-                  >
-                    Email
-                    <ClipboardIcon size={11} copied={emailCopied} />
-                  </button>
-                  <CopiedToast show={emailCopied} />
-                </span>
+                <button
+                  type="button"
+                  tabIndex={contactOpen ? 0 : -1}
+                  onClick={() => copyEmail("lakshhaybedi@gmail.com")}
+                  aria-label="Copy email address lakshhaybedi@gmail.com"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    background: "none", border: "none", padding: 0, margin: 0,
+                    font: "inherit", color: "var(--fg)", textDecoration: "none",
+                    borderBottom: "1px solid var(--border-strong)", cursor: "pointer",
+                  }}
+                >
+                  Email
+                  <ClipboardIcon size={11} copied={emailCopied} />
+                </button>
                 <a
                   href="https://www.linkedin.com/in/lakshhaybedi/"
                   target="_blank"
@@ -180,6 +176,11 @@ export default function HeroContent({
                 </a>
               </span>
             </span>
+            {/* Rendered here, a sibling of the grid stack above rather than
+                nested inside it, because that stack needs `overflow: hidden`
+                for the crossfade clip — a toast nested inside it would get
+                clipped the instant it tries to render above the pill. */}
+            <CopiedToast show={emailCopied} />
           </div>
         </div>
       </motion.div>
