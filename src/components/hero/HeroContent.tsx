@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useTransform, type MotionValue } from "framer-motion";
 import { revealVariant, easeOutExpo } from "@/lib/motion";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
@@ -22,11 +22,28 @@ export default function HeroContent({
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
+  // Intrinsic widths of the two pill states, so the pill can size to
+  // whichever is showing instead of always being as wide as the larger one.
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const linksRef = useRef<HTMLSpanElement>(null);
+  const [widths, setWidths] = useState<{ label: number; links: number } | null>(null);
   const { copy: copyEmail, copied: emailCopied } = useCopyToClipboard();
   const reveal = revealVariant(!!reduceMotion);
 
   const contentY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -140]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.75], [1, reduceMotion ? 1 : 0]);
+
+  useEffect(() => {
+    const measure = () => {
+      if (labelRef.current && linksRef.current) {
+        setWidths({ label: labelRef.current.offsetWidth, links: linksRef.current.offsetWidth });
+      }
+    };
+    measure();
+    document.fonts?.ready.then(measure);
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   useEffect(() => {
     const tick = () => {
@@ -126,11 +143,16 @@ export default function HeroContent({
 
             {/* Both states occupy the same grid cell, so the badge keeps one
                 width and the swap doesn't shove the clock around. */}
-            <span style={{ display: "grid", overflow: "hidden" }}>
+            <span style={{
+              display: "grid", overflow: "hidden", textAlign: "left",
+              width: widths ? (contactOpen ? widths.links : widths.label) : undefined,
+              transition: reduceMotion ? "none" : "width 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}>
               <span
+                ref={labelRef}
                 aria-hidden={contactOpen}
                 style={{
-                  gridArea: "1 / 1", whiteSpace: "nowrap",
+                  gridArea: "1 / 1", justifySelf: "start", whiteSpace: "nowrap", textAlign: "center",
                   opacity: contactOpen ? 0 : 1,
                   transform: contactOpen && !reduceMotion ? "translateY(-6px)" : "translateY(0)",
                   transition: reduceMotion ? "none" : "opacity 0.22s ease, transform 0.22s ease",
@@ -138,11 +160,13 @@ export default function HeroContent({
                 }}
               >
                 Available for work
+                <span style={{ display: "block", color: "var(--muted)", marginTop: 3, fontSize: 10 }}>Get in touch ↗</span>
               </span>
 
               <span
+                ref={linksRef}
                 style={{
-                  gridArea: "1 / 1", display: "inline-flex", alignItems: "center", gap: 14,
+                  gridArea: "1 / 1", justifySelf: "start", display: "inline-flex", alignItems: "center", gap: 14,
                   whiteSpace: "nowrap",
                   opacity: contactOpen ? 1 : 0,
                   transform: !contactOpen && !reduceMotion ? "translateY(6px)" : "translateY(0)",
