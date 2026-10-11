@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useTransform, type MotionValue } from "framer-motion";
 import { revealVariant, easeOutExpo } from "@/lib/motion";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
+import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { ClipboardIcon, CopiedToast } from "@/components/CopyEmailBits";
 
 /**
@@ -22,6 +23,8 @@ export default function HeroContent({
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [contactOpen, setContactOpen] = useState(false);
+  const isFinePointer = useHasFinePointer();
+  const pillRef = useRef<HTMLDivElement>(null);
   // Intrinsic widths of the two pill states, so the pill can size to
   // whichever is showing instead of always being as wide as the larger one.
   const labelRef = useRef<HTMLSpanElement>(null);
@@ -44,6 +47,16 @@ export default function HeroContent({
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
+
+  // Touch has no hover: tap the pill to open it, tap anywhere else to close.
+  useEffect(() => {
+    if (isFinePointer || !contactOpen) return;
+    const close = (e: PointerEvent) => {
+      if (!pillRef.current?.contains(e.target as Node)) setContactOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [isFinePointer, contactOpen]);
 
   useEffect(() => {
     const tick = () => {
@@ -120,8 +133,10 @@ export default function HeroContent({
               rendered rather than mounting on hover, so the links are
               always reachable by tab order. */}
           <div
-            onMouseEnter={() => setContactOpen(true)}
-            onMouseLeave={() => setContactOpen(false)}
+            ref={pillRef}
+            onMouseEnter={isFinePointer ? () => setContactOpen(true) : undefined}
+            onMouseLeave={isFinePointer ? () => setContactOpen(false) : undefined}
+            onClick={isFinePointer ? undefined : () => setContactOpen(true)}
             onFocus={() => setContactOpen(true)}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) setContactOpen(false);
