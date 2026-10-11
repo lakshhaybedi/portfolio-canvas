@@ -992,6 +992,7 @@ export default function Portfolio() {
             {[
               { label: "LinkedIn", href: "https://www.linkedin.com/in/lakshhaybedi/" },
               { label: "Behance", href: "https://www.behance.net/lakshhaybedi/" },
+              { label: "GitHub", href: "https://github.com/lakshhaybedi" },
             ].map((link) => (
               <motion.a
                 key={link.label}

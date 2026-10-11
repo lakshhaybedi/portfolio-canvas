@@ -174,6 +174,15 @@ export default function HeroContent({
                 >
                   LinkedIn ↗
                 </a>
+                <a
+                  href="https://github.com/lakshhaybedi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  tabIndex={contactOpen ? 0 : -1}
+                  style={{ color: "var(--fg)", textDecoration: "none", borderBottom: "1px solid var(--border-strong)" }}
+                >
+                  GitHub ↗
+                </a>
               </span>
             </span>
             {/* Rendered here, a sibling of the grid stack above rather than

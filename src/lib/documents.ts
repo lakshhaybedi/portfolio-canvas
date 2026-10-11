@@ -30,13 +30,13 @@ export const DOCUMENTS: PortfolioDocument[] = [
     name: "Resume.pdf",
     // Default variant — English, dark, matching the site's own theme.
     fileUrl: "/documents/resume-en-dark.pdf",
-    sizeLabel: "96 KB",
-    updatedLabel: "Aug 2026",
+    sizeLabel: "104 KB",
+    updatedLabel: "Oct 2026",
     variants: [
-      { id: "en-dark", lang: "EN", theme: "Dark", fileUrl: "/documents/resume-en-dark.pdf", sizeLabel: "96 KB" },
-      { id: "en-light", lang: "EN", theme: "Light", fileUrl: "/documents/resume-en-light.pdf", sizeLabel: "96 KB" },
-      { id: "de-dark", lang: "DE", theme: "Dark", fileUrl: "/documents/resume-de-dark.pdf", sizeLabel: "338 KB" },
-      { id: "de-light", lang: "DE", theme: "Light", fileUrl: "/documents/resume-de-light.pdf", sizeLabel: "338 KB" },
+      { id: "en-dark", lang: "EN", theme: "Dark", fileUrl: "/documents/resume-en-dark.pdf", sizeLabel: "104 KB" },
+      { id: "en-light", lang: "EN", theme: "Light", fileUrl: "/documents/resume-en-light.pdf", sizeLabel: "104 KB" },
+      { id: "de-dark", lang: "DE", theme: "Dark", fileUrl: "/documents/resume-de-dark.pdf", sizeLabel: "346 KB" },
+      { id: "de-light", lang: "DE", theme: "Light", fileUrl: "/documents/resume-de-light.pdf", sizeLabel: "346 KB" },
     ],
   },
   {
