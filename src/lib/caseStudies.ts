@@ -16,6 +16,8 @@ export type ScopeItem = {
   desc: string;
 };
 
+export type CaseStudyLink = { label: string; href: string };
+
 export type CaseStudy = {
   slug: string;
   index: string;
@@ -41,6 +43,14 @@ export type CaseStudy = {
   // still gets its own full /work/[slug] page and prev/next nav; it just
   // surfaces instead in the "More Case Studies" list on /other-work.
   featured: boolean;
+  // "software" entries are shipped apps rather than client engagements: they
+  // get the same /work/[slug] page, but surface in the homepage's Software
+  // section instead of Selected Work / More Case Studies.
+  kind?: "software";
+  // GitHub / download buttons shown under the page title.
+  links?: CaseStudyLink[];
+  // Overrides the default "My Role" line on the page's at-a-glance strip.
+  role?: string;
   heroColor: string;
   accent: string;
   // `accent` as a solid fill (backgrounds, borders, dots) always has enough
@@ -501,77 +511,281 @@ export const CASE_STUDIES: CaseStudy[] = [
     ],
   },
 
-  // ── 06 · Guest Relations Rounds ─────────────────────────────────────────
-  // No client deck for this one — screens are real captures of the app
-  // running seeded demo data (not production KV), taken the same day the
-  // sync backend shipped. Not featured: it gets a full /work/[slug] page
-  // and prev/next nav, surfaced instead in Other Work's "More Case Studies".
+  // ── 06 · InSpin Survey Analysis ────────────────────────────────────────
+  // A design task, not a shipped product: the data is 2,000 synthetic rows
+  // generated to match the brief's question types, and the research is
+  // desk research only. The copy says so rather than implying real users.
+  // Screens are frame exports from the Figma file's Final Screens page.
   {
-    slug: "guest-relations-rounds",
+    slug: "inspin-survey-analysis",
     index: "06",
-    title: "Guest Relations Rounds",
-    company: "Personal",
+    title: "InSpin Survey Analysis",
+    company: "HeyMarvin design task",
     year: "2026",
-    tags: ["Full-Stack", "Systems Design", "PWA"],
-    canvasPageId: "guest-relations-rounds-flow",
-    featured: false,
+    tags: ["UX Research", "Data Visualisation", "AI UX"],
+    canvasPageId: "inspin-flow",
+    featured: true,
+    role: "End-to-end: research, information architecture, high-fidelity UI, accessibility.",
     homeDesc:
-      "A hotel guest-relations checklist that used to live on one phone at a time — ticks and comments vanished when the tab closed, and a second phone on the same shift saw none of it. Rebuilt with a small Cloudflare Workers KV backend so every device on the same link agrees, while staying fully usable the moment the network doesn't.",
-    heroColor: "#E2793D",
-    accent: "#E2793D",
-    // 6.63:1 on --bg and 6.11:1 on --bg-elevated as text — clears AA with
-    // real margin, so accentText is the accent itself, no lightening needed
-    // (same rule as Standard Bank's teal). White-on-fill fails badly though
-    // (2.98:1), so the badge uses near-black text, same as Portfolio Site's
-    // gold.
-    accentText: "#E2793D",
-    badgeOnAccent: "#14140F",
+      "2,000 survey answers, and the person opening them isn't an analyst. An overview-first analysis tool where every AI answer can be checked, and every design decision traces back to published research.",
+    heroColor: "#8B8FF7",
+    accent: "#4F46E5",
+    accentText: "#A5A8FF",
+    badgeOnAccent: "#0E0E22",
     overview:
-      "A hotel guest-relations team ran their daily rounds off a 131-task, 11-section checklist that had already survived one rebuild, from a paper PDF into a single-file web app. That app worked, but only on one phone at a time: close the tab and the day's ticks and remarks were gone, and a second phone on the same shift saw an empty list, not the one a colleague had already worked through an hour earlier. The brief wasn't a redesign, it was to make the same app agree with itself across every phone reading the same link, on hotel wifi, without turning a staff tool into something that breaks the moment the network does. It was also built almost entirely through an AI coding agent: the merge strategy, the Cloudflare Functions, and a second automated test suite proving two browser contexts actually converge were all specified and reviewed rather than hand-written. That part usually stays out of a case study. It's in here because the live deploy is where an AI-built backend stops being a demo — an invalid API token, a macOS permission wall blocking git, a native binary built for the wrong CPU architecture. None of those are design problems, and all of them had to be diagnosed and fixed before any of this was actually live.",
-    heroImage: "/case-studies/guest-relations-rounds/01-checklist.png",
-    // The only PWA in the set besides this being genuinely phone-only —
-    // captures carry the real mobile viewport a shift worker actually uses,
-    // so a desktop browser frame would misrepresent the platform the same
-    // way it once did for Standard Bank.
-    heroDevice: "mobile",
+      "InSpin had 2,000 answers from its workers and an Excel file nobody wanted to open. The task was a tool for the person who has to decide what to fix and who to call back, someone in ops or research who is comfortable with numbers but isn't a data analyst. I designed it overview-first, with AI that shows its working, and wrote down why every major decision was made. There are no real users yet: the data is synthetic, and the document marks which decisions still need testing.",
+    heroImage: "/case-studies/inspin/01-overview.png",
+    heroDevice: "desktop",
     heroStack: [
-      { src: "/case-studies/guest-relations-rounds/02-remarks.png", label: "Progress & Remarks", caption: "", portrait: true },
-      { src: "/case-studies/guest-relations-rounds/03-summary.png", label: "Daily Summary",        caption: "", portrait: true },
+      { src: "/case-studies/inspin/03-open-text-themes.png", label: "Open-text themes", caption: "" },
+      { src: "/case-studies/inspin/05-compare-heatmap.png", label: "Compare groups", caption: "" },
     ],
     screens: [
-      { src: "/case-studies/guest-relations-rounds/01-checklist.png",  label: "Today's Round",      caption: "Morning Opening section open, mid-shift: 14 of 19 tasks done, reset countdown and completion ring in the header.", portrait: true },
-      { src: "/case-studies/guest-relations-rounds/02-remarks.png",    label: "Remark Filed",        caption: "A remark logged against Morning Opening, with the other sections' progress badges visible collapsed below it.", portrait: true },
-      { src: "/case-studies/guest-relations-rounds/03-summary.png",   label: "Daily Summary",        caption: "Shift and staff name, plus the seven handover fields — visitors, requests, housekeeping and maintenance issues, supplies, pending items, notes for management.", portrait: true },
-      { src: "/case-studies/guest-relations-rounds/04-archive.png",   label: "30-Day Archive",       caption: "Past shift days with completion percentage and note counts, each on a countdown to its own 30-day purge.", portrait: true },
-      { src: "/case-studies/guest-relations-rounds/05-inprogress.png", label: "Later In The Shift",  caption: "A second section opened later on, Morning Opening's remark still attached and visible above it.", portrait: true },
+      { src: "/case-studies/inspin/01-overview.png",          label: "Overview",          caption: "The landing page: four numbers and two short lists. NPS is −25, so the first question answers itself. 403 unhappy people asked to be called, and one flag the tool raised unprompted." },
+      { src: "/case-studies/inspin/02-privacy-setup.png",     label: "Privacy Setup",     caption: "Before any numbers, the tool asks what respondents were promised. Anonymous is the default: small groups stay hidden, and a person's answers open only if they said yes to a follow-up." },
+      { src: "/case-studies/inspin/03-open-text-themes.png",  label: "Open-Text Themes", caption: "The one question where AI earns its place. Answers are grouped into themes, but the quotes underneath are the respondents' own words, each linking to their full record." },
+      { src: "/case-studies/inspin/04-nps.png",               label: "NPS As A Split",    caption: "The score always shows the promoters and detractors pulling against each other, and the same question compared by tenure." },
+      { src: "/case-studies/inspin/05-compare-heatmap.png",   label: "Compare Groups",    caption: "A heatmap with a number in every cell and a legend, themes sorted by share so the pattern shows. Pay delays hit San Francisco at 27% against 23% overall." },
+      { src: "/case-studies/inspin/06-small-group.png",       label: "Small Group Warning", caption: "Narrow a segment to 26 people and the screen says the numbers are a hint. Narrow it to 2 and it shows nothing, and says which filter to remove." },
+      { src: "/case-studies/inspin/07-participants.png",      label: "Participants",      caption: "The 403 detractors who said yes to a call. Contact details are one more click, and that click is logged." },
+      { src: "/case-studies/inspin/08-ask-ai-view.png",       label: "Open This View",    caption: "Ask AI ends with the exact group it used. One click applies that segment to the real screens, so checking an answer costs a click, not a footnote." },
+      { src: "/case-studies/inspin/09-share-panel.png",       label: "Share",             caption: "The bonus flow. One field for people, pods and outside guests, with a role on every recipient and an External tag on guests." },
+      { src: "/case-studies/inspin/10-sharing-people.png",    label: "People And Seats",  caption: "Past the Share button: who has access and how, pods you can manage, guest access that expires." },
     ],
     scopeConstraints: [
-      { label: "One shared link, no accounts", desc: "Everyone on a shift opens the same URL and sees the same checklist. Real per-user accounts would have added a login flow to a tool used with wet hands and a phone propped on a cart — the access gate deters casual entry, and the sync layer doesn't try to be more than that." },
-      { label: "Offline is the default state, not a fallback", desc: "The original single-device app worked with zero backend. Sync had to be strictly additive: every fetch degrades silently on failure, so a bad wifi patch means the checklist keeps working exactly as it did before sync existed, just without other phones' edits until the network comes back." },
-      { label: "No infrastructure to maintain", desc: "Cloudflare Pages Functions plus one KV namespace, chosen specifically because there's no server to patch, scale, or forget about, for a solo-maintained staff tool where 'someone keeps this running' was never going to be a real answer." },
-      { label: "Built and shipped through an AI coding agent", desc: "Every line of the sync engine, the two Cloudflare Functions, and the cross-device Playwright test came from specifying intent and reviewing the result. The same agent then created the KV namespace, set the secrets, and worked through a live deploy failure by failure until it actually shipped." },
+      { label: "No real users, synthetic data", desc: "The 2,000 rows are generated to match InSpin's question types, so the patterns are plausible, not proven. Wherever a decision depends on how real analysts behave, the document flags it as something to test." },
+      { label: "Desk research only", desc: "Published work on how people read charts, NN/g, Google and Microsoft guidance on dashboards and AI, the WCAG 2.2 spec, and the public help docs of five tools that already do this job." },
+      { label: "The user isn't a data analyst", desc: "They work in ops, workforce or research. They're comfortable with numbers, and they've probably opened the Excel file once and closed it again. The tool has to be readable without training." },
+      { label: "A promise the tool has to ask about", desc: "Whether workers were promised anonymity isn't in the brief, so setup asks. Anonymous is the default: groups under 5 stay hidden everywhere, and answers open only for people who said yes to a follow-up. An original version with no privacy setting is kept in case InSpin never promised it." },
     ],
     decisions: [
       {
         num: "1",
-        title: "Patch-Level Merge, Not Full-State Overwrite",
-        desc: "Two phones editing the same day at once ruled out “last full save wins” — one device's photo count would silently erase another's just-typed remark. The server merges per field instead: a tick, a remark, a summary line each write independently, so two people editing different parts of the same round within the same second never step on each other. One KV namespace and two small Functions handle this; Durable Objects would have added real-time guarantees this app, at hotel-shift scale, never needed.",
+        title: "Overview First, Then Zoom, Then Details",
+        desc: "Shneiderman's 1996 rule is the whole information architecture: an Overview, segments to zoom and filter, then the respondent record on demand. The Overview shows four numbers and two lists, and everything else is one click away. Categorical questions are sorted horizontal bars, because people read length more accurately than angle, so the donut chart was dropped.",
       },
       {
         num: "2",
-        title: "A Pending Edit Always Beats A Stale Poll",
-        desc: "Every device polls the server every 20 seconds. Without a rule, a poll landing mid-typing would overwrite a keystroke with whatever the server last had. The fix: any field with an edit still queued to send wins over incoming server data for that same field, unconditionally, until the send confirms. It's the one rule the whole sync engine depends on, and the one thing every mutation site in the app had to be threaded through consistently.",
+        title: "AI That Can Be Checked, Not Just Cited",
+        desc: "Theme cards show a short AI summary labelled as one, then real quotes word for word. Each theme list ends with a coverage line, like “96% of answers fit a theme. Read the other 4%.” NN/g found participants never clicked AI citations, so every Ask AI answer ends with a plain “based on” line and an Open this view button that lands on the same charts you'd trust anyway.",
       },
       {
         num: "3",
-        title: "Photos Stay On The Phone That Took Them",
-        desc: "Only a photo's id, timestamp and size sync, never the bytes. Uploading real images would mean object storage, a signed-upload endpoint, and a real answer for “whose photo is this” across devices, none of which the brief actually needed. What syncs is enough for every device to know a photo exists and when it was taken; opening it means being on the phone that took it — a deliberate boundary, not a missing feature.",
+        title: "Segments Apply Instantly And Stay Visible",
+        desc: "Someone exploring survey results shouldn't press Apply. Picking a segment updates every chart at once, the applied filters stay on screen as chips, and a live count reads “Showing 248 of 2,000.” Below about 30 people the screen warns that percentages are unstable, and an empty result tells you which segment to remove.",
       },
     ],
     outcomes: [
-      { num: "4/4", title: "Cross-device sync checks, proven not assumed", desc: "A second Playwright suite opens two separate browser contexts as a stand-in for two phones and checks that a tick and a remark made on one appear on the other, in both directions, plus that a day's data is visible server-side the way the archive depends on. All four checks pass against the real Functions + KV stack, not a mock." },
-      { num: "0 bytes", title: "Photo data ever leaves the device", desc: "Only id, timestamp and size sync for a photo. The image itself never crosses the network — verified by design rather than by omission, since there's no upload endpoint for it to reach." },
-      { num: "800ms → ~1s", title: "Edit to visible on another phone", desc: "An 800ms debounce on the writing device, then a network round trip to Cloudflare KV. The other phone sees it on its next 20-second poll, or immediately if it's mid-unlock, which triggers an out-of-cycle fetch." },
+      { num: "14", title: "Decisions traced to evidence", desc: "Each row of the evidence-to-decision table pairs a published source with the specific thing it changed in the design." },
+      { num: "5", title: "Tools compared", desc: "Dovetail, Qualtrics Text iQ, SurveyMonkey, Typeform Smart Insights and Marvin, each with what was borrowed and what was deliberately done differently." },
+      { num: "AA", title: "WCAG 2.2 target, one miss caught", desc: "Writing up the contrast checks found that segment chips and secondary buttons used a 1.75:1 border. They moved to the darker control border. A user-test plan for the next round is in the document." },
+    ],
+  },
+
+  // ── Software · NetMeter ─────────────────────────────────────────────────
+  // Screenshots are the app's own demo-data captures (`NetMeter --demo`),
+  // not real usage. Figures come from the project README.
+  {
+    slug: "netmeter",
+    role: "Design, development and release, end to end.",
+    index: "S1",
+    kind: "software",
+    title: "NetMeter",
+    company: "Personal",
+    year: "2026",
+    tags: ["macOS", "Menu Bar App", "Utility"],
+    canvasPageId: "netmeter-flow",
+    featured: false,
+    links: [
+      { label: "View on GitHub", href: "https://github.com/lakshhaybedi/NetMeter" },
+      { label: "Download", href: "https://github.com/lakshhaybedi/NetMeter/releases/latest" },
+    ],
+    homeDesc:
+      "A menu bar app that shows what your Mac is using: live speed, usage per network against its own limit, which apps spent it, and day-by-day history. Nothing leaves the machine.",
+    heroColor: "#6AA7F5",
+    accent: "#3B82F6",
+    accentText: "#7DB5FF",
+    badgeOnAccent: "#0B1220",
+    overview:
+      "A home connection and a phone hotspot don't bill the same way, and macOS shows you neither. NetMeter sits in the menu bar and counts what each network has used against its own monthly limit, resetting on that network's own billing day, then shows which apps spent it. Everything stays on the Mac: the app makes no network connections of its own.",
+    heroImage: "/case-studies/netmeter/01-overview-dark.png",
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/case-studies/netmeter/03-history.png", label: "History", caption: "" },
+      { src: "/case-studies/netmeter/06-overview-light.png", label: "Overview, light", caption: "" },
+    ],
+    screens: [
+      { src: "/case-studies/netmeter/01-overview-dark.png",      label: "Overview",         caption: "This month at a glance: usage per network against its limit, the busiest apps, and a day-by-day chart." },
+      { src: "/case-studies/netmeter/02-menubar-panel.png",      label: "Menu Bar Panel",   caption: "The everyday view. Live speed, each network with its own limit and reset day, and the apps being tracked.", portrait: true },
+      { src: "/case-studies/netmeter/03-history.png",            label: "History",          caption: "A sortable day-by-day table. Each day opens into the apps and networks behind it, with CSV export." },
+      { src: "/case-studies/netmeter/04-network-editor.png",     label: "Network Editor",   caption: "Right-click a network to set its monthly limit and the day its billing cycle resets, or sync it to your ISP's own figure.", portrait: true },
+      { src: "/case-studies/netmeter/05-menubar-settings.png",   label: "Menu Bar Settings", caption: "The menu bar item is the product, so it is configurable: icon and/or text, number size, two-line stacking, any order.", portrait: true },
+      { src: "/case-studies/netmeter/06-overview-light.png",     label: "Light Mode",       caption: "Same layout in light appearance. All screenshots use synthetic demo data." },
+    ],
+    scopeConstraints: [
+      { label: "One limit per network, not one number", desc: "Billing cycles differ per connection: a home line that resets on the 1st and a hotspot that resets on the 9th. A single global counter would have been wrong for anyone with both." },
+      { label: "No sandbox, no App Store", desc: "Per-app traffic comes from /usr/bin/nettop, which a sandboxed app can't run. That rules out the Mac App Store, so NetMeter ships as a direct download." },
+      { label: "Wi-Fi names need Location access", desc: "macOS only reveals the network name to apps with Location permission. Without it the app still counts everything but can't tell networks apart, so the welcome flow has to explain the ask." },
+      { label: "Unsigned until there's a Developer ID", desc: "Releases are ad-hoc signed and not notarized, so first launch needs a Control-click Open. The README says so before the download link, not after." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "Exact Totals, Estimated Attribution",
+        desc: "Network totals come straight from interface byte counters every 2 seconds, so they are exact. The per-app view is a nettop snapshot every 5 seconds, reconciled to those totals. Which app a closing connection's last seconds belong to is estimated, and the documentation says so plainly instead of implying precision it doesn't have.",
+      },
+      {
+        num: "2",
+        title: "Internet And Local Are Different Numbers",
+        desc: "An ISP meters internet download only. Traffic that stays on the Mac, such as Docker talking to rclone, or on the home network is counted separately. Switch the view between Internet, Local and All, so the number you compare against your plan is the number your ISP actually bills.",
+      },
+      {
+        num: "3",
+        title: "The Menu Bar Item Is The Product",
+        desc: "Most people will never open the main window; they glance at the menu bar all day. So that one item is the most configurable part of the app: icon, text or both, full, compact or tiny numbers, optional two-line stacking, and any order of items.",
+      },
+    ],
+    outcomes: [
+      { num: "~1%", title: "Of one CPU core", desc: "Light enough to leave running all day. The per-app snapshot costs about 30 ms of CPU every 5 seconds." },
+      { num: "2 s", title: "Counter refresh", desc: "Network totals refresh from the interface counters every 2 seconds and are exact. The per-app breakdown is reconciled to those totals." },
+      { num: "0", title: "Network connections of its own", desc: "Usage history lives in one local file on the Mac, about 13 months of it. Export to CSV, or erase it from Settings." },
+    ],
+  },
+
+  // ── Software · Sunroof ──────────────────────────────────────────────────
+  // Figures come from the project README and its scripts/perf.sh run.
+  {
+    slug: "sunroof",
+    role: "Design, development and release, end to end.",
+    index: "S2",
+    kind: "software",
+    title: "Sunroof",
+    company: "Personal",
+    year: "2026",
+    tags: ["macOS", "Productivity", "SwiftUI"],
+    canvasPageId: "sunroof-flow",
+    featured: false,
+    links: [
+      { label: "View on GitHub", href: "https://github.com/lakshhaybedi/Sunroof" },
+      { label: "Download", href: "https://github.com/lakshhaybedi/Sunroof/releases/latest" },
+    ],
+    homeDesc:
+      "Clipboard history, a file drawer, markdown notes and widgets, one scroll away. Push the pointer to the top of the screen and scroll down. It uses 22 MB of memory when closed and wakes nothing at idle.",
+    heroColor: "#F2B84B",
+    accent: "#F59E0B",
+    accentText: "#FBBF24",
+    badgeOnAccent: "#1A1205",
+    overview:
+      "The things you keep reaching for, clipboard history, a place to park files, quick notes, the weather and the next meeting, are scattered across five apps and a Dock. Sunroof puts them on one shelf that slides open from the top edge of any screen: push the pointer up and scroll down. There is no Dock icon and no window to manage, and it closes the way it opened.",
+    heroImage: "/case-studies/sunroof/01-shelf.png",
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/case-studies/sunroof/02-in-use.jpg", label: "In Daily Use", caption: "" },
+      { src: "/case-studies/sunroof/03-widgets.png", label: "Widgets", caption: "" },
+    ],
+    screens: [
+      { src: "/case-studies/sunroof/01-shelf.png",    label: "The Shelf",     caption: "Clipboard history, a file drawer and markdown notes side by side, with calendar, weather, music, tasks and system widgets floating underneath." },
+      { src: "/case-studies/sunroof/02-in-use.jpg",   label: "In Daily Use",  caption: "A real screenshot from daily use, with personal items blacked out." },
+      { src: "/case-studies/sunroof/03-widgets.png",  label: "Widgets",       caption: "A row of widgets on frosted glass. Drag one onto another to rearrange, right-click to resize or remove." },
+      { src: "/case-studies/sunroof/04-notes.png",    label: "Notes",         caption: "Plain Markdown files with live styling: the syntax hides as you type, checklists are clickable." },
+      { src: "/case-studies/sunroof/05-settings.png", label: "Appearance",    caption: "Accent colour, shelf tint, note font, Liquid Glass or solid, light, dark or auto." },
+    ],
+    scopeConstraints: [
+      { label: "Invisible until it's wanted", desc: "No Dock icon and no window. The shelf has to open over any app, in any Space, full-screen apps included, and leave no trace when closed." },
+      { label: "Idle cost has to be zero", desc: "Widgets only run while the shelf is open. Measured on Apple Silicon: 22 MB with the shelf closed, 0.0% CPU and zero idle wake-ups." },
+      { label: "The clipboard is the sensitive part", desc: "Anything a password manager copies shows as dots, is never written to disk and never matches a search. History files are readable by the owner's account only." },
+      { label: "Plain files over a database", desc: "Notes and files are ordinary files in folders you choose, so iCloud Drive or Dropbox can sync them. A change from another Mac never overwrites unsaved work; a conflict copy is kept instead." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "One Gesture, Several Ways In",
+        desc: "Scroll down at the top edge, hold a key, pause there, drag a file upward, or press a hotkey. People's habits differ, and a gesture that fires by accident is worse than none, so each trigger can be switched on or off.",
+      },
+      {
+        num: "2",
+        title: "Notes That Stay Plain Markdown",
+        desc: "Headings, bold, highlights and checklists render as you type, so it feels like a notes app. Underneath, each note is a plain .md file any editor can open. Moving away from Sunroof means copying a folder, not exporting.",
+      },
+      {
+        num: "3",
+        title: "Hidden By Default Where It Matters",
+        desc: "Password-manager clips show as dots. Type ||secret|| in a note and it stays a dark field until you click its eye. Link clicks open web and mail addresses only, and images in notes never load from the internet.",
+      },
+    ],
+    outcomes: [
+      { num: "22 MB", title: "Memory with the shelf closed", desc: "47 MB while open, 0.0% CPU at rest and zero idle wake-ups. Widgets cost nothing when the shelf is shut." },
+      { num: "7.6 MB", title: "App size", desc: "Down from 14 MB after removing unused code and stripping debug symbols." },
+      { num: "5", title: "Widgets, all optional", desc: "Calendar, weather, music, tasks and system stats. Each can be turned off in Settings, and none of them run while the shelf is closed." },
+    ],
+  },
+
+  // ── Software · DocFlow ──────────────────────────────────────────────────
+  // Designed in the SchnellPDF Figma file (flow-by-flow state screens);
+  // screenshots here are the shipped app. Figures from the project README.
+  {
+    slug: "docflow",
+    role: "Design, development and release, end to end.",
+    index: "S3",
+    kind: "software",
+    title: "DocFlow",
+    company: "Personal",
+    year: "2026",
+    tags: ["macOS", "PDF", "Privacy"],
+    canvasPageId: "docflow-flow",
+    featured: false,
+    links: [
+      { label: "View on GitHub", href: "https://github.com/lakshhaybedi/docflow" },
+      { label: "Download", href: "https://github.com/lakshhaybedi/docflow/releases/latest" },
+    ],
+    homeDesc:
+      "Read, edit, sign and securely redact PDFs entirely on your Mac. No account, no uploads. Redaction rebuilds the page and checks that the hidden text is really gone.",
+    heroColor: "#F26B6B",
+    accent: "#EF4444",
+    accentText: "#F87171",
+    badgeOnAccent: "#1A0808",
+    overview:
+      "Most free PDF tools want an account, an upload, or both, and most black-box redaction leaves the original text sitting underneath. DocFlow does the job on the machine: annotate, edit text, sign, OCR, merge and export, with nothing leaving the Mac. Redaction is the part that had to be right, so it rebuilds each page and re-opens the result to check that nothing survived.",
+    heroImage: "/case-studies/docflow/01-signature.png",
+    heroDevice: "desktop",
+    heroStack: [
+      { src: "/case-studies/docflow/02-editor-dark.png", label: "Editor, dark", caption: "" },
+      { src: "/case-studies/docflow/03-dashboard.png", label: "Dashboard", caption: "" },
+    ],
+    screens: [
+      { src: "/case-studies/docflow/01-signature.png",    label: "Sign",         caption: "Type, draw, upload or scan a signature from paper with the webcam, then save it and reuse it." },
+      { src: "/case-studies/docflow/02-editor-dark.png",  label: "Editor",       caption: "Annotate, edit text and organise pages in one workspace. Dark appearance shown." },
+      { src: "/case-studies/docflow/03-dashboard.png",    label: "Dashboard",    caption: "Files, folders, labels (Draft, Review, Approved) and quick tools for merge, compress and convert." },
+      { src: "/case-studies/docflow/04-onboarding.png",   label: "Onboarding",   caption: "A guided first run with a practice document, so the first thing you edit isn't something you care about." },
+      { src: "/case-studies/docflow/05-editor-light.png", label: "Light Mode",   caption: "Light, dark or auto, any accent colour, and sepia or night page tones for reading." },
+    ],
+    scopeConstraints: [
+      { label: "No account, no upload", desc: "Documents are processed on the device. The OCR engine, its language data and all fonts ship inside the app, so it works fully offline. The only request it ever makes is one you start: stock image search." },
+      { label: "Redaction has to be real", desc: "Drawing a black box over text in a PDF often leaves the text underneath, still selectable. For a tool people use on contracts and IDs, that failure is the whole risk." },
+      { label: "Text in more than one script", desc: "Latin uses the PDF standard fonts. Devanagari, Cyrillic and Greek embed subset Noto fonts, and other scripts need a font you add." },
+      { label: "A Mac app, built on web tech", desc: "An Electron shell serves the app from a private origin with a strict content security policy, a sandboxed renderer and a minimal preload bridge." },
+    ],
+    decisions: [
+      {
+        num: "1",
+        title: "Redaction That Proves Itself",
+        desc: "Each redacted page is rebuilt as an image in a brand-new document, so the original text and graphics are not carried over. The output is re-opened and checked for leftover text before success is reported. The trade-off is stated, not hidden: those pages become images, so OCR restores a searchable layer.",
+      },
+      {
+        num: "2",
+        title: "Every State Designed, Not Just The Happy Path",
+        desc: "The Figma file runs to 53 screens: empty, loading, unsaved changes, saving, save error, toast notifications, and a flow per tool for redaction, OCR, signing, annotation and export. Errors and half-finished states get a layout, instead of falling back to a default.",
+      },
+      {
+        num: "3",
+        title: "Honest About Editing Existing Text",
+        desc: "Retouching an existing line covers the original, and the original stays in the file underneath. The app says so at the moment of editing and points to Redact for when the text has to be gone. A reassuring lie there would defeat the purpose of the tool.",
+      },
+    ],
+    outcomes: [
+      { num: "53", title: "Screens designed", desc: "Each tool, state and error path was designed in Figma before it was built." },
+      { num: "0", title: "Accounts, uploads or analytics", desc: "Documents live in local storage. The app has no sign-in and sends nothing anywhere." },
+      { num: "2 in 1", title: "One download, both Mac chips", desc: "A single universal build runs natively on Apple Silicon and Intel, on macOS 13 Ventura or later." },
     ],
   },
 ];

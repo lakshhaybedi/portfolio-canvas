@@ -8,6 +8,7 @@ import { CASE_STUDIES } from "@/lib/caseStudies";
 import { SERVICES } from "@/lib/services";
 import { TOOL_GROUPS } from "@/lib/tools";
 import ToolIcon from "@/components/ToolIcon";
+import Picture from "@/components/Picture";
 import { revealVariant, viewportOnce, easeOutExpo } from "@/lib/motion";
 import { useHasFinePointer } from "@/lib/useHasFinePointer";
 import { useIsLowEndDevice } from "@/lib/useIsLowEndDevice";
@@ -60,6 +61,10 @@ const PROJECTS = CASE_STUDIES.filter((c) => c.featured).map((c) => ({
   heroColor: c.heroColor,
   previewImage: c.heroImage,
 }));
+
+// Shipped apps — same data file, surfaced in their own homepage section
+// rather than the Selected Work list.
+const SOFTWARE = CASE_STUDIES.filter((c) => c.kind === "software");
 
 // Every tag used across all projects, for the "Selected Work" filter pills
 // — derived, not hand-maintained, so a new project's tags show up in the
@@ -266,6 +271,7 @@ export default function Portfolio() {
         <ul style={{ display: "flex", gap: 36, listStyle: "none" }}>
           {[
             { label: "Work", href: "#work" },
+            { label: "Software", href: "#software" },
             { label: "Services", href: "#services" },
             { label: "About", href: "#about" },
             { label: "Contact", href: "#contact" },
@@ -712,6 +718,76 @@ export default function Portfolio() {
       </motion.section>
 
       {/* ── Services ── */}
+      {/* ── Software ── */}
+      <section id="software" style={{ padding: "80px 48px 0" }}>
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ marginBottom: 12 }}
+        >
+          <h2 style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "var(--muted)",
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            Software
+            <span style={{ flex: 1, height: 1, background: "var(--border)", display: "block" }} />
+          </h2>
+        </motion.div>
+        <motion.p
+          initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+          style={{ fontSize: 16, fontWeight: 300, lineHeight: 1.6, color: "var(--muted-strong)", maxWidth: 560, margin: "0 0 40px" }}
+        >
+          Mac apps I designed, built and released myself. Every one of them is public on GitHub.
+        </motion.p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+          {SOFTWARE.map((app, i) => (
+            <motion.div
+              key={app.slug}
+              initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}
+              transition={{ delay: i * 0.08 }}
+            >
+              <Link
+                href={`/work/${app.slug}`}
+                style={{
+                  display: "flex", flexDirection: "column", height: "100%",
+                  border: "1px solid var(--border)", background: "var(--bg-elevated)",
+                  color: "inherit", textDecoration: "none", borderRadius: 12, overflow: "hidden",
+                  transition: "border-color 0.25s ease, transform 0.25s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = app.heroColor; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+              >
+                <div style={{ aspectRatio: "16 / 10", background: "#0c0c0e", overflow: "hidden" }}>
+                  {app.heroImage && (
+                    <Picture
+                      src={app.heroImage}
+                      alt={`${app.title} screenshot`}
+                      loading="lazy"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top left", display: "block" }}
+                    />
+                  )}
+                </div>
+                <div style={{ padding: "24px 24px 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+                    <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em" }}>{app.title}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: app.heroColor }}>
+                      {app.tags[0]}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.65, color: "var(--muted-strong)", margin: 0, flex: 1 }}>
+                    {app.homeDesc}
+                  </p>
+                  <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: app.heroColor }}>
+                    Read more ↗
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       <section id="services" style={{ padding: "80px 48px 0" }}>
         <motion.div
           initial="hidden" whileInView="visible" viewport={viewportOnce} variants={reveal}

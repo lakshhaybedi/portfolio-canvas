@@ -540,7 +540,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   textTransform: "uppercase", color: "var(--muted)", marginBottom: 24,
                 }}
               >
-                Case Study · {study.company} · {study.year}
+                {study.kind === "software" ? "Software" : "Case Study"} · {study.company} · {study.year}
               </motion.div>
               <motion.h1
                 initial="hidden" animate="visible" variants={reveal} transition={{ delay: 0.1 }}
@@ -564,8 +564,28 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
               </motion.p>
               <motion.div
                 initial="hidden" animate="visible" variants={reveal} transition={{ delay: 0.28 }}
-                style={{ marginTop: 32 }}
+                style={{ marginTop: 32, display: "flex", flexWrap: "wrap", gap: 12 }}
               >
+                {(study.links ?? []).map((l, i) => (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 10,
+                      padding: "14px 24px",
+                      background: i === (study.links ?? []).length - 1 ? accentText : "transparent",
+                      color: i === (study.links ?? []).length - 1 ? badgeOnAccent : accentText,
+                      border: `1px solid ${accentText}`,
+                      fontSize: 12, fontWeight: 700, letterSpacing: "0.08em",
+                      textTransform: "uppercase", textDecoration: "none", borderRadius: 8,
+                    }}
+                  >
+                    {l.label}
+                    <span style={{ fontSize: 16, fontWeight: 400, lineHeight: 1 }}>↗</span>
+                  </a>
+                ))}
                 <Link
                   href={`/canvas?page=${study.canvasPageId}`}
                   target="_blank"
@@ -653,7 +673,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
           gap: 32,
         }}>
           <AtAGlanceItem label="The Problem" accentText={accentText} text={firstSentence(study.overview)} />
-          <AtAGlanceItem label="My Role" accentText={accentText} text="End-to-end: research, flow architecture, high-fidelity UI, design system contribution." />
+          <AtAGlanceItem label="My Role" accentText={accentText} text={study.role ?? "End-to-end: research, flow architecture, high-fidelity UI, design system contribution."} />
           {study.decisions[0] && (
             <AtAGlanceItem label="The Approach" accentText={accentText} text={study.decisions[0].title} />
           )}
@@ -743,35 +763,7 @@ export default function CaseStudyPage({ slug }: { slug: string }) {
                   ))}
                 </div>
               </section>
-            ) : (
-              /* Slides placeholder */
-              <section style={{ padding: "72px 48px", background: "var(--bg-tint)" }}>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
-                  textTransform: "uppercase", color: "var(--muted)",
-                  display: "flex", alignItems: "center", gap: 16, marginBottom: 48,
-                }}>
-                  The Work
-                  <span style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <div key={n} style={{
-                      height: 320, borderRadius: 8,
-                      background: `linear-gradient(135deg, rgba(237,234,212,0.05) 0%, ${accent}0a 100%)`,
-                      border: "1px dashed var(--border)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)" }}>
-                          Slide {String(n).padStart(2, "0")}, uploading soon
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+            ) : null}
 
             {/* Design Decisions */}
             <section style={{ padding: "72px 48px", background: "var(--bg-elevated)" }}>

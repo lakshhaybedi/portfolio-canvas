@@ -14,7 +14,7 @@ const CATEGORY_ORDER: OtherProjectCategory[] = ["branding", "ux", "experimental"
 // "Selected Work" handful. Same depth as the flagship four (a real
 // /work/[slug] page, decisions, outcomes) — just not surfaced on the
 // homepage. Empty today; this list only appears once one exists.
-const MORE_CASE_STUDIES = CASE_STUDIES.filter((c) => !c.featured);
+const MORE_CASE_STUDIES = CASE_STUDIES.filter((c) => !c.featured && c.kind !== "software");
 
 export default function OtherWorkPage() {
   const [lightboxSlug, setLightboxSlug] = useState<string | null>(null);
